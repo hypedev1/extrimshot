@@ -43,7 +43,7 @@ export const HeroSection = () => {
             </div>
 
             <a href="#order" className="btn-primary block text-center text-lg pulse-glow">
-              এখনই অর্ডার করুন – ৪০% ডিসকাউন্ট
+              এখনই অর্ডার করুন – ৫০% ডিসকাউন্ট
             </a>
 
             <p className="text-center text-red font-medium animate-pulse">
