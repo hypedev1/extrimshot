@@ -1,12 +1,33 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { AnnouncementBar } from '@/components/AnnouncementBar';
+import { RecentPurchasePopup } from '@/components/RecentPurchasePopup';
+import { HeroSection } from '@/components/HeroSection';
+import { AboutSection } from '@/components/AboutSection';
+import { BenefitsSection } from '@/components/BenefitsSection';
+import { TargetAudienceSection } from '@/components/TargetAudienceSection';
+import { BeforeAfterSection } from '@/components/BeforeAfterSection';
+import { StatsSection } from '@/components/StatsSection';
+import { TestimonialsSection } from '@/components/TestimonialsSection';
+import { HowToUseSection } from '@/components/HowToUseSection';
+import { QualitySection } from '@/components/QualitySection';
+import { OrderSection } from '@/components/OrderSection';
+import { FinalCTASection } from '@/components/FinalCTASection';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <AnnouncementBar />
+      <RecentPurchasePopup />
+      <HeroSection />
+      <AboutSection />
+      <BenefitsSection />
+      <TargetAudienceSection />
+      <BeforeAfterSection />
+      <StatsSection />
+      <TestimonialsSection />
+      <HowToUseSection />
+      <QualitySection />
+      <OrderSection />
+      <FinalCTASection />
     </div>
   );
 };
