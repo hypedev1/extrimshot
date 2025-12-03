@@ -49,13 +49,7 @@ export const AnnouncementBar = () => {
           <Truck className="w-4 h-4 text-accent" />
           <span className="text-foreground">ফ্রি ডেলিভারি সারা বাংলাদেশে     </span>
         </span>
-        <span className="flex items-center gap-1.5">
-          <Clock className="w-4 h-4 text-red" />
-          <span className="text-foreground">অফার শেষ: </span>
-          <span className="font-mono font-bold text-primary">
-            {formatTime(timeLeft.hours)}:{formatTime(timeLeft.minutes)}:{formatTime(timeLeft.seconds)}
-          </span>
-        </span>
+        
       </div>
       <button onClick={() => setIsVisible(false)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-secondary rounded-full transition-colors">
         <X className="w-4 h-4 text-muted-foreground" />
