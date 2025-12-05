@@ -39,29 +39,49 @@ export const OrderSection = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    console.log('Submitting order...', formData);
+
     try {
-      const { data, error } = await supabase.from('orders').insert({
+      const orderData = {
         customer_name: formData.name.trim(),
         phone: formData.phone.trim(),
         address: formData.address.trim(),
         total_amount: 1250,
         status: 'pending'
-      }).select().single();
+      };
+      
+      console.log('Order data:', orderData);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
 
-      if (error) throw error;
+      console.log('Supabase response:', { data, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       // Track Purchase event on both browser and server
-      await trackPurchase(
-        { phone: formData.phone, name: formData.name },
-        1250,
-        data.id
-      );
+      try {
+        await trackPurchase(
+          { phone: formData.phone, name: formData.name },
+          1250,
+          data.id
+        );
 
-      // Also track Lead event
-      trackPixelEvent('Lead', {
-        value: 1250,
-        currency: 'BDT',
-      });
+        // Also track Lead event
+        trackPixelEvent('Lead', {
+          value: 1250,
+          currency: 'BDT',
+        });
+      } catch (trackError) {
+        console.error('Tracking error:', trackError);
+        // Don't block navigation on tracking errors
+      }
 
       navigate('/thank-you');
     } catch (error: any) {
@@ -69,7 +89,7 @@ export const OrderSection = () => {
       toast({
         variant: 'destructive',
         title: 'ত্রুটি হয়েছে',
-        description: 'অর্ডার সাবমিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।'
+        description: error.message || 'অর্ডার সাবমিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।'
       });
       setIsSubmitting(false);
     }
