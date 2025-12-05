@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, CreditCard, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackInitiateCheckout, trackPurchase, trackPixelEvent } from '@/lib/fbPixel';
 
 export const OrderSection = () => {
   const navigate = useNavigate();
@@ -14,22 +15,57 @@ export const OrderSection = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Track InitiateCheckout when user scrolls to order section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            trackInitiateCheckout(1250);
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    const section = document.getElementById('order');
+    if (section) observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from('orders').insert({
+      const { data, error } = await supabase.from('orders').insert({
         customer_name: formData.name.trim(),
         phone: formData.phone.trim(),
         address: formData.address.trim(),
         total_amount: 1250,
         status: 'pending'
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Track Purchase event on both browser and server
+      await trackPurchase(
+        { phone: formData.phone, name: formData.name },
+        1250,
+        data.id
+      );
+
+      // Also track Lead event
+      trackPixelEvent('Lead', {
+        value: 1250,
+        currency: 'BDT',
+      });
+
       navigate('/thank-you');
     } catch (error: any) {
+      console.error('Order error:', error);
       toast({
         variant: 'destructive',
         title: 'ত্রুটি হয়েছে',
