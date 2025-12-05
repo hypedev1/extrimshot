@@ -1,23 +1,46 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, CreditCard, Lock } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
 export const OrderSection = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     address: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    navigate('/thank-you');
+    try {
+      const { error } = await supabase.from('orders').insert({
+        customer_name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        total_amount: 1250,
+        status: 'pending'
+      });
+
+      if (error) throw error;
+      navigate('/thank-you');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি হয়েছে',
+        description: 'অর্ডার সাবমিট করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।'
+      });
+      setIsSubmitting(false);
+    }
   };
-  return <section id="order" className="py-16 px-4 bg-gradient-to-b from-card/50 to-background">
+
+  return (
+    <section id="order" className="py-16 px-4 bg-gradient-to-b from-card/50 to-background">
       <div className="container max-w-4xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full mb-4">
@@ -27,7 +50,6 @@ export const OrderSection = () => {
           <h2 className="text-2xl md:text-4xl font-bold mb-2">
             আজকের স্পেশাল অফার – স্টক সীমিত!
           </h2>
-          
         </div>
 
         <div className="card-glass p-6 md:p-8">
@@ -56,26 +78,38 @@ export const OrderSection = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">আপনার নাম *</label>
-                  <input type="text" required value={formData.name} onChange={e => setFormData({
-                  ...formData,
-                  name: e.target.value
-                })} className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="আপনার পুরো নাম লিখুন" />
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="আপনার পুরো নাম লিখুন"
+                  />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-2">মোবাইল নাম্বার *</label>
-                  <input type="tel" required value={formData.phone} onChange={e => setFormData({
-                  ...formData,
-                  phone: e.target.value
-                })} className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="01XXXXXXXXX" />
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="01XXXXXXXXX"
+                  />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-2">ডেলিভারি ঠিকানা *</label>
-                  <textarea required value={formData.address} onChange={e => setFormData({
-                  ...formData,
-                  address: e.target.value
-                })} className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows={3} placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন" />
+                  <textarea
+                    required
+                    value={formData.address}
+                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    rows={3}
+                    placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 rounded-lg p-3">
@@ -83,7 +117,11 @@ export const OrderSection = () => {
                   <span>💳 পেমেন্ট: Cash on Delivery (হাতে পণ্য পেয়ে টাকা দিবেন)</span>
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   {isSubmitting ? 'প্রসেস হচ্ছে...' : 'অর্ডার কনফার্ম করুন'}
                 </button>
 
@@ -96,5 +134,6 @@ export const OrderSection = () => {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
