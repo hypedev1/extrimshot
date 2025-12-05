@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { Clock, CreditCard, Lock, AlertTriangle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { Clock, CreditCard, Lock } from 'lucide-react';
 export const OrderSection = () => {
-  const {
-    toast
-  } = useToast();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -17,16 +15,7 @@ export const OrderSection = () => {
 
     // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 1500));
-    toast({
-      title: "অর্ডার সফল হয়েছে! ✅",
-      description: "শীঘ্রই আমাদের টিম আপনার সাথে যোগাযোগ করবে।"
-    });
-    setFormData({
-      name: '',
-      phone: '',
-      address: ''
-    });
-    setIsSubmitting(false);
+    navigate('/thank-you');
   };
   return <section id="order" className="py-16 px-4 bg-gradient-to-b from-card/50 to-background">
       <div className="container max-w-4xl">
