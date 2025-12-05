@@ -88,8 +88,8 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold">ড্যাশবোর্ড</h1>
-          <p className="text-muted-foreground">আপনার স্টোরের সামগ্রিক পরিস্থিতি</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">ড্যাশবোর্ড</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">আপনার স্টোরের সামগ্রিক পরিস্থিতি</p>
         </div>
 
         {loading ? (

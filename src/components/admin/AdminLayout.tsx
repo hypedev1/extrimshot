@@ -1,7 +1,7 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { AdminSidebar } from './AdminSidebar';
+import { AdminSidebar, MobileMenuButton } from './AdminSidebar';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -10,6 +10,7 @@ interface AdminLayoutProps {
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -35,10 +36,17 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <AdminSidebar />
-      <main className="flex-1 p-8 overflow-auto">
-        {children}
-      </main>
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile header */}
+        <header className="lg:hidden sticky top-0 z-30 bg-card border-b border-border p-4 flex items-center gap-4">
+          <MobileMenuButton onClick={() => setSidebarOpen(true)} />
+          <h1 className="font-bold text-gradient">Nobosokti Admin</h1>
+        </header>
+        <main className="flex-1 p-4 lg:p-8 overflow-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

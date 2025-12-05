@@ -84,8 +84,8 @@ const AdminOrders = () => {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">অর্ডার সমূহ</h1>
-          <p className="text-muted-foreground">সকল অর্ডার দেখুন এবং ম্যানেজ করুন</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">অর্ডার সমূহ</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">সকল অর্ডার দেখুন এবং ম্যানেজ করুন</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
