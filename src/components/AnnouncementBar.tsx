@@ -42,7 +42,7 @@ export const AnnouncementBar = () => {
       <div className="container flex items-center justify-center gap-2 md:gap-6 text-sm md:text-base flex-wrap">
         <span className="flex items-center gap-1.5">
           <Flame className="w-4 h-4 text-primary" />
-          <span className="text-foreground">৫০% ছাড়ে!<span className="text-primary font-bold">৪০% ছাড়ে!</span></span>
+          
         </span>
         <span className="hidden md:inline text-muted-foreground">|</span>
         <span className="flex items-center gap-1.5">
