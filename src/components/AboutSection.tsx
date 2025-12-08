@@ -1,4 +1,3 @@
-import { Check } from 'lucide-react';
 export const AboutSection = () => {
   return <section className="py-16 px-4 bg-gradient-to-b from-background to-card/50">
       <div className="container">
@@ -16,8 +15,8 @@ export const AboutSection = () => {
 
             <div className="flex flex-wrap gap-3">
               {['১০০% হার্বাল', 'স্টেরয়েড ফ্রি', 'নন-অ্যাডিক্টিভ'].map((item, i) => <span key={i} className="flex items-center gap-2 bg-accent/10 border border-accent/30 rounded-full px-4 py-2">
-                  <Check className="w-4 h-4 text-accent" />
-                  <span className="font-medium">{item}</span>
+                  
+                  
                 </span>)}
             </div>
 
