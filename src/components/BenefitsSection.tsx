@@ -3,7 +3,7 @@ export const BenefitsSection = () => {
   return <section className="py-16 px-4">
       <div className="container">
         <h2 className="text-2xl md:text-4xl font-bold text-center mb-4">
-          <span className="text-gradient">Nobosokti</span> থেকে আপনি কী কী উপকার পেতে পারেন?
+          <span className="text-gradient">Extrimshot</span> থেকে আপনি কী কী উপকার পেতে পারেন?
         </h2>
         <p className="text-center text-muted-foreground mb-12">
           হাজারো সন্তুষ্ট কাস্টমারের বাস্তব অভিজ্ঞতা
