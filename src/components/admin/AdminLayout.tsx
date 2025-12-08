@@ -41,7 +41,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-30 bg-card border-b border-border p-4 flex items-center gap-4">
           <MobileMenuButton onClick={() => setSidebarOpen(true)} />
-          <h1 className="font-bold text-gradient">Nobosokti Admin</h1>
+          <h1 className="font-bold text-gradient">Extrimshot Admin</h1>
         </header>
         <main className="flex-1 p-4 lg:p-8 overflow-auto">
           {children}
