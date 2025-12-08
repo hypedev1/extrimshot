@@ -11,7 +11,7 @@ export const BenefitsSection = () => {
 
         <div className="flex flex-col lg:flex-row gap-10 items-center">
           <div className="flex-1">
-            <img alt="Confident Man" className="rounded-2xl shadow-xl w-full max-w-sm mx-auto" src="/lovable-uploads/c5fb1812-cf74-4249-9744-ed2222164fee.jpg" />
+            <img alt="Confident Man" className="rounded-2xl shadow-xl w-full max-w-sm mx-auto" src="/lovable-uploads/aeca2ff1-3195-4d8b-ac60-1bd8bd7f9078.png" />
           </div>
 
           <div className="flex-1 grid md:grid-cols-2 gap-6">
