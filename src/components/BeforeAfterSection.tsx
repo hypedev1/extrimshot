@@ -1,7 +1,7 @@
 import { X, Check, Frown, Flame, ArrowRight } from 'lucide-react';
 export const BeforeAfterSection = () => {
   const beforeItems = ['সকালেই ক্লান্তি, সারাদিন এনার্জি কম', 'কাজে ফোকাস থাকে না', 'সব কাজে অন্যমনস্কতা', 'বিশেষ মুহূর্তে দুর্বল'];
-  const afterItems = ['দিনে বেশিক্ষণ এনার্জেটিক ফিল', 'কাজে ফোকাস ও মোটিভেশন বাড়ে', 'হালকা ফিলিং, স্ট্রেস কমে', '৩০ মিনিট এক টানা খেলতে পারবেন'];
+  const afterItems = ['দিনে বেশিক্ষণ এনার্জেটিক ফিল', 'কাজে ফোকাস ও মোটিভেশন বাড়ে', 'হালকা ফিলিং, স্ট্রেস কমে', '৩০ মিনিট এক টানা সহবাস করতে পারবেন'];
   return <section className="py-16 px-4">
       <div className="container">
         <p className="text-center text-primary font-semibold mb-2">রূপান্তরের গল্প</p>
