@@ -11,6 +11,7 @@ import AdminAuth from "./pages/AdminAuth";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminOrders from "./pages/AdminOrders";
 import AdminIncompleteOrders from "./pages/AdminIncompleteOrders";
+import AdminFraudAttempts from "./pages/AdminFraudAttempts";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminSettings from "./pages/AdminSettings";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/incomplete-orders" element={<AdminIncompleteOrders />} />
+            <Route path="/admin/fraud-attempts" element={<AdminFraudAttempts />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
