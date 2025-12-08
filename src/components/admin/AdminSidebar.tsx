@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, LogOut, Home, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, LogOut, Home, Menu, X, Settings, BarChart3, Users } from 'lucide-react';
 import { NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 const menuItems = [
   { title: 'ড্যাশবোর্ড', icon: LayoutDashboard, path: '/admin' },
   { title: 'অর্ডার সমূহ', icon: Package, path: '/admin/orders' },
+  { title: 'পরিসংখ্যান', icon: BarChart3, path: '/admin/analytics' },
+  { title: 'সেটিংস', icon: Settings, path: '/admin/settings' },
 ];
 
 interface AdminSidebarProps {
@@ -14,7 +16,7 @@ interface AdminSidebarProps {
 }
 
 export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -42,13 +44,29 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         <div className="p-4 lg:p-6 border-b border-border flex items-center justify-between">
-          <h1 className="text-lg lg:text-xl font-bold text-gradient">Nobosokti Admin</h1>
+          <div>
+            <h1 className="text-lg lg:text-xl font-bold text-gradient">Admin Panel</h1>
+            <p className="text-xs text-muted-foreground mt-1">Extrimshot</p>
+          </div>
           <button 
             onClick={onClose}
             className="lg:hidden p-2 hover:bg-secondary rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* User info */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">অ্যাডমিন</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
@@ -60,9 +78,9 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
               onClick={handleNavClick}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-colors',
+                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
                   isActive
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
                     : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
                 )
               }

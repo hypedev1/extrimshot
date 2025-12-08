@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search, ChevronDown, Eye, Phone, Trash2 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,6 +13,7 @@ interface Order {
   status: string;
   total_amount: number;
   created_at: string;
+  updated_at: string;
 }
 
 const statusOptions = [
@@ -26,6 +28,8 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -131,13 +135,19 @@ const AdminOrders = () => {
                     <th className="text-left py-4 px-4 font-medium">মূল্য</th>
                     <th className="text-left py-4 px-4 font-medium">স্ট্যাটাস</th>
                     <th className="text-left py-4 px-4 font-medium hidden sm:table-cell">তারিখ</th>
+                    <th className="text-left py-4 px-4 font-medium">অ্যাকশন</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.map((order) => (
                     <tr key={order.id} className="border-t border-border hover:bg-secondary/30">
                       <td className="py-4 px-4 font-medium">{order.customer_name}</td>
-                      <td className="py-4 px-4">{order.phone}</td>
+                      <td className="py-4 px-4">
+                        <a href={`tel:${order.phone}`} className="flex items-center gap-1 text-primary hover:underline">
+                          <Phone className="w-3 h-3" />
+                          {order.phone}
+                        </a>
+                      </td>
                       <td className="py-4 px-4 hidden md:table-cell max-w-xs truncate">{order.address}</td>
                       <td className="py-4 px-4">৳{order.total_amount}</td>
                       <td className="py-4 px-4">
@@ -157,6 +167,18 @@ const AdminOrders = () => {
                       <td className="py-4 px-4 text-muted-foreground text-sm hidden sm:table-cell">
                         {new Date(order.created_at).toLocaleDateString('bn-BD')}
                       </td>
+                      <td className="py-4 px-4">
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                          title="বিস্তারিত দেখুন"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -165,6 +187,16 @@ const AdminOrders = () => {
           </div>
         )}
       </div>
+
+      <OrderDetailModal
+        order={selectedOrder}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedOrder(null);
+        }}
+        onStatusChange={updateStatus}
+      />
     </AdminLayout>
   );
 };
