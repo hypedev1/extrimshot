@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, ChevronDown, Eye, Phone, Trash2 } from 'lucide-react';
+import { Search, ChevronDown, Eye, Phone, Copy } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,6 +82,18 @@ const AdminOrders = () => {
 
   const getStatusStyle = (status: string) => {
     return statusOptions.find(s => s.value === status)?.color || 'bg-gray-500/20 text-gray-500';
+  };
+
+  const copyOrderToClipboard = async (order: Order) => {
+    // Tab-separated format for Google Sheets (Name, Phone, Address)
+    const copyText = `${order.customer_name}\t${order.phone}\t${order.address}`;
+    
+    try {
+      await navigator.clipboard.writeText(copyText);
+      toast({ title: 'কপি হয়েছে', description: 'অর্ডার তথ্য ক্লিপবোর্ডে কপি হয়েছে' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'ত্রুটি', description: 'কপি করতে সমস্যা হয়েছে' });
+    }
   };
 
   return (
@@ -168,16 +180,25 @@ const AdminOrders = () => {
                         {new Date(order.created_at).toLocaleDateString('bn-BD')}
                       </td>
                       <td className="py-4 px-4">
-                        <button
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setIsModalOpen(true);
-                          }}
-                          className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                          title="বিস্তারিত দেখুন"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => copyOrderToClipboard(order)}
+                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-primary"
+                            title="কপি করুন"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                            title="বিস্তারিত দেখুন"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
