@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      order_fingerprints: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          id: string
+          ip_address: string | null
+          language: string | null
+          phone: string
+          screen_resolution: string | null
+          timezone: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          id?: string
+          ip_address?: string | null
+          language?: string | null
+          phone: string
+          screen_resolution?: string | null
+          timezone?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          ip_address?: string | null
+          language?: string | null
+          phone?: string
+          screen_resolution?: string | null
+          timezone?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string
