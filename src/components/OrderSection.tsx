@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, CreditCard, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,8 @@ export const OrderSection = () => {
     address: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const incompleteOrderIdRef = useRef<string | null>(null);
+  const phoneTrackedRef = useRef<string | null>(null);
 
   // Track InitiateCheckout when user scrolls to order section
   useEffect(() => {
@@ -34,6 +36,51 @@ export const OrderSection = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  // Track incomplete order when phone number is entered
+  const handlePhoneBlur = async () => {
+    const phone = formData.phone.trim();
+    if (phone.length >= 10 && phone !== phoneTrackedRef.current) {
+      phoneTrackedRef.current = phone;
+      try {
+        const { data, error } = await supabase
+          .from('incomplete_orders')
+          .upsert(
+            { 
+              phone, 
+              customer_name: formData.name.trim() || null,
+              address: formData.address.trim() || null
+            },
+            { onConflict: 'phone' }
+          )
+          .select()
+          .single();
+        
+        if (!error && data) {
+          incompleteOrderIdRef.current = data.id;
+        }
+      } catch (err) {
+        console.error('Failed to track incomplete order:', err);
+      }
+    }
+  };
+
+  // Update incomplete order when other fields change
+  const updateIncompleteOrder = async () => {
+    if (incompleteOrderIdRef.current) {
+      try {
+        await supabase
+          .from('incomplete_orders')
+          .update({
+            customer_name: formData.name.trim() || null,
+            address: formData.address.trim() || null
+          })
+          .eq('id', incompleteOrderIdRef.current);
+      } catch (err) {
+        console.error('Failed to update incomplete order:', err);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +128,20 @@ export const OrderSection = () => {
       } catch (trackError) {
         console.error('Tracking error:', trackError);
         // Don't block navigation on tracking errors
+      }
+
+      // Remove from incomplete orders after successful order
+      if (incompleteOrderIdRef.current) {
+        await supabase
+          .from('incomplete_orders')
+          .delete()
+          .eq('id', incompleteOrderIdRef.current);
+      } else if (formData.phone.trim()) {
+        // Also try to delete by phone number
+        await supabase
+          .from('incomplete_orders')
+          .delete()
+          .eq('phone', formData.phone.trim());
       }
 
       navigate('/thank-you');
@@ -139,6 +200,7 @@ export const OrderSection = () => {
                     required
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    onBlur={updateIncompleteOrder}
                     className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="আপনার পুরো নাম লিখুন"
                   />
@@ -151,6 +213,7 @@ export const OrderSection = () => {
                     required
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    onBlur={handlePhoneBlur}
                     className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="01XXXXXXXXX"
                   />
@@ -162,6 +225,7 @@ export const OrderSection = () => {
                     required
                     value={formData.address}
                     onChange={e => setFormData({ ...formData, address: e.target.value })}
+                    onBlur={updateIncompleteOrder}
                     className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                     rows={3}
                     placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন"
