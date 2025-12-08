@@ -27,7 +27,7 @@ export const HeroSection = () => {
           <div className="flex-1 flex justify-center">
             <div className="relative">
               <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
-              <img alt="Nobosokti Product" className="relative z-10 rounded-2xl shadow-2xl max-w-[350px] md:max-w-[400px] animate-float" src="/lovable-uploads/acfcf931-2261-40e7-b2ab-6d20cc99533f.png" />
+              
             </div>
           </div>
 
