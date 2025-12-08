@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      incomplete_orders: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_name: string | null
+          id: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string
