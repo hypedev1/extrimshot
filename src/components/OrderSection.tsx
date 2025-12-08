@@ -99,31 +99,53 @@ export const OrderSection = () => {
 
     console.log('Submitting order...', formData);
 
-    // Fraud prevention check
-    if (deviceInfo) {
-      const fraudCheck = await checkFraudPrevention(
-        deviceInfo,
-        formData.phone.trim(),
-        clientIP
-      );
+    // Fraud prevention check - MUST have device info
+    if (!deviceInfo) {
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি হয়েছে',
+        description: 'ডিভাইস যাচাই করা যায়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।'
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
-      if (!fraudCheck.allowed) {
-        setFraudBlock({
-          blocked: true,
-          reason: fraudCheck.reason,
-          hoursRemaining: fraudCheck.hoursRemaining
-        });
-        setIsSubmitting(false);
-        toast({
-          variant: 'destructive',
-          title: 'অর্ডার করা সম্ভব হয়নি',
-          description: fraudCheck.reason
-        });
-        return;
-      }
+    const fraudCheck = await checkFraudPrevention(
+      deviceInfo,
+      formData.phone.trim(),
+      clientIP
+    );
+
+    if (!fraudCheck.allowed) {
+      setFraudBlock({
+        blocked: true,
+        reason: fraudCheck.reason,
+        hoursRemaining: fraudCheck.hoursRemaining
+      });
+      setIsSubmitting(false);
+      toast({
+        variant: 'destructive',
+        title: 'অর্ডার করা সম্ভব হয়নি',
+        description: fraudCheck.reason
+      });
+      return;
     }
 
     try {
+      // Record fingerprint FIRST before creating order to prevent race conditions
+      const fingerprintRecorded = await recordOrderFingerprint(deviceInfo, formData.phone.trim(), clientIP);
+      
+      if (!fingerprintRecorded) {
+        console.error('Failed to record fingerprint, blocking order');
+        toast({
+          variant: 'destructive',
+          title: 'ত্রুটি হয়েছে',
+          description: 'অর্ডার প্রসেস করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const orderData = {
         customer_name: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -145,11 +167,6 @@ export const OrderSection = () => {
       if (error) {
         console.error('Supabase error:', error);
         throw error;
-      }
-
-      // Record fingerprint after successful order
-      if (deviceInfo) {
-        await recordOrderFingerprint(deviceInfo, formData.phone.trim(), clientIP);
       }
 
       // Track Purchase event on both browser and server
