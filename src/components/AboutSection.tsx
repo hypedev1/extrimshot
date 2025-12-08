@@ -3,7 +3,7 @@ export const AboutSection = () => {
   return <section className="py-16 px-4 bg-gradient-to-b from-background to-card/50">
       <div className="container">
         <h2 className="text-2xl md:text-4xl font-bold text-center mb-10">
-          <span className="text-gradient">Nobosokti</span> – নেচারাল পাওয়ার বুস্টার
+          <span className="text-gradient">Extrimshot</span> – নেচারাল পাওয়ার বুস্টার
         </h2>
 
         <div className="flex flex-col lg:flex-row items-center gap-10">
