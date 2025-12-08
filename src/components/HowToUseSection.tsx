@@ -2,7 +2,7 @@ import { Circle, AlertTriangle } from 'lucide-react';
 
 export const HowToUseSection = () => {
   const steps = [
-    'প্রয়োজন অনুযায়ী দিনে ১ শট',
+    'দিনে ১ চামুচ',
     'খালি পেটে না, হালকা খাবারের পর',
     'হাল্কা গরম পানি বা দুধের সাথে ১ চামুচ মিক্স করে খাবেন',
     '১৮+ বয়সের জন্য',
