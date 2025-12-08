@@ -22,7 +22,7 @@ export const HeroSection = () => {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+        <div className="flex flex-col lg:flex-row items-center lg:gap-16 gap-0">
           {/* Product Image */}
           <div className="flex-1 flex justify-center">
             <div className="relative">
