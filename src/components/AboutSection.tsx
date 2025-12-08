@@ -12,7 +12,7 @@ export const AboutSection = () => {
           </div>
           <div className="flex-1 space-y-6">
             <p className="text-lg text-muted-foreground">
-              <span className="text-primary font-semibold">Nobosokti</span> হলো একটি প্রাকৃতিক হার্বাল পাওয়ার বুস্টার শট, যা সিলেক্টেড হার্ব, ভিটামিন ও ন্যাচারাল এনার্জি কমপ্লেক্স দিয়ে তৈরি। এটি শরীরের ন্যাচারাল এনার্জি সিস্টেমকে সাপোর্ট করে।
+              <span className="text-primary font-semibold">Extrimshot</span> হলো একটি প্রাকৃতিক হার্বাল পাওয়ার বুস্টার শট, যা সিলেক্টেড হার্ব, ভিটামিন ও ন্যাচারাল এনার্জি কমপ্লেক্স দিয়ে তৈরি। এটি শরীরের ন্যাচারাল এনার্জি সিস্টেমকে সাপোর্ট করে।
             </p>
 
             <div className="flex flex-wrap gap-3">
