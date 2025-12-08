@@ -56,9 +56,7 @@ export const HeroSection = () => {
               এখনই অর্ডার করুন – ৫০% ডিসকাউন্ট
             </a>
 
-            <p className="text-center text-red font-medium animate-pulse">
-              ⏰ স্টক সীমিত – মাত্র 49 টি বাকি!
-            </p>
+            
 
             <div className="grid grid-cols-2 gap-4 mt-8">
               {[{
