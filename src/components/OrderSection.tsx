@@ -1,21 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, CreditCard, Lock } from 'lucide-react';
+import { Clock, CreditCard, Lock, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { trackInitiateCheckout, trackPurchase, trackPixelEvent } from '@/lib/fbPixel';
+import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
+import { checkFraudPrevention, recordOrderFingerprint, getClientIP } from '@/lib/fraudPrevention';
 
 export const OrderSection = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { deviceInfo, isLoading: isFingerprintLoading } = useDeviceFingerprint();
+  const [clientIP, setClientIP] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     address: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fraudBlock, setFraudBlock] = useState<{ blocked: boolean; reason?: string; hoursRemaining?: number }>({ blocked: false });
   const incompleteOrderIdRef = useRef<string | null>(null);
   const phoneTrackedRef = useRef<string | null>(null);
+
+  // Get client IP on mount
+  useEffect(() => {
+    getClientIP().then(setClientIP);
+  }, []);
 
   // Track InitiateCheckout when user scrolls to order section
   useEffect(() => {
@@ -85,8 +95,33 @@ export const OrderSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setFraudBlock({ blocked: false });
 
     console.log('Submitting order...', formData);
+
+    // Fraud prevention check
+    if (deviceInfo) {
+      const fraudCheck = await checkFraudPrevention(
+        deviceInfo,
+        formData.phone.trim(),
+        clientIP
+      );
+
+      if (!fraudCheck.allowed) {
+        setFraudBlock({
+          blocked: true,
+          reason: fraudCheck.reason,
+          hoursRemaining: fraudCheck.hoursRemaining
+        });
+        setIsSubmitting(false);
+        toast({
+          variant: 'destructive',
+          title: 'অর্ডার করা সম্ভব হয়নি',
+          description: fraudCheck.reason
+        });
+        return;
+      }
+    }
 
     try {
       const orderData = {
@@ -110,6 +145,11 @@ export const OrderSection = () => {
       if (error) {
         console.error('Supabase error:', error);
         throw error;
+      }
+
+      // Record fingerprint after successful order
+      if (deviceInfo) {
+        await recordOrderFingerprint(deviceInfo, formData.phone.trim(), clientIP);
       }
 
       // Track Purchase event on both browser and server
@@ -192,6 +232,20 @@ export const OrderSection = () => {
             <div className="flex-1">
               <h3 className="text-xl font-bold mb-6">অর্ডার করতে নিচের ফর্মটি পূরণ করুন</h3>
               
+              {fraudBlock.blocked && (
+                <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-4 flex items-start gap-3">
+                  <ShieldAlert className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-destructive font-medium">{fraudBlock.reason}</p>
+                    {fraudBlock.hoursRemaining && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        অনুগ্রহ করে {fraudBlock.hoursRemaining} ঘণ্টা পর আবার চেষ্টা করুন।
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">আপনার নাম *</label>
@@ -239,10 +293,10 @@ export const OrderSection = () => {
 
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isFingerprintLoading || fraudBlock.blocked}
                   className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'প্রসেস হচ্ছে...' : 'অর্ডার কনফার্ম করুন'}
+                  {isSubmitting ? 'প্রসেস হচ্ছে...' : isFingerprintLoading ? 'লোড হচ্ছে...' : 'অর্ডার কনফার্ম করুন'}
                 </button>
 
                 <div className="flex items-start gap-2 text-xs text-muted-foreground">
