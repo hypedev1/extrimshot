@@ -8,7 +8,7 @@ export const AboutSection = () => {
 
         <div className="flex flex-col lg:flex-row items-center gap-10">
           <div className="flex-1">
-            <img alt="Natural Ingredients" className="rounded-2xl shadow-xl w-full max-w-md mx-auto" src="/lovable-uploads/7dcfcca6-53ab-4f9f-8e43-c791ff913947.jpg" />
+            <img alt="Natural Ingredients" className="rounded-2xl shadow-xl w-full max-w-md mx-auto" src="/lovable-uploads/12a04d91-3d2a-4274-8e85-16c00eae429a.png" />
           </div>
           <div className="flex-1 space-y-6">
             <p className="text-lg text-muted-foreground">
