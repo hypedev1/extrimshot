@@ -33,7 +33,7 @@ export const HeroSection = () => {
 
           {/* Features */}
           <div className="flex-1 space-y-6">
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-start mb-8">
+            <div className="flex flex-wrap justify-center lg:justify-start mb-8 gap-[10px]">
               {[{
               icon: Check,
               text: 'কোন প্রকার কেমিকেল নেই',
