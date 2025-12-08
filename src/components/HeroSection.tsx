@@ -4,8 +4,7 @@ export const HeroSection = () => {
   return <section className="py-12 md:py-20 px-4">
       <div className="container">
         <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            এক টানা ৩০ মিনিট এনার্জি অন, কনফিডেন্স অন – <span className="text-gradient"> পূনর্বল</span>
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">ডক্টর এ আর খান এর রেকমেন্ডেড প্রডাক্ট এক্সট্রিমশট, যা খেলে যৌন জীবন হবে শান্তিপূর্ণ ইনশা আল্লাহ<span className="text-gradient"> পূনর্বল</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
             দিনের ক্লান্তি, স্ট্রেস, লো এনার্জি… সব ভুলে আবারও অনুভব করুন তরুন উদ্যম, স্ট্রং পারফরম্যান্স আর কনফিডেন্ট <span className="text-primary font-semibold">পূনর্বল – ন্যাচারাল পাওয়ার বুস্টার         </span> এর সাথে।
