@@ -54,7 +54,7 @@ export const RecentPurchasePopup = () => {
           <div>
             <p className="font-semibold text-foreground text-sm">{purchase.name}</p>
             <p className="text-xs text-muted-foreground">{purchase.location} থেকে</p>
-            <p className="text-xs text-primary font-medium mt-1">Nobosokti কিনেছেন</p>
+            <p className="text-xs text-primary font-medium mt-1">Extrimshot কিনেছেন</p>
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
               <Clock className="w-3 h-3" />
               {purchase.time}
