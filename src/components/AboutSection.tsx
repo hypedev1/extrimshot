@@ -1,8 +1,8 @@
 export const AboutSection = () => {
   return <section className="py-16 px-4 bg-gradient-to-b from-background to-card/50">
       <div className="container">
-        <h2 className="text-2xl md:text-4xl font-bold text-center mb-10"><span className="text-gradient">Extrimshot</span> ​          
-        </h2>
+        <h2 className="text-2xl md:text-4xl font-bold text-center mb-10"><span className="text-gradient">Extrimshot</span>Extrimshot Extrimshot – ন্যাচারাল পাওয়ার বুস্টার যেটি খেলে ন্যাচারালি সহবাসের সময় দীর্ঘায়িত হবে ইনশা আল্লাহ।দ্রুত বীর্যপাত রোধ করবে যা আপনার বিবাহিত জীবন কে করবে আরও বেশি আনন্দময় ইনশা আল্লাহ Extrimshot – নেচারাল পাওয়ার বুস্টার যেটি খেলে ন্যাচারালি
+      </h2>
 
         <div className="flex flex-col lg:flex-row items-center gap-10">
           <div className="flex-1">
