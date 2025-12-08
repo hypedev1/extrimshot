@@ -1,5 +1,4 @@
 import { Check, Zap, Dumbbell, FlaskConical, Lock } from 'lucide-react';
-import productImage from '@/assets/nobosokti-product.png';
 export const HeroSection = () => {
   return <section className="py-12 md:py-20 px-4">
       <div className="container">

@@ -115,7 +115,7 @@ serve(async (req) => {
     const eventData: EventData = {
       event_name,
       event_time: Math.floor(Date.now() / 1000),
-      event_source_url: event_source_url || 'https://nobosokti.com',
+      event_source_url: event_source_url || 'https://extrimshot.com',
       action_source: 'website',
       user_data: hashedUserData,
     };

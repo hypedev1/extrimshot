@@ -98,7 +98,7 @@ export const trackInitiateCheckout = (value: number) => {
   trackEvent('InitiateCheckout', undefined, {
     value,
     currency: 'BDT',
-    content_name: 'Nobosokti',
+    content_name: 'Extrimshot',
   });
 };
 
@@ -110,7 +110,7 @@ export const trackPurchase = async (
   await trackEvent('Purchase', userData, {
     value,
     currency: 'BDT',
-    content_name: 'Nobosokti',
+    content_name: 'Extrimshot',
     order_id: orderId,
   });
 };
