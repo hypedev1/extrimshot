@@ -15,41 +15,75 @@ export const useDeviceFingerprint = () => {
 
   useEffect(() => {
     const getFingerprint = async () => {
+      // Helper to create fallback fingerprint
+      const createFallbackInfo = (): DeviceInfo => {
+        const screenWidth = window.screen?.width || 0;
+        const screenHeight = window.screen?.height || 0;
+        const lang = navigator.language || 'en';
+        const ua = navigator.userAgent || 'unknown';
+        
+        let timezone = 'Unknown';
+        try {
+          timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch {
+          timezone = String(new Date().getTimezoneOffset());
+        }
+        
+        // Create fallback fingerprint without btoa (which can fail on some characters)
+        const fallbackData = `${ua}-${screenWidth}-${screenHeight}-${lang}-${new Date().getTimezoneOffset()}`;
+        const fallbackFingerprint = fallbackData.split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0).toString(36);
+        
+        return {
+          fingerprint: `fallback_${fallbackFingerprint}`,
+          userAgent: ua,
+          screenResolution: `${screenWidth}x${screenHeight}`,
+          timezone,
+          language: lang
+        };
+      };
+
       try {
-        const fp = await FingerprintJS.load();
+        // Add timeout for FingerprintJS loading
+        const loadPromise = FingerprintJS.load();
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Fingerprint timeout')), 8000)
+        );
+        
+        const fp = await Promise.race([loadPromise, timeoutPromise]);
         const result = await fp.get();
+        
+        let timezone = 'Unknown';
+        try {
+          timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch {
+          timezone = String(new Date().getTimezoneOffset());
+        }
         
         setDeviceInfo({
           fingerprint: result.visitorId,
-          userAgent: navigator.userAgent,
-          screenResolution: `${window.screen.width}x${window.screen.height}`,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          language: navigator.language
+          userAgent: navigator.userAgent || 'unknown',
+          screenResolution: `${window.screen?.width || 0}x${window.screen?.height || 0}`,
+          timezone,
+          language: navigator.language || 'en'
         });
       } catch (error) {
-        console.error('Failed to get device fingerprint:', error);
-        // Fallback fingerprint using available browser data
-        const fallbackFingerprint = btoa(
-          navigator.userAgent + 
-          window.screen.width + 
-          window.screen.height + 
-          navigator.language +
-          new Date().getTimezoneOffset()
-        );
-        
-        setDeviceInfo({
-          fingerprint: fallbackFingerprint,
-          userAgent: navigator.userAgent,
-          screenResolution: `${window.screen.width}x${window.screen.height}`,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          language: navigator.language
-        });
+        console.warn('Fingerprint fallback used:', error);
+        setDeviceInfo(createFallbackInfo());
       } finally {
         setIsLoading(false);
       }
     };
 
-    getFingerprint();
+    // Wrap in try-catch to ensure component always renders
+    try {
+      getFingerprint();
+    } catch (error) {
+      console.error('Critical fingerprint error:', error);
+      setIsLoading(false);
+    }
   }, []);
 
   return { deviceInfo, isLoading };

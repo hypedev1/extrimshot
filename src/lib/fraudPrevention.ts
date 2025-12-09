@@ -18,11 +18,24 @@ const RATE_LIMIT_HOURS = 24;
 
 export const getClientIP = async (): Promise<string | null> => {
   try {
-    const response = await fetch('https://api.ipify.org?format=json');
+    // Add timeout to prevent hanging on slow networks
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch('https://api.ipify.org?format=json', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      return null;
+    }
+    
     const data = await response.json();
-    return data.ip;
+    return data.ip || null;
   } catch (error) {
-    console.error('Failed to get IP:', error);
+    // Silently fail - IP check is optional
+    console.warn('IP fetch skipped:', error);
     return null;
   }
 };
