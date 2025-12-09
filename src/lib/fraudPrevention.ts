@@ -14,7 +14,35 @@ interface FraudCheckResult {
   hoursRemaining?: number;
 }
 
+interface OrderFormData {
+  name?: string;
+  phone: string;
+  address?: string;
+}
+
 const RATE_LIMIT_HOURS = 24;
+
+export const recordBlockedAttempt = async (
+  formData: OrderFormData,
+  deviceInfo: DeviceInfo | null,
+  ipAddress: string | null,
+  reason: string
+): Promise<void> => {
+  try {
+    await supabase
+      .from('blocked_order_attempts')
+      .insert({
+        customer_name: formData.name || null,
+        phone: formData.phone,
+        address: formData.address || null,
+        fingerprint: deviceInfo?.fingerprint || null,
+        ip_address: ipAddress,
+        block_reason: reason
+      });
+  } catch (error) {
+    console.error('Failed to record blocked attempt:', error);
+  }
+};
 
 export const getClientIP = async (): Promise<string | null> => {
   try {
