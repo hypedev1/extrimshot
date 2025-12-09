@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_order_attempts: {
+        Row: {
+          address: string | null
+          block_reason: string
+          created_at: string
+          customer_name: string | null
+          fingerprint: string | null
+          id: string
+          ip_address: string | null
+          phone: string
+        }
+        Insert: {
+          address?: string | null
+          block_reason: string
+          created_at?: string
+          customer_name?: string | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          phone: string
+        }
+        Update: {
+          address?: string | null
+          block_reason?: string
+          created_at?: string
+          customer_name?: string | null
+          fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          phone?: string
+        }
+        Relationships: []
+      }
       incomplete_orders: {
         Row: {
           address: string | null

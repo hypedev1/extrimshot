@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { trackInitiateCheckout, trackPurchase, trackPixelEvent } from '@/lib/fbPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
-import { checkFraudPrevention, recordOrderFingerprint, getClientIP } from '@/lib/fraudPrevention';
+import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
 
 export const OrderSection = () => {
   const navigate = useNavigate();
@@ -117,6 +117,14 @@ export const OrderSection = () => {
     );
 
     if (!fraudCheck.allowed) {
+      // Record the blocked attempt for admin review
+      await recordBlockedAttempt(
+        { name: formData.name.trim(), phone: formData.phone.trim(), address: formData.address.trim() },
+        deviceInfo,
+        clientIP,
+        fraudCheck.reason || 'Unknown reason'
+      );
+      
       setFraudBlock({
         blocked: true,
         reason: fraudCheck.reason,

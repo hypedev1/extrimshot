@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, LogOut, Home, Menu, X, Settings, BarChart3, Users, AlertCircle, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Package, LogOut, Home, Menu, X, Settings, BarChart3, Users, AlertCircle, ShieldAlert, UserX } from 'lucide-react';
 import { NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ const menuItems = [
   { title: 'অর্ডার সমূহ', icon: Package, path: '/admin/orders' },
   { title: 'অসম্পূর্ণ অর্ডার', icon: AlertCircle, path: '/admin/incomplete-orders' },
   { title: 'ফ্রড প্রতিরোধ', icon: ShieldAlert, path: '/admin/fraud-attempts' },
+  { title: 'ব্লক প্রচেষ্টা', icon: UserX, path: '/admin/blocked-attempts' },
   { title: 'পরিসংখ্যান', icon: BarChart3, path: '/admin/analytics' },
   { title: 'সেটিংস', icon: Settings, path: '/admin/settings' },
 ];
