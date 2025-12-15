@@ -116,6 +116,7 @@ export type Database = {
           created_at: string
           customer_name: string
           id: string
+          package_type: string
           phone: string
           status: string
           total_amount: number
@@ -126,6 +127,7 @@ export type Database = {
           created_at?: string
           customer_name: string
           id?: string
+          package_type?: string
           phone: string
           status?: string
           total_amount?: number
@@ -136,6 +138,7 @@ export type Database = {
           created_at?: string
           customer_name?: string
           id?: string
+          package_type?: string
           phone?: string
           status?: string
           total_amount?: number

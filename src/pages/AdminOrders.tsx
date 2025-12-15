@@ -12,9 +12,15 @@ interface Order {
   address: string;
   status: string;
   total_amount: number;
+  package_type: string;
   created_at: string;
   updated_at: string;
 }
+
+const packageLabels: Record<string, string> = {
+  regular: 'রেগুলার (৯০গ্রাম)',
+  permanent: 'পার্মানেন্ট (১৮০গ্রাম)'
+};
 
 const statusOptions = [
   { value: 'pending', label: 'পেন্ডিং', color: 'bg-yellow-500/20 text-yellow-500' },
@@ -85,8 +91,9 @@ const AdminOrders = () => {
   };
 
   const copyOrderToClipboard = async (order: Order) => {
-    // Tab-separated format for Google Sheets (Name, Phone, Address)
-    const copyText = `${order.customer_name}\t${order.phone}\t${order.address}`;
+    // Tab-separated format for Google Sheets (Name, Phone, Address, Package)
+    const packageName = packageLabels[order.package_type] || order.package_type;
+    const copyText = `${order.customer_name}\t${order.phone}\t${order.address}\t${packageName}`;
     
     try {
       await navigator.clipboard.writeText(copyText);
@@ -143,7 +150,8 @@ const AdminOrders = () => {
                   <tr className="bg-secondary/50">
                     <th className="text-left py-4 px-4 font-medium">নাম</th>
                     <th className="text-left py-4 px-4 font-medium">ফোন</th>
-                    <th className="text-left py-4 px-4 font-medium hidden md:table-cell">ঠিকানা</th>
+                    <th className="text-left py-4 px-4 font-medium hidden lg:table-cell">ঠিকানা</th>
+                    <th className="text-left py-4 px-4 font-medium">প্যাকেজ</th>
                     <th className="text-left py-4 px-4 font-medium">মূল্য</th>
                     <th className="text-left py-4 px-4 font-medium">স্ট্যাটাস</th>
                     <th className="text-left py-4 px-4 font-medium hidden sm:table-cell">তারিখ</th>
@@ -160,7 +168,12 @@ const AdminOrders = () => {
                           {order.phone}
                         </a>
                       </td>
-                      <td className="py-4 px-4 hidden md:table-cell max-w-xs truncate">{order.address}</td>
+                      <td className="py-4 px-4 hidden lg:table-cell max-w-xs truncate">{order.address}</td>
+                      <td className="py-4 px-4">
+                        <span className={`text-xs px-2 py-1 rounded-full ${order.package_type === 'permanent' ? 'bg-accent/20 text-accent' : 'bg-secondary text-foreground'}`}>
+                          {packageLabels[order.package_type] || order.package_type}
+                        </span>
+                      </td>
                       <td className="py-4 px-4">৳{order.total_amount}</td>
                       <td className="py-4 px-4">
                         <div className="relative inline-block">

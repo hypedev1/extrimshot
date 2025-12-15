@@ -15,8 +15,16 @@ export const OrderSection = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    address: ''
+    address: '',
+    packageType: 'regular' as 'regular' | 'permanent'
   });
+
+  const packages = {
+    regular: { name: 'রেগুলার কোর্স (৯০ গ্রাম)', duration: '১৫ দিনের জন্য', price: 1250, priceText: '১২৫০' },
+    permanent: { name: 'পার্মানেন্ট কোর্স (১৮০ গ্রাম)', duration: '৩০ দিনের জন্য', price: 1950, priceText: '১৯৫০' }
+  };
+
+  const selectedPackage = packages[formData.packageType];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fraudBlock, setFraudBlock] = useState<{ blocked: boolean; reason?: string; hoursRemaining?: number }>({ blocked: false });
   const incompleteOrderIdRef = useRef<string | null>(null);
@@ -33,7 +41,7 @@ export const OrderSection = () => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            trackInitiateCheckout(1250);
+            trackInitiateCheckout(selectedPackage.price);
             observer.disconnect();
           }
         });
@@ -158,7 +166,8 @@ export const OrderSection = () => {
         customer_name: formData.name.trim(),
         phone: formData.phone.trim(),
         address: formData.address.trim(),
-        total_amount: 1250,
+        total_amount: selectedPackage.price,
+        package_type: formData.packageType,
         status: 'pending'
       };
       
@@ -181,13 +190,13 @@ export const OrderSection = () => {
       try {
         await trackPurchase(
           { phone: formData.phone, name: formData.name },
-          1250,
+          selectedPackage.price,
           data.id
         );
 
         // Also track Lead event
         trackPixelEvent('Lead', {
-          value: 1250,
+          value: selectedPackage.price,
           currency: 'BDT',
         });
       } catch (trackError) {
@@ -236,20 +245,66 @@ export const OrderSection = () => {
 
         <div className="card-glass p-6 md:p-8">
           <div className="flex flex-col md:flex-row gap-8">
-            {/* Pricing */}
-            <div className="flex-1 text-center md:text-left">
-              <p className="text-muted-foreground mb-1">নিয়মিত মূল্য</p>
-              <p className="text-2xl text-muted-foreground line-through mb-4">২৫০০ টাকা</p>
-              
-              <div className="inline-block bg-red/20 text-red px-3 py-1 rounded-full text-sm font-bold mb-4">
-                ৫০% ছাড়
+            {/* Package Selection */}
+            <div className="flex-1">
+              <h3 className="text-xl font-bold mb-4 text-center md:text-left">প্যাকেজ নির্বাচন করুন</h3>
+              <div className="space-y-3">
+                {/* Regular Package */}
+                <div 
+                  onClick={() => setFormData({ ...formData, packageType: 'regular' })}
+                  className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                    formData.packageType === 'regular' 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      formData.packageType === 'regular' ? 'border-primary' : 'border-muted-foreground'
+                    }`}>
+                      {formData.packageType === 'regular' && (
+                        <div className="w-3 h-3 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold">{packages.regular.name}</p>
+                      <p className="text-sm text-muted-foreground">{packages.regular.duration}</p>
+                    </div>
+                    <p className="text-xl font-bold text-primary">{packages.regular.priceText} টাকা</p>
+                  </div>
+                </div>
+
+                {/* Permanent Package */}
+                <div 
+                  onClick={() => setFormData({ ...formData, packageType: 'permanent' })}
+                  className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                    formData.packageType === 'permanent' 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      formData.packageType === 'permanent' ? 'border-primary' : 'border-muted-foreground'
+                    }`}>
+                      {formData.packageType === 'permanent' && (
+                        <div className="w-3 h-3 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold">{packages.permanent.name}</p>
+                      <p className="text-sm text-muted-foreground">{packages.permanent.duration}</p>
+                    </div>
+                    <p className="text-xl font-bold text-primary">{packages.permanent.priceText} টাকা</p>
+                  </div>
+                  <div className="mt-2 ml-8">
+                    <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">সবচেয়ে জনপ্রিয়</span>
+                  </div>
+                </div>
               </div>
-              
-              <p className="text-muted-foreground mb-1">আজকের বিশেষ অফার মূল্য</p>
-              <p className="text-5xl font-bold text-gradient mb-4">১২৫০ টাকা</p>
-              
-              <div className="bg-accent/10 border border-accent/30 rounded-xl p-4 inline-block">
-                <p className="text-accent font-semibold">💰 আপনি সাশ্রয় করছেন ১২৫০ টাকা!</p>
+
+              <div className="mt-4 bg-accent/10 border border-accent/30 rounded-xl p-4 text-center">
+                <p className="text-accent font-semibold">💰 নির্বাচিত প্যাকেজ: {selectedPackage.priceText} টাকা</p>
               </div>
             </div>
 
