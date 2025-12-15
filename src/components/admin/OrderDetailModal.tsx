@@ -8,9 +8,15 @@ interface Order {
   address: string;
   status: string;
   total_amount: number;
+  package_type?: string;
   created_at: string;
   updated_at: string;
 }
+
+const packageLabels: Record<string, string> = {
+  regular: 'রেগুলার কোর্স (৯০ গ্রাম) - ১৫ দিন',
+  permanent: 'পার্মানেন্ট কোর্স (১৮০ গ্রাম) - ৩০ দিন'
+};
 
 interface OrderDetailModalProps {
   order: Order | null;
@@ -91,6 +97,10 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
               অর্ডার তথ্য
             </h3>
             <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">প্যাকেজ</span>
+                <span className="font-semibold">{order.package_type ? packageLabels[order.package_type] || order.package_type : 'রেগুলার'}</span>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">পণ্য মূল্য</span>
                 <span className="font-semibold">৳{order.total_amount}</span>
