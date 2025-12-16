@@ -42,6 +42,7 @@ const AdminOrders = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sendingToPathao, setSendingToPathao] = useState<string | null>(null);
   const [syncingStatus, setSyncingStatus] = useState<string | null>(null);
+  const [bulkSyncing, setBulkSyncing] = useState(false);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -154,6 +155,51 @@ const AdminOrders = () => {
     }
   };
 
+  const bulkSyncPathaoStatus = async () => {
+    const pathaoOrders = orders.filter(o => o.pathao_consignment_id && o.status !== 'delivered' && o.status !== 'cancelled');
+    
+    if (pathaoOrders.length === 0) {
+      toast({ title: 'কোনো অর্ডার নেই', description: 'সিঙ্ক করার মতো কোনো পাঠাও অর্ডার নেই' });
+      return;
+    }
+
+    setBulkSyncing(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const order of pathaoOrders) {
+      try {
+        const { data, error } = await supabase.functions.invoke('pathao-courier', {
+          body: {
+            action: 'check_status',
+            orderId: order.id,
+            consignmentId: order.pathao_consignment_id,
+          },
+        });
+
+        if (error) throw error;
+        if (data.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (err) {
+        console.error('Bulk sync error for order:', order.id, err);
+        errorCount++;
+      }
+    }
+
+    setBulkSyncing(false);
+    fetchOrders();
+    
+    toast({
+      title: 'বাল্ক সিঙ্ক সম্পন্ন',
+      description: `${successCount} টি সফল, ${errorCount} টি ব্যর্থ`,
+    });
+  };
+
+  const pathaoOrderCount = orders.filter(o => o.pathao_consignment_id && o.status !== 'delivered' && o.status !== 'cancelled').length;
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -208,6 +254,21 @@ const AdminOrders = () => {
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </select>
+          {pathaoOrderCount > 0 && (
+            <button
+              onClick={bulkSyncPathaoStatus}
+              disabled={bulkSyncing}
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {bulkSyncing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">পাঠাও সিঙ্ক ({pathaoOrderCount})</span>
+              <span className="sm:hidden">সিঙ্ক</span>
+            </button>
+          )}
         </div>
 
         {loading ? (
