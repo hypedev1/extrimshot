@@ -24,6 +24,9 @@ interface OrderData {
   address: string;
   total_amount: number;
   package_type: string;
+  pathao_city_id?: number;
+  pathao_zone_id?: number;
+  pathao_area_id?: number;
 }
 
 // Get Pathao access token
@@ -68,6 +71,28 @@ async function createPathaoOrder(token: string, order: OrderData, sandbox: boole
   // Calculate weight based on package type
   const weight = order.package_type === 'permanent' ? 0.2 : 0.1; // 180g or 90g
   
+  const orderBody: Record<string, any> = {
+    store_id: storeId,
+    merchant_order_id: order.id,
+    recipient_name: order.customer_name,
+    recipient_phone: order.phone,
+    recipient_address: order.address,
+    recipient_city: order.pathao_city_id || 1,
+    recipient_zone: order.pathao_zone_id || 1,
+    delivery_type: 48, // Normal delivery
+    item_type: 2, // Parcel
+    special_instruction: `Package: ${order.package_type === 'permanent' ? 'পার্মানেন্ট (১৮০গ্রাম)' : 'রেগুলার (৯০গ্রাম)'}`,
+    item_quantity: 1,
+    item_weight: weight,
+    amount_to_collect: order.total_amount,
+    item_description: `Nobosokti - ${order.package_type === 'permanent' ? 'Permanent Course (180g)' : 'Regular Course (90g)'}`,
+  };
+
+  // Add area if provided
+  if (order.pathao_area_id) {
+    orderBody.recipient_area = order.pathao_area_id;
+  }
+
   const response = await fetch(`${baseUrl}/aladdin/api/v1/orders`, {
     method: 'POST',
     headers: {
@@ -75,22 +100,7 @@ async function createPathaoOrder(token: string, order: OrderData, sandbox: boole
       'Accept': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      store_id: storeId,
-      merchant_order_id: order.id,
-      recipient_name: order.customer_name,
-      recipient_phone: order.phone,
-      recipient_address: order.address,
-      recipient_city: 1, // Default to Dhaka, can be updated based on address parsing
-      recipient_zone: 1, // Default zone
-      delivery_type: 48, // Normal delivery
-      item_type: 2, // Parcel
-      special_instruction: `Package: ${order.package_type === 'permanent' ? 'পার্মানেন্ট (১৮০গ্রাম)' : 'রেগুলার (৯০গ্রাম)'}`,
-      item_quantity: 1,
-      item_weight: weight,
-      amount_to_collect: order.total_amount,
-      item_description: `Nobosokti - ${order.package_type === 'permanent' ? 'Permanent Course (180g)' : 'Regular Course (90g)'}`,
-    }),
+    body: JSON.stringify(orderBody),
   });
 
   if (!response.ok) {
@@ -120,6 +130,26 @@ async function getPathaoOrderStatus(token: string, consignmentId: string, sandbo
     const errorText = await response.text();
     console.error('Pathao status check error:', errorText);
     throw new Error(`Failed to get Pathao order status: ${errorText}`);
+  }
+
+  return await response.json();
+}
+
+// Get areas for a zone
+async function getPathaoAreas(token: string, zoneId: number, sandbox: boolean = false) {
+  const baseUrl = sandbox ? PATHAO_SANDBOX_URL : PATHAO_BASE_URL;
+  
+  const response = await fetch(`${baseUrl}/aladdin/api/v1/zones/${zoneId}/area-list`, {
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Pathao areas error:', errorText);
+    throw new Error(`Failed to get Pathao areas: ${errorText}`);
   }
 
   return await response.json();
@@ -158,7 +188,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, orderId, consignmentId } = await req.json();
+    const body = await req.json();
+    const { action, orderId, consignmentId, cityId, zoneId } = body;
     const sandbox = Deno.env.get('PATHAO_SANDBOX') === 'true';
 
     console.log(`Pathao action: ${action}, orderId: ${orderId}, sandbox: ${sandbox}`);
@@ -180,13 +211,20 @@ serve(async (req) => {
 
       // Create order in Pathao
       const pathaoResponse = await createPathaoOrder(token, order, sandbox);
+      const consignment_id = pathaoResponse.data?.consignment_id;
 
-      // Store Pathao consignment_id in order (we'll add this column later if needed)
-      console.log('Pathao consignment_id:', pathaoResponse.data?.consignment_id);
+      // Save consignment_id to order
+      if (consignment_id) {
+        await supabase
+          .from('orders')
+          .update({ pathao_consignment_id: consignment_id })
+          .eq('id', orderId);
+        console.log('Saved Pathao consignment_id:', consignment_id);
+      }
 
       return new Response(JSON.stringify({
         success: true,
-        consignment_id: pathaoResponse.data?.consignment_id,
+        consignment_id,
         message: 'Order created in Pathao successfully',
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -220,7 +258,8 @@ serve(async (req) => {
       });
 
     } else if (action === 'get_cities') {
-      const response = await fetch(`${sandbox ? PATHAO_SANDBOX_URL : PATHAO_BASE_URL}/aladdin/api/v1/city-list`, {
+      const baseUrl = sandbox ? PATHAO_SANDBOX_URL : PATHAO_BASE_URL;
+      const response = await fetch(`${baseUrl}/aladdin/api/v1/city-list`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -233,8 +272,11 @@ serve(async (req) => {
       });
 
     } else if (action === 'get_zones') {
-      const { cityId } = await req.json();
-      const response = await fetch(`${sandbox ? PATHAO_SANDBOX_URL : PATHAO_BASE_URL}/aladdin/api/v1/city/${cityId}/zone-list`, {
+      if (!cityId) {
+        throw new Error('City ID is required');
+      }
+      const baseUrl = sandbox ? PATHAO_SANDBOX_URL : PATHAO_BASE_URL;
+      const response = await fetch(`${baseUrl}/aladdin/api/v1/cities/${cityId}/zone-list`, {
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -242,6 +284,15 @@ serve(async (req) => {
       });
       
       const data = await response.json();
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
+    } else if (action === 'get_areas') {
+      if (!zoneId) {
+        throw new Error('Zone ID is required');
+      }
+      const data = await getPathaoAreas(token, zoneId, sandbox);
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

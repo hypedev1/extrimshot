@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,10 @@ interface Order {
   package_type: string;
   created_at: string;
   updated_at: string;
+  pathao_consignment_id: string | null;
+  pathao_city_id: number | null;
+  pathao_zone_id: number | null;
+  pathao_area_id: number | null;
 }
 
 const packageLabels: Record<string, string> = {
@@ -230,18 +234,25 @@ const AdminOrders = () => {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => sendToPathao(order)}
-                            disabled={sendingToPathao === order.id}
-                            className="p-2 hover:bg-orange-500/20 rounded-lg transition-colors text-orange-500 disabled:opacity-50"
-                            title="পাঠাও-তে পাঠান"
-                          >
-                            {sendingToPathao === order.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Truck className="w-4 h-4" />
-                            )}
-                          </button>
+                          {order.pathao_consignment_id ? (
+                            <div className="flex items-center gap-1 text-green-500" title={`Pathao ID: ${order.pathao_consignment_id}`}>
+                              <CheckCircle className="w-4 h-4" />
+                              <span className="text-xs hidden md:inline">{order.pathao_consignment_id}</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => sendToPathao(order)}
+                              disabled={sendingToPathao === order.id}
+                              className="p-2 hover:bg-orange-500/20 rounded-lg transition-colors text-orange-500 disabled:opacity-50"
+                              title="পাঠাও-তে পাঠান"
+                            >
+                              {sendingToPathao === order.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Truck className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
                           <button
                             onClick={() => copyOrderToClipboard(order)}
                             className="p-2 hover:bg-secondary rounded-lg transition-colors text-primary"
