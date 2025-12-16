@@ -190,7 +190,8 @@ const AdminOrders = () => {
                         </div>
                       </td>
                       <td className="py-4 px-4 text-muted-foreground text-sm hidden sm:table-cell">
-                        {new Date(order.created_at).toLocaleDateString('bn-BD')}
+                        <div>{new Date(order.created_at).toLocaleDateString('bn-BD')}</div>
+                        <div className="text-xs">{new Date(order.created_at).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1">
