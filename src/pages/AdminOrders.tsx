@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle, RefreshCw } from 'lucide-react';
+import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle, RefreshCw, Plus } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
+import { CreateOrderModal } from '@/components/admin/CreateOrderModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,6 +41,7 @@ const AdminOrders = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [sendingToPathao, setSendingToPathao] = useState<string | null>(null);
   const [syncingStatus, setSyncingStatus] = useState<string | null>(null);
   const [bulkSyncing, setBulkSyncing] = useState(false);
@@ -228,9 +230,18 @@ const AdminOrders = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">অর্ডার সমূহ</h1>
-          <p className="text-muted-foreground text-sm lg:text-base">সকল অর্ডার দেখুন এবং ম্যানেজ করুন</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold">অর্ডার সমূহ</h1>
+            <p className="text-muted-foreground text-sm lg:text-base">সকল অর্ডার দেখুন এবং ম্যানেজ করুন</p>
+          </div>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">নতুন অর্ডার</span>
+          </button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
@@ -401,6 +412,12 @@ const AdminOrders = () => {
           setSelectedOrder(null);
         }}
         onStatusChange={updateStatus}
+      />
+
+      <CreateOrderModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onOrderCreated={fetchOrders}
       />
     </AdminLayout>
   );
