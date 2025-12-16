@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Phone, User, MapPin, Clock, Trash2 } from 'lucide-react';
+import { Search, Phone, User, MapPin, Clock, Trash2, Truck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
 
 interface IncompleteOrder {
   id: string;
@@ -18,6 +19,7 @@ const AdminIncompleteOrders = () => {
   const [orders, setOrders] = useState<IncompleteOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<IncompleteOrder | null>(null);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -160,9 +162,16 @@ const AdminIncompleteOrders = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="btn-primary px-4 py-2 text-sm flex items-center gap-2"
+                    >
+                      <Truck className="w-4 h-4" />
+                      অর্ডার তৈরি
+                    </button>
                     <a
                       href={`tel:${order.phone}`}
-                      className="btn-primary px-4 py-2 text-sm"
+                      className="px-4 py-2 text-sm bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
                     >
                       কল করুন
                     </a>
@@ -179,6 +188,13 @@ const AdminIncompleteOrders = () => {
             ))}
           </div>
         )}
+
+        <IncompleteOrderModal
+          order={selectedOrder}
+          isOpen={!!selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onOrderCreated={fetchOrders}
+        />
       </div>
     </AdminLayout>
   );
