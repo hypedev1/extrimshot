@@ -1,1 +1,7 @@
 project_id = "qsxqfhgdmlbtbrslowlq"
+
+[functions.fb-capi]
+verify_jwt = false
+
+[functions.pathao-courier]
+verify_jwt = false

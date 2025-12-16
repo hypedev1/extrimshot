@@ -1,5 +1,8 @@
-import { X, Phone, MapPin, Calendar, Package, User } from 'lucide-react';
+import { X, Phone, MapPin, Calendar, Package, User, Truck, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Order {
   id: string;
@@ -33,10 +36,47 @@ const statusOptions = [
 ];
 
 export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: OrderDetailModalProps) => {
+  const [sendingToPathao, setSendingToPathao] = useState(false);
+  const { toast } = useToast();
+
   if (!isOpen || !order) return null;
 
   const getStatusStyle = (status: string) => {
     return statusOptions.find(s => s.value === status)?.color || 'bg-gray-500/20 text-gray-500';
+  };
+
+  const sendToPathao = async () => {
+    setSendingToPathao(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pathao-courier', {
+        body: {
+          action: 'create_order',
+          orderId: order.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: 'সফল!',
+          description: `পাঠাও-তে অর্ডার তৈরি হয়েছে। Consignment ID: ${data.consignment_id}`,
+        });
+        // Update order status to confirmed
+        onStatusChange(order.id, 'confirmed');
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error: any) {
+      console.error('Pathao error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি',
+        description: error.message || 'পাঠাও-তে অর্ডার পাঠাতে সমস্যা হয়েছে',
+      });
+    } finally {
+      setSendingToPathao(false);
+    }
   };
 
   return (
@@ -120,6 +160,31 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4" />
             <span>অর্ডার করা হয়েছে: {new Date(order.created_at).toLocaleString('bn-BD')}</span>
+          </div>
+
+          {/* Pathao Integration */}
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Truck className="w-4 h-4" />
+              কুরিয়ার
+            </h3>
+            <button
+              onClick={sendToPathao}
+              disabled={sendingToPathao}
+              className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {sendingToPathao ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  পাঠানো হচ্ছে...
+                </>
+              ) : (
+                <>
+                  <Truck className="w-5 h-5" />
+                  পাঠাও-তে পাঠান
+                </>
+              )}
+            </button>
           </div>
 
           {/* Status Update */}
