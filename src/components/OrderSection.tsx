@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, CreditCard, Lock, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { trackInitiateCheckout, trackPurchase, trackPixelEvent } from '@/lib/fbPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
+import { PathaoLocationSelector } from './PathaoLocationSelector';
 
 export const OrderSection = () => {
   const navigate = useNavigate();
@@ -18,6 +19,11 @@ export const OrderSection = () => {
     address: '',
     packageType: 'regular' as 'regular' | 'permanent'
   });
+  const [pathaoLocation, setPathaoLocation] = useState<{
+    cityId: number | null;
+    zoneId: number | null;
+    areaId: number | null;
+  }>({ cityId: null, zoneId: null, areaId: null });
 
   const packages = {
     regular: { name: 'রেগুলার কোর্স (৯০ গ্রাম)', duration: '১৫ দিনের জন্য', price: 1250, priceText: '১২৫০' },
@@ -29,6 +35,10 @@ export const OrderSection = () => {
   const [fraudBlock, setFraudBlock] = useState<{ blocked: boolean; reason?: string; hoursRemaining?: number }>({ blocked: false });
   const incompleteOrderIdRef = useRef<string | null>(null);
   const phoneTrackedRef = useRef<string | null>(null);
+
+  const handleLocationChange = useCallback((location: { cityId: number | null; zoneId: number | null; areaId: number | null }) => {
+    setPathaoLocation(location);
+  }, []);
 
   // Get client IP on mount
   useEffect(() => {
@@ -168,7 +178,10 @@ export const OrderSection = () => {
         address: formData.address.trim(),
         total_amount: selectedPackage.price,
         package_type: formData.packageType,
-        status: 'pending'
+        status: 'pending',
+        pathao_city_id: pathaoLocation.cityId,
+        pathao_zone_id: pathaoLocation.zoneId,
+        pathao_area_id: pathaoLocation.areaId,
       };
       
       console.log('Order data:', orderData);
@@ -354,15 +367,20 @@ export const OrderSection = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">ডেলিভারি ঠিকানা *</label>
+                  <label className="block text-sm font-medium mb-2">ডেলিভারি এলাকা *</label>
+                  <PathaoLocationSelector onLocationChange={handleLocationChange} />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">বিস্তারিত ঠিকানা *</label>
                   <textarea
                     required
                     value={formData.address}
                     onChange={e => setFormData({ ...formData, address: e.target.value })}
                     onBlur={updateIncompleteOrder}
                     className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                    rows={3}
-                    placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন"
+                    rows={2}
+                    placeholder="বাড়ি/ফ্ল্যাট নং, রাস্তার নাম"
                   />
                 </div>
 
@@ -373,7 +391,7 @@ export const OrderSection = () => {
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || isFingerprintLoading || fraudBlock.blocked}
+                  disabled={isSubmitting || isFingerprintLoading || fraudBlock.blocked || !pathaoLocation.cityId || !pathaoLocation.zoneId}
                   className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'প্রসেস হচ্ছে...' : isFingerprintLoading ? 'লোড হচ্ছে...' : 'অর্ডার কনফার্ম করুন'}

@@ -117,6 +117,10 @@ export type Database = {
           customer_name: string
           id: string
           package_type: string
+          pathao_area_id: number | null
+          pathao_city_id: number | null
+          pathao_consignment_id: string | null
+          pathao_zone_id: number | null
           phone: string
           status: string
           total_amount: number
@@ -128,6 +132,10 @@ export type Database = {
           customer_name: string
           id?: string
           package_type?: string
+          pathao_area_id?: number | null
+          pathao_city_id?: number | null
+          pathao_consignment_id?: string | null
+          pathao_zone_id?: number | null
           phone: string
           status?: string
           total_amount?: number
@@ -139,6 +147,10 @@ export type Database = {
           customer_name?: string
           id?: string
           package_type?: string
+          pathao_area_id?: number | null
+          pathao_city_id?: number | null
+          pathao_consignment_id?: string | null
+          pathao_zone_id?: number | null
           phone?: string
           status?: string
           total_amount?: number
