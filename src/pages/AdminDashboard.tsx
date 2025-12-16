@@ -29,9 +29,7 @@ const AdminDashboard = () => {
     if (orders) {
       const pending = orders.filter(o => o.status === 'pending').length;
       const confirmed = orders.filter(o => o.status === 'confirmed' || o.status === 'delivered').length;
-      const totalSales = orders
-        .filter(o => o.status === 'confirmed' || o.status === 'delivered')
-        .reduce((sum, o) => sum + o.total_amount, 0);
+      const totalSales = orders.reduce((sum, o) => sum + o.total_amount, 0);
 
       setStats({
         totalOrders: orders.length,
