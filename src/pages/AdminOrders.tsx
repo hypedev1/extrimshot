@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle } from 'lucide-react';
+import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle, RefreshCw } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +41,7 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sendingToPathao, setSendingToPathao] = useState<string | null>(null);
+  const [syncingStatus, setSyncingStatus] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -114,6 +115,42 @@ const AdminOrders = () => {
       });
     } finally {
       setSendingToPathao(null);
+    }
+  };
+
+  const syncPathaoStatus = async (order: Order) => {
+    if (!order.pathao_consignment_id) return;
+    
+    setSyncingStatus(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('pathao-courier', {
+        body: {
+          action: 'check_status',
+          orderId: order.id,
+          consignmentId: order.pathao_consignment_id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: 'স্ট্যাটাস আপডেট হয়েছে',
+          description: `পাঠাও স্ট্যাটাস: ${data.pathao_status}`,
+        });
+        fetchOrders();
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error: any) {
+      console.error('Pathao sync error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি',
+        description: error.message || 'স্ট্যাটাস সিঙ্ক করতে সমস্যা হয়েছে',
+      });
+    } finally {
+      setSyncingStatus(null);
     }
   };
 
@@ -235,9 +272,23 @@ const AdminOrders = () => {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1">
                           {order.pathao_consignment_id ? (
-                            <div className="flex items-center gap-1 text-green-500" title={`Pathao ID: ${order.pathao_consignment_id}`}>
-                              <CheckCircle className="w-4 h-4" />
-                              <span className="text-xs hidden md:inline">{order.pathao_consignment_id}</span>
+                            <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 text-green-500" title={`Pathao ID: ${order.pathao_consignment_id}`}>
+                                <CheckCircle className="w-4 h-4" />
+                                <span className="text-xs hidden md:inline">{order.pathao_consignment_id}</span>
+                              </div>
+                              <button
+                                onClick={() => syncPathaoStatus(order)}
+                                disabled={syncingStatus === order.id}
+                                className="p-1 hover:bg-blue-500/20 rounded transition-colors text-blue-500 disabled:opacity-50"
+                                title="পাঠাও স্ট্যাটাস সিঙ্ক করুন"
+                              >
+                                {syncingStatus === order.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="w-3 h-3" />
+                                )}
+                              </button>
                             </div>
                           ) : (
                             <button
