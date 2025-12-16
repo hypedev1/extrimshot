@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, ChevronDown, Eye, Phone, Copy } from 'lucide-react';
+import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +36,7 @@ const AdminOrders = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sendingToPathao, setSendingToPathao] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchOrders = async () => {
@@ -75,6 +76,40 @@ const AdminOrders = () => {
       toast({ variant: 'destructive', title: 'ত্রুটি', description: error.message });
     } else {
       toast({ title: 'সফল', description: 'অর্ডার স্ট্যাটাস আপডেট হয়েছে' });
+    }
+  };
+
+  const sendToPathao = async (order: Order) => {
+    setSendingToPathao(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('pathao-courier', {
+        body: {
+          action: 'create_order',
+          orderId: order.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: 'সফল!',
+          description: `পাঠাও-তে অর্ডার তৈরি হয়েছে`,
+        });
+        // Update order status to confirmed
+        await updateStatus(order.id, 'confirmed');
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error: any) {
+      console.error('Pathao error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি',
+        description: error.message || 'পাঠাও-তে অর্ডার পাঠাতে সমস্যা হয়েছে',
+      });
+    } finally {
+      setSendingToPathao(null);
     }
   };
 
@@ -195,6 +230,18 @@ const AdminOrders = () => {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => sendToPathao(order)}
+                            disabled={sendingToPathao === order.id}
+                            className="p-2 hover:bg-orange-500/20 rounded-lg transition-colors text-orange-500 disabled:opacity-50"
+                            title="পাঠাও-তে পাঠান"
+                          >
+                            {sendingToPathao === order.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Truck className="w-4 h-4" />
+                            )}
+                          </button>
                           <button
                             onClick={() => copyOrderToClipboard(order)}
                             className="p-2 hover:bg-secondary rounded-lg transition-colors text-primary"
