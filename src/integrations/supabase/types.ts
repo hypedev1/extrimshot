@@ -116,6 +116,7 @@ export type Database = {
           created_at: string
           customer_name: string
           id: string
+          notes: string | null
           package_type: string
           pathao_area_id: number | null
           pathao_city_id: number | null
@@ -131,6 +132,7 @@ export type Database = {
           created_at?: string
           customer_name: string
           id?: string
+          notes?: string | null
           package_type?: string
           pathao_area_id?: number | null
           pathao_city_id?: number | null
@@ -146,6 +148,7 @@ export type Database = {
           created_at?: string
           customer_name?: string
           id?: string
+          notes?: string | null
           package_type?: string
           pathao_area_id?: number | null
           pathao_city_id?: number | null

@@ -1,9 +1,10 @@
-import { X, Phone, MapPin, Calendar, Package, User, Truck, Loader2, Save, CheckCircle } from 'lucide-react';
+import { X, Phone, MapPin, Calendar, Package, User, Truck, Loader2, Save, CheckCircle, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { PathaoLocationSelector } from '../PathaoLocationSelector';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Order {
   id: string;
@@ -19,6 +20,7 @@ interface Order {
   pathao_city_id?: number | null;
   pathao_zone_id?: number | null;
   pathao_area_id?: number | null;
+  notes?: string | null;
 }
 
 const packageLabels: Record<string, string> = {
@@ -49,9 +51,11 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
     areaId: number | null;
   }>({ cityId: null, zoneId: null, areaId: null });
   const [locationSaved, setLocationSaved] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
   const { toast } = useToast();
 
-  // Reset location state when order changes
+  // Reset state when order changes
   useEffect(() => {
     if (order) {
       setPathaoLocation({
@@ -60,6 +64,7 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
         areaId: order.pathao_area_id || null,
       });
       setLocationSaved(false);
+      setNotes(order.notes || '');
     }
   }, [order?.id]);
 
@@ -67,6 +72,33 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
     setPathaoLocation(location);
     setLocationSaved(false);
   }, []);
+
+  const saveNotes = async () => {
+    if (!order) return;
+    setSavingNotes(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ notes })
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'সফল!',
+        description: 'নোট সেভ হয়েছে',
+      });
+    } catch (error: any) {
+      console.error('Save notes error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি',
+        description: error.message || 'নোট সেভ করতে সমস্যা হয়েছে',
+      });
+    } finally {
+      setSavingNotes(false);
+    }
+  };
 
   if (!isOpen || !order) return null;
 
@@ -321,6 +353,39 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
                 )}
               </>
             )}
+          </div>
+
+          {/* Admin Notes */}
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              অ্যাডমিন নোট
+            </h3>
+            <div className="space-y-2">
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="অর্ডার সম্পর্কে নোট লিখুন..."
+                className="min-h-[80px] resize-none"
+              />
+              <button
+                onClick={saveNotes}
+                disabled={savingNotes}
+                className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingNotes ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    সেভ হচ্ছে...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    নোট সেভ করুন
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Status Update */}
