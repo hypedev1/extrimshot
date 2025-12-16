@@ -1,8 +1,9 @@
-import { X, Phone, MapPin, Calendar, Package, User, Truck, Loader2 } from 'lucide-react';
+import { X, Phone, MapPin, Calendar, Package, User, Truck, Loader2, Save, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { PathaoLocationSelector } from '../PathaoLocationSelector';
 
 interface Order {
   id: string;
@@ -14,6 +15,10 @@ interface Order {
   package_type?: string;
   created_at: string;
   updated_at: string;
+  pathao_consignment_id?: string | null;
+  pathao_city_id?: number | null;
+  pathao_zone_id?: number | null;
+  pathao_area_id?: number | null;
 }
 
 const packageLabels: Record<string, string> = {
@@ -37,7 +42,31 @@ const statusOptions = [
 
 export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: OrderDetailModalProps) => {
   const [sendingToPathao, setSendingToPathao] = useState(false);
+  const [savingLocation, setSavingLocation] = useState(false);
+  const [pathaoLocation, setPathaoLocation] = useState<{
+    cityId: number | null;
+    zoneId: number | null;
+    areaId: number | null;
+  }>({ cityId: null, zoneId: null, areaId: null });
+  const [locationSaved, setLocationSaved] = useState(false);
   const { toast } = useToast();
+
+  // Reset location state when order changes
+  useEffect(() => {
+    if (order) {
+      setPathaoLocation({
+        cityId: order.pathao_city_id || null,
+        zoneId: order.pathao_zone_id || null,
+        areaId: order.pathao_area_id || null,
+      });
+      setLocationSaved(false);
+    }
+  }, [order?.id]);
+
+  const handleLocationChange = useCallback((location: { cityId: number | null; zoneId: number | null; areaId: number | null }) => {
+    setPathaoLocation(location);
+    setLocationSaved(false);
+  }, []);
 
   if (!isOpen || !order) return null;
 
@@ -45,7 +74,62 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
     return statusOptions.find(s => s.value === status)?.color || 'bg-gray-500/20 text-gray-500';
   };
 
+  const saveLocation = async () => {
+    if (!pathaoLocation.cityId || !pathaoLocation.zoneId) {
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি',
+        description: 'শহর এবং জোন নির্বাচন করুন',
+      });
+      return;
+    }
+
+    setSavingLocation(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          pathao_city_id: pathaoLocation.cityId,
+          pathao_zone_id: pathaoLocation.zoneId,
+          pathao_area_id: pathaoLocation.areaId,
+        })
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      setLocationSaved(true);
+      toast({
+        title: 'সফল!',
+        description: 'লোকেশন সেভ হয়েছে',
+      });
+    } catch (error: any) {
+      console.error('Save location error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি',
+        description: error.message || 'লোকেশন সেভ করতে সমস্যা হয়েছে',
+      });
+    } finally {
+      setSavingLocation(false);
+    }
+  };
+
   const sendToPathao = async () => {
+    // Check if location is set
+    if (!pathaoLocation.cityId || !pathaoLocation.zoneId) {
+      toast({
+        variant: 'destructive',
+        title: 'ত্রুটি',
+        description: 'প্রথমে শহর এবং জোন নির্বাচন করুন',
+      });
+      return;
+    }
+
+    // Save location first if not saved
+    if (!locationSaved && !order.pathao_city_id) {
+      await saveLocation();
+    }
+
     setSendingToPathao(true);
     try {
       const { data, error } = await supabase.functions.invoke('pathao-courier', {
@@ -64,6 +148,7 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
         });
         // Update order status to confirmed
         onStatusChange(order.id, 'confirmed');
+        onClose();
       } else {
         throw new Error(data.error || 'Unknown error');
       }
@@ -79,13 +164,16 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
     }
   };
 
+  const hasLocation = pathaoLocation.cityId && pathaoLocation.zoneId;
+  const isAlreadySentToPathao = !!order.pathao_consignment_id;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       
       <div className="relative bg-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold">অর্ডার বিস্তারিত</h2>
           <button
             onClick={onClose}
@@ -163,28 +251,76 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
           </div>
 
           {/* Pathao Integration */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Truck className="w-4 h-4" />
-              কুরিয়ার
+              কুরিয়ার (পাঠাও)
             </h3>
-            <button
-              onClick={sendToPathao}
-              disabled={sendingToPathao}
-              className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {sendingToPathao ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  পাঠানো হচ্ছে...
-                </>
-              ) : (
-                <>
-                  <Truck className="w-5 h-5" />
-                  পাঠাও-তে পাঠান
-                </>
-              )}
-            </button>
+            
+            {isAlreadySentToPathao ? (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-green-500">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="font-medium">পাঠাও-তে পাঠানো হয়েছে</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Consignment ID: <span className="font-mono">{order.pathao_consignment_id}</span>
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="bg-secondary/50 rounded-xl p-4 space-y-4">
+                  <p className="text-sm text-muted-foreground">ডেলিভারি লোকেশন নির্বাচন করুন:</p>
+                  <PathaoLocationSelector onLocationChange={handleLocationChange} />
+                  
+                  <button
+                    onClick={saveLocation}
+                    disabled={savingLocation || !hasLocation}
+                    className="w-full py-2 px-4 bg-secondary hover:bg-secondary/80 border border-border rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {savingLocation ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        সেভ হচ্ছে...
+                      </>
+                    ) : locationSaved ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        লোকেশন সেভ হয়েছে
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        লোকেশন সেভ করুন
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <button
+                  onClick={sendToPathao}
+                  disabled={sendingToPathao || !hasLocation}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {sendingToPathao ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      পাঠানো হচ্ছে...
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="w-5 h-5" />
+                      পাঠাও-তে পাঠান
+                    </>
+                  )}
+                </button>
+                {!hasLocation && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    * পাঠাও-তে পাঠাতে শহর এবং জোন নির্বাচন আবশ্যক
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           {/* Status Update */}
