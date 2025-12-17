@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, CreditCard, Lock, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -7,35 +7,61 @@ import { trackInitiateCheckout, trackPurchase, trackPixelEvent } from '@/lib/fbP
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
 
-export const OrderSection = () => {
+interface OrderPackage {
+  id: string;
+  name: string;
+  quantity: string;
+  price: number;
+  originalPrice: number;
+  popular?: boolean;
+  savings?: string;
+}
+
+interface OrderContent {
+  title: string;
+  subtitle: string;
+  packages: OrderPackage[];
+}
+
+interface OrderSectionProps {
+  content?: OrderContent;
+}
+
+export const OrderSection = ({ content }: OrderSectionProps) => {
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { deviceInfo, isLoading: isFingerprintLoading } = useDeviceFingerprint();
   const [clientIP, setClientIP] = useState<string | null>(null);
+
+  const defaultContent: OrderContent = {
+    title: 'আজই অর্ডার করুন',
+    subtitle: 'সীমিত সময়ের জন্য বিশেষ অফার',
+    packages: [
+      { id: 'regular', name: 'রেগুলার কোর্স (৯০ গ্রাম)', quantity: '১৫ দিনের জন্য', price: 1250, originalPrice: 2500, savings: '৫০% সেভ' },
+      { id: 'permanent', name: 'পার্মানেন্ট কোর্স (১৮০ গ্রাম)', quantity: '৩০ দিনের জন্য', price: 1950, originalPrice: 3900, popular: true, savings: '৫০% সেভ' }
+    ]
+  };
+
+  const data = content || defaultContent;
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     address: '',
-    packageType: 'regular' as 'regular' | 'permanent'
+    packageType: data.packages.find(p => p.popular)?.id || data.packages[0]?.id || 'regular'
   });
 
-  const packages = {
-    regular: { name: 'রেগুলার কোর্স (৯০ গ্রাম)', duration: '১৫ দিনের জন্য', price: 1250, priceText: '১২৫০' },
-    permanent: { name: 'পার্মানেন্ট কোর্স (১৮০ গ্রাম)', duration: '৩০ দিনের জন্য', price: 1950, priceText: '১৯৫০' }
-  };
-
-  const selectedPackage = packages[formData.packageType];
+  const selectedPackage = data.packages.find(p => p.id === formData.packageType) || data.packages[0];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fraudBlock, setFraudBlock] = useState<{ blocked: boolean; reason?: string; hoursRemaining?: number }>({ blocked: false });
   const incompleteOrderIdRef = useRef<string | null>(null);
   const phoneTrackedRef = useRef<string | null>(null);
 
-  // Get client IP on mount
   useEffect(() => {
     getClientIP().then(setClientIP);
   }, []);
 
-  // Track InitiateCheckout when user scrolls to order section
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -55,7 +81,6 @@ export const OrderSection = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Track incomplete order when phone number is entered
   const handlePhoneBlur = async () => {
     const phone = formData.phone.trim();
     if (phone.length >= 10 && phone !== phoneTrackedRef.current) {
@@ -83,7 +108,6 @@ export const OrderSection = () => {
     }
   };
 
-  // Update incomplete order when other fields change
   const updateIncompleteOrder = async () => {
     if (incompleteOrderIdRef.current) {
       try {
@@ -105,9 +129,6 @@ export const OrderSection = () => {
     setIsSubmitting(true);
     setFraudBlock({ blocked: false });
 
-    console.log('Submitting order...', formData);
-
-    // Fraud prevention check - MUST have device info
     if (!deviceInfo) {
       toast({
         variant: 'destructive',
@@ -125,7 +146,6 @@ export const OrderSection = () => {
     );
 
     if (!fraudCheck.allowed) {
-      // Record the blocked attempt for admin review
       await recordBlockedAttempt(
         { name: formData.name.trim(), phone: formData.phone.trim(), address: formData.address.trim() },
         deviceInfo,
@@ -148,11 +168,9 @@ export const OrderSection = () => {
     }
 
     try {
-      // Record fingerprint FIRST before creating order to prevent race conditions
       const fingerprintRecorded = await recordOrderFingerprint(deviceInfo, formData.phone.trim(), clientIP);
       
       if (!fingerprintRecorded) {
-        console.error('Failed to record fingerprint, blocking order');
         toast({
           variant: 'destructive',
           title: 'ত্রুটি হয়েছে',
@@ -162,56 +180,45 @@ export const OrderSection = () => {
         return;
       }
 
+      const productName = slug || 'powerbooster';
       const orderData = {
         customer_name: formData.name.trim(),
         phone: formData.phone.trim(),
         address: formData.address.trim(),
         total_amount: selectedPackage.price,
-        package_type: formData.packageType,
+        package_type: `${productName}-${formData.packageType}`,
         status: 'pending',
       };
       
-      console.log('Order data:', orderData);
-      
-      const { data, error } = await supabase
+      const { data: orderResult, error } = await supabase
         .from('orders')
         .insert(orderData)
         .select()
         .single();
 
-      console.log('Supabase response:', { data, error });
+      if (error) throw error;
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      // Track Purchase event on both browser and server
       try {
         await trackPurchase(
           { phone: formData.phone, name: formData.name },
           selectedPackage.price,
-          data.id
+          orderResult.id
         );
 
-        // Also track Lead event
         trackPixelEvent('Lead', {
           value: selectedPackage.price,
           currency: 'BDT',
         });
       } catch (trackError) {
         console.error('Tracking error:', trackError);
-        // Don't block navigation on tracking errors
       }
 
-      // Remove from incomplete orders after successful order
       if (incompleteOrderIdRef.current) {
         await supabase
           .from('incomplete_orders')
           .delete()
           .eq('id', incompleteOrderIdRef.current);
       } else if (formData.phone.trim()) {
-        // Also try to delete by phone number
         await supabase
           .from('incomplete_orders')
           .delete()
@@ -239,8 +246,9 @@ export const OrderSection = () => {
             <span className="font-semibold">স্পেশাল অফার – শুধুমাত্র আজকের জন্য!</span>
           </div>
           <h2 className="text-2xl md:text-4xl font-bold mb-2">
-            আজকের স্পেশাল অফার – স্টক সীমিত!
+            {data.title}
           </h2>
+          <p className="text-muted-foreground">{data.subtitle}</p>
         </div>
 
         <div className="card-glass p-6 md:p-8">
@@ -249,62 +257,47 @@ export const OrderSection = () => {
             <div className="flex-1">
               <h3 className="text-xl font-bold mb-4 text-center md:text-left">প্যাকেজ নির্বাচন করুন</h3>
               <div className="space-y-3">
-                {/* Regular Package */}
-                <div 
-                  onClick={() => setFormData({ ...formData, packageType: 'regular' })}
-                  className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
-                    formData.packageType === 'regular' 
-                      ? 'border-primary bg-primary/10' 
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      formData.packageType === 'regular' ? 'border-primary' : 'border-muted-foreground'
-                    }`}>
-                      {formData.packageType === 'regular' && (
-                        <div className="w-3 h-3 rounded-full bg-primary" />
-                      )}
+                {data.packages.map((pkg) => (
+                  <div 
+                    key={pkg.id}
+                    onClick={() => setFormData({ ...formData, packageType: pkg.id })}
+                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                      formData.packageType === pkg.id 
+                        ? 'border-primary bg-primary/10' 
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        formData.packageType === pkg.id ? 'border-primary' : 'border-muted-foreground'
+                      }`}>
+                        {formData.packageType === pkg.id && (
+                          <div className="w-3 h-3 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">{pkg.name}</p>
+                        <p className="text-sm text-muted-foreground">{pkg.quantity}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-primary">৳{pkg.price}</p>
+                        <p className="text-sm line-through text-muted-foreground">৳{pkg.originalPrice}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-semibold">{packages.regular.name}</p>
-                      <p className="text-sm text-muted-foreground">{packages.regular.duration}</p>
-                    </div>
-                    <p className="text-xl font-bold text-primary">{packages.regular.priceText} টাকা</p>
+                    {pkg.popular && (
+                      <div className="mt-2 ml-8">
+                        <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">সবচেয়ে জনপ্রিয়</span>
+                      </div>
+                    )}
+                    {pkg.savings && (
+                      <div className="mt-1 ml-8 text-xs text-accent">{pkg.savings}</div>
+                    )}
                   </div>
-                </div>
-
-                {/* Permanent Package */}
-                <div 
-                  onClick={() => setFormData({ ...formData, packageType: 'permanent' })}
-                  className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
-                    formData.packageType === 'permanent' 
-                      ? 'border-primary bg-primary/10' 
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      formData.packageType === 'permanent' ? 'border-primary' : 'border-muted-foreground'
-                    }`}>
-                      {formData.packageType === 'permanent' && (
-                        <div className="w-3 h-3 rounded-full bg-primary" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold">{packages.permanent.name}</p>
-                      <p className="text-sm text-muted-foreground">{packages.permanent.duration}</p>
-                    </div>
-                    <p className="text-xl font-bold text-primary">{packages.permanent.priceText} টাকা</p>
-                  </div>
-                  <div className="mt-2 ml-8">
-                    <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">সবচেয়ে জনপ্রিয়</span>
-                  </div>
-                </div>
+                ))}
               </div>
 
               <div className="mt-4 bg-accent/10 border border-accent/30 rounded-xl p-4 text-center">
-                <p className="text-accent font-semibold">💰 নির্বাচিত প্যাকেজ: {selectedPackage.priceText} টাকা</p>
+                <p className="text-accent font-semibold">💰 নির্বাচিত প্যাকেজ: ৳{selectedPackage.price}</p>
               </div>
             </div>
 

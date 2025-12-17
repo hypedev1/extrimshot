@@ -1,25 +1,46 @@
 import { Circle, AlertTriangle } from 'lucide-react';
 
-export const HowToUseSection = () => {
-  const steps = [
-    'দিনে ১ চামুচ',
-    'খালি পেটে না, হালকা খাবারের পর',
-    'হাল্কা গরম পানি বা দুধের সাথে ১ চামুচ মিক্স করে খাবেন',
-    '১৮+ বয়সের জন্য',
-  ];
+interface HowToUseContent {
+  title: string;
+  subtitle: string;
+  steps: { step: string; title: string; desc: string }[];
+}
+
+interface HowToUseSectionProps {
+  content?: HowToUseContent;
+}
+
+export const HowToUseSection = ({ content }: HowToUseSectionProps) => {
+  const defaultContent: HowToUseContent = {
+    title: 'কীভাবে ব্যবহার করবেন?',
+    subtitle: 'সঠিক নিয়মে ব্যবহার করলে সেরা ফলাফল পাবেন',
+    steps: [
+      { step: '১', title: 'দিনে ১ চামুচ', desc: 'প্রতিদিন ১ চামচ সেবন করুন' },
+      { step: '২', title: 'হালকা খাবারের পর', desc: 'খালি পেটে না, হালকা খাবারের পর খান' },
+      { step: '৩', title: 'পানি বা দুধের সাথে', desc: 'হাল্কা গরম পানি বা দুধের সাথে মিক্স করে খাবেন' }
+    ]
+  };
+
+  const data = content || defaultContent;
 
   return (
     <section className="py-16 px-4 bg-gradient-to-b from-background to-card/50">
       <div className="container max-w-3xl">
-        <h2 className="text-2xl md:text-4xl font-bold text-center mb-10">
-          কীভাবে ব্যবহার করবেন?
+        <h2 className="text-2xl md:text-4xl font-bold text-center mb-4">
+          {data.title}
         </h2>
+        <p className="text-center text-muted-foreground mb-10">
+          {data.subtitle}
+        </p>
 
-        <div className="space-y-4 mb-8">
-          {steps.map((step, i) => (
-            <div key={i} className="flex items-center gap-4 bg-card/80 rounded-xl p-4 border border-border">
-              <Circle className="w-3 h-3 text-primary fill-primary flex-shrink-0" />
-              <span>{step}</span>
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {data.steps.map((step, i) => (
+            <div key={i} className="text-center bg-card/80 rounded-xl p-6 border border-border">
+              <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground text-xl font-bold flex items-center justify-center mx-auto mb-4">
+                {step.step}
+              </div>
+              <h3 className="font-bold mb-2">{step.title}</h3>
+              <p className="text-sm text-muted-foreground">{step.desc}</p>
             </div>
           ))}
         </div>
