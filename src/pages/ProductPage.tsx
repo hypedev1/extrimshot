@@ -49,7 +49,7 @@ const ProductPage = () => {
       />
       
       <div className="relative z-10">
-        <Header />
+        {slug !== 'diabeticpack' && <Header />}
         <AnnouncementBar />
         <RecentPurchasePopup />
         <HeroSection content={productContent?.hero} />
