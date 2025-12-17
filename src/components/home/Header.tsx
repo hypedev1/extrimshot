@@ -3,19 +3,16 @@ import { Link } from 'react-router-dom';
 import { Search, ShoppingBag, Menu, X, Leaf, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
+  return <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       {/* Top bar */}
       <div className="bg-primary/10 py-2 px-4">
         <div className="container flex items-center justify-between text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Phone className="w-3 h-3" />
-            <span>হটলাইন: 01XXX-XXXXXX</span>
+            <span>হটলাইন: 01335167186</span>
           </div>
           <div className="hidden md:flex items-center gap-4 text-muted-foreground">
             <span>🚚 সারা বাংলাদেশে ক্যাশ অন ডেলিভারি</span>
@@ -43,13 +40,7 @@ export const Header = () => {
           <div className="hidden md:flex flex-1 max-w-xl mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="আপনার পছন্দের পণ্য খুঁজুন..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full bg-secondary/50 border-border focus:border-primary rounded-full"
-              />
+              <Input type="text" placeholder="আপনার পছন্দের পণ্য খুঁজুন..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 w-full bg-secondary/50 border-border focus:border-primary rounded-full" />
             </div>
           </div>
 
@@ -62,12 +53,7 @@ export const Header = () => {
               </span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
@@ -77,19 +63,12 @@ export const Header = () => {
         <div className="md:hidden mt-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="পণ্য খুঁজুন..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full bg-secondary/50 border-border rounded-full"
-            />
+            <Input type="text" placeholder="পণ্য খুঁজুন..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 w-full bg-secondary/50 border-border rounded-full" />
           </div>
         </div>
 
         {/* Mobile menu */}
-        {isMenuOpen && (
-          <nav className="md:hidden mt-4 py-4 border-t border-border animate-fade-in">
+        {isMenuOpen && <nav className="md:hidden mt-4 py-4 border-t border-border animate-fade-in">
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="block py-2 px-4 rounded-lg hover:bg-secondary/50 transition-colors">
@@ -112,9 +91,7 @@ export const Header = () => {
                 </Link>
               </li>
             </ul>
-          </nav>
-        )}
+          </nav>}
       </div>
-    </header>
-  );
+    </header>;
 };
