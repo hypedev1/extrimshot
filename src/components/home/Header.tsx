@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingBag, Menu, X, Sparkles, Phone } from 'lucide-react';
+import { ShoppingBag, Menu, X, Sparkles, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  
   return <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       {/* Top bar */}
       <div className="bg-primary/10 py-2 px-4">
@@ -40,14 +40,6 @@ export const Header = () => {
             </div>
           </Link>
 
-          {/* Search bar - desktop */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input type="text" placeholder="আপনার পছন্দের পণ্য খুঁজুন..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 w-full bg-secondary/50 border-border focus:border-primary rounded-full" />
-            </div>
-          </div>
-
           {/* Actions */}
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="relative">
@@ -60,14 +52,6 @@ export const Header = () => {
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
-          </div>
-        </div>
-
-        {/* Mobile search */}
-        <div className="md:hidden mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input type="text" placeholder="পণ্য খুঁজুন..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 w-full bg-secondary/50 border-border rounded-full" />
           </div>
         </div>
 
