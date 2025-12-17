@@ -1,5 +1,6 @@
 import { useParams, Navigate } from 'react-router-dom';
 import { products } from '@/data/products';
+import { getProductContent } from '@/data/productContent';
 import { Header } from '@/components/home/Header';
 import { Footer } from '@/components/home/Footer';
 import { AnnouncementBar } from '@/components/AnnouncementBar';
@@ -17,17 +18,15 @@ import { FinalCTASection } from '@/components/FinalCTASection';
 const ProductPage = () => {
   const { slug } = useParams<{ slug: string }>();
   
-  // Find the product by slug
   const product = products.find(p => p.slug === slug);
+  const productContent = slug ? getProductContent(slug) : undefined;
   
-  // If product not found, redirect to home
   if (!product) {
     return <Navigate to="/" replace />;
   }
 
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Background Grid Pattern with Glow */}
       <div 
         className="fixed inset-0 pointer-events-none z-0 animate-grid-glow" 
         style={{
@@ -39,7 +38,6 @@ const ProductPage = () => {
         }} 
       />
       
-      {/* Gradient overlay for depth */}
       <div 
         className="fixed inset-0 pointer-events-none z-0" 
         style={{
@@ -54,15 +52,15 @@ const ProductPage = () => {
         <Header />
         <AnnouncementBar />
         <RecentPurchasePopup />
-        <HeroSection />
-        <AboutSection />
-        <BenefitsSection />
-        <BeforeAfterSection />
-        <StatsSection />
+        <HeroSection content={productContent?.hero} />
+        <AboutSection content={productContent?.about} />
+        <BenefitsSection content={productContent?.benefits} />
+        <BeforeAfterSection content={productContent?.beforeAfter} />
+        <StatsSection content={productContent?.stats} />
         <TestimonialsSection />
-        <HowToUseSection />
-        <OrderSection />
-        <FinalCTASection />
+        <HowToUseSection content={productContent?.howToUse} />
+        <OrderSection content={productContent?.order} />
+        <FinalCTASection content={productContent?.finalCta} />
         <Footer />
       </div>
     </div>
