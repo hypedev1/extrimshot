@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
+import ProductPage from "./pages/ProductPage";
 import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
 import AdminAuth from "./pages/AdminAuth";
@@ -26,7 +27,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/:slug" element={<ProductPage />} />
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/admin/auth" element={<AdminAuth />} />
             <Route path="/admin" element={<AdminDashboard />} />
