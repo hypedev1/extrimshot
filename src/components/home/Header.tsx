@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingBag, Menu, X, Leaf, Phone } from 'lucide-react';
+import { Search, ShoppingBag, Menu, X, Sparkles, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 export const Header = () => {
@@ -26,13 +26,17 @@ export const Header = () => {
       <div className="container py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Leaf className="w-6 h-6 text-primary-foreground" />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg shadow-emerald-500/30">
+              <Sparkles className="w-6 h-6 text-white" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full animate-pulse" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-gradient">নোবোশক্তি</h1>
-              <p className="text-xs text-muted-foreground">অর্গানিক বাংলাদেশ</p>
+              <h1 className="text-2xl font-black tracking-tight">
+                <span className="bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500 bg-clip-text text-transparent">Extrim</span>
+                <span className="text-foreground ml-1">Shot</span>
+              </h1>
+              <p className="text-xs text-muted-foreground font-medium">প্রাকৃতিক শক্তি • Natural Energy</p>
             </div>
           </Link>
 
