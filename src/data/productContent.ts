@@ -146,9 +146,7 @@ export const productContents: Record<string, ProductContent> = {
       title: 'আজই অর্ডার করুন',
       subtitle: 'সীমিত সময়ের জন্য বিশেষ অফার',
       packages: [
-        { id: '1pack', name: '১ প্যাক', quantity: '১ মাসের কোর্স', price: 1250, originalPrice: 2500, savings: '৫০% সেভ' },
-        { id: '2pack', name: '২ প্যাক', quantity: '২ মাসের কোর্স', price: 2200, originalPrice: 5000, popular: true, savings: '৫৬% সেভ' },
-        { id: '3pack', name: '৩ প্যাক', quantity: '৩ মাসের কোর্স', price: 3000, originalPrice: 7500, savings: '৬০% সেভ' }
+        { id: '1pack', name: '১ প্যাক', quantity: '১ মাসের কোর্স', price: 1250, originalPrice: 2500, savings: '৫০% সেভ' }
       ]
     },
     finalCta: {
@@ -241,9 +239,7 @@ export const productContents: Record<string, ProductContent> = {
       title: 'আজই অর্ডার করুন',
       subtitle: 'সীমিত সময়ের জন্য বিশেষ ছাড়',
       packages: [
-        { id: '1pack', name: '১ প্যাক', quantity: '১ মাসের কোর্স', price: 1450, originalPrice: 2800, savings: '৪৮% সেভ' },
-        { id: '2pack', name: '২ প্যাক', quantity: '২ মাসের কোর্স', price: 2600, originalPrice: 5600, popular: true, savings: '৫৪% সেভ' },
-        { id: '3pack', name: '৩ প্যাক', quantity: '৩ মাসের কোর্স', price: 3600, originalPrice: 8400, savings: '৫৭% সেভ' }
+        { id: '1pack', name: '১ প্যাক', quantity: '১ মাসের কোর্স', price: 1250, originalPrice: 2500, savings: '৫০% সেভ' }
       ]
     },
     finalCta: {
