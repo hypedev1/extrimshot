@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Sparkles, Phone, Mail } from 'lucide-react';
-
 export const Footer = () => {
-  return (
-    <footer className="bg-card border-t border-border">
+  return <footer className="bg-card border-t border-border">
       <div className="container py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
@@ -34,14 +32,7 @@ export const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
-          <p>© ২০২৪ Extrim Shot। সর্বস্বত্ব সংরক্ষিত।</p>
-          <div className="flex gap-4">
-            <Link to="/" className="hover:text-primary transition-colors">গোপনীয়তা নীতি</Link>
-            <Link to="/" className="hover:text-primary transition-colors">শর্তাবলী</Link>
-          </div>
-        </div>
+        
       </div>
-    </footer>
-  );
+    </footer>;
 };
