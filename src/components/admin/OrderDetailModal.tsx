@@ -24,8 +24,8 @@ interface Order {
 }
 
 const packageLabels: Record<string, string> = {
-  regular: 'রেগুলার কোর্স (৯০ গ্রাম) - ১৫ দিন',
-  permanent: 'পার্মানেন্ট কোর্স (১৮০ গ্রাম) - ৩০ দিন'
+  regular: 'Regular Course (90g) - 15 Days',
+  permanent: 'Permanent Course (180g) - 30 Days'
 };
 
 interface OrderDetailModalProps {
@@ -36,10 +36,10 @@ interface OrderDetailModalProps {
 }
 
 const statusOptions = [
-  { value: 'pending', label: 'পেন্ডিং', color: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30' },
-  { value: 'confirmed', label: 'কনফার্মড', color: 'bg-blue-500/20 text-blue-500 border-blue-500/30' },
-  { value: 'delivered', label: 'ডেলিভারড', color: 'bg-green-500/20 text-green-500 border-green-500/30' },
-  { value: 'cancelled', label: 'বাতিল', color: 'bg-red-500/20 text-red-500 border-red-500/30' },
+  { value: 'pending', label: 'Pending', color: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30' },
+  { value: 'confirmed', label: 'Confirmed', color: 'bg-blue-500/20 text-blue-500 border-blue-500/30' },
+  { value: 'delivered', label: 'Delivered', color: 'bg-green-500/20 text-green-500 border-green-500/30' },
+  { value: 'cancelled', label: 'Cancelled', color: 'bg-red-500/20 text-red-500 border-red-500/30' },
 ];
 
 export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: OrderDetailModalProps) => {
@@ -85,15 +85,15 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
       if (error) throw error;
 
       toast({
-        title: 'সফল!',
-        description: 'নোট সেভ হয়েছে',
+        title: 'Success!',
+        description: 'Notes saved',
       });
     } catch (error: any) {
       console.error('Save notes error:', error);
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: error.message || 'নোট সেভ করতে সমস্যা হয়েছে',
+        title: 'Error',
+        description: error.message || 'Failed to save notes',
       });
     } finally {
       setSavingNotes(false);
@@ -110,8 +110,8 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
     if (!pathaoLocation.cityId || !pathaoLocation.zoneId) {
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'শহর এবং জোন নির্বাচন করুন',
+        title: 'Error',
+        description: 'Please select city and zone',
       });
       return;
     }
@@ -131,15 +131,15 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
 
       setLocationSaved(true);
       toast({
-        title: 'সফল!',
-        description: 'লোকেশন সেভ হয়েছে',
+        title: 'Success!',
+        description: 'Location saved',
       });
     } catch (error: any) {
       console.error('Save location error:', error);
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: error.message || 'লোকেশন সেভ করতে সমস্যা হয়েছে',
+        title: 'Error',
+        description: error.message || 'Failed to save location',
       });
     } finally {
       setSavingLocation(false);
@@ -151,8 +151,8 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
     if (!pathaoLocation.cityId || !pathaoLocation.zoneId) {
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'প্রথমে শহর এবং জোন নির্বাচন করুন',
+        title: 'Error',
+        description: 'Please select city and zone first',
       });
       return;
     }
@@ -175,8 +175,8 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
 
       if (data.success) {
         toast({
-          title: 'সফল!',
-          description: `পাঠাও-তে অর্ডার তৈরি হয়েছে। Consignment ID: ${data.consignment_id}`,
+          title: 'Success!',
+          description: `Order sent to Pathao. Consignment ID: ${data.consignment_id}`,
         });
         // Update order status to confirmed
         onStatusChange(order.id, 'confirmed');
@@ -188,8 +188,8 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
       console.error('Pathao error:', error);
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: error.message || 'পাঠাও-তে অর্ডার পাঠাতে সমস্যা হয়েছে',
+        title: 'Error',
+        description: error.message || 'Failed to send order to Pathao',
       });
     } finally {
       setSendingToPathao(false);
@@ -206,7 +206,7 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
       <div className="relative bg-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
-          <h2 className="text-lg font-bold">অর্ডার বিস্তারিত</h2>
+          <h2 className="text-lg font-bold">Order Details</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-secondary rounded-lg transition-colors"
@@ -220,7 +220,7 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
           {/* Order ID & Status */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">অর্ডার আইডি</p>
+              <p className="text-xs text-muted-foreground">Order ID</p>
               <p className="font-mono text-sm">{order.id.slice(0, 8)}...</p>
             </div>
             <span className={cn('px-3 py-1 rounded-full text-sm font-medium border', getStatusStyle(order.status))}>
@@ -232,7 +232,7 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
           <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <User className="w-4 h-4" />
-              কাস্টমার তথ্য
+              Customer Info
             </h3>
             <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-3">
@@ -254,23 +254,23 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
           <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Package className="w-4 h-4" />
-              অর্ডার তথ্য
+              Order Info
             </h3>
             <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">প্যাকেজ</span>
-                <span className="font-semibold">{order.package_type ? packageLabels[order.package_type] || order.package_type : 'রেগুলার'}</span>
+                <span className="text-muted-foreground">Package</span>
+                <span className="font-semibold">{order.package_type ? packageLabels[order.package_type] || order.package_type : 'Regular'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">পণ্য মূল্য</span>
+                <span className="text-muted-foreground">Product Price</span>
                 <span className="font-semibold">৳{order.total_amount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">ডেলিভারি চার্জ</span>
-                <span className="font-semibold text-green-500">ফ্রি</span>
+                <span className="text-muted-foreground">Delivery Charge</span>
+                <span className="font-semibold text-green-500">Free</span>
               </div>
               <div className="border-t border-border pt-3 flex items-center justify-between">
-                <span className="font-medium">মোট</span>
+                <span className="font-medium">Total</span>
                 <span className="text-xl font-bold text-primary">৳{order.total_amount}</span>
               </div>
             </div>
@@ -279,21 +279,21 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
           {/* Dates */}
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4" />
-            <span>অর্ডার করা হয়েছে: {new Date(order.created_at).toLocaleString('bn-BD')}</span>
+            <span>Ordered: {new Date(order.created_at).toLocaleString('en-US')}</span>
           </div>
 
           {/* Pathao Integration */}
           <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Truck className="w-4 h-4" />
-              কুরিয়ার (পাঠাও)
+              Courier (Pathao)
             </h3>
             
             {isAlreadySentToPathao ? (
               <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
                 <div className="flex items-center gap-2 text-green-500">
                   <CheckCircle className="w-5 h-5" />
-                  <span className="font-medium">পাঠাও-তে পাঠানো হয়েছে</span>
+                  <span className="font-medium">Sent to Pathao</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   Consignment ID: <span className="font-mono">{order.pathao_consignment_id}</span>
@@ -302,7 +302,7 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
             ) : (
               <>
                 <div className="bg-secondary/50 rounded-xl p-4 space-y-4">
-                  <p className="text-sm text-muted-foreground">ডেলিভারি লোকেশন নির্বাচন করুন:</p>
+                  <p className="text-sm text-muted-foreground">Select delivery location:</p>
                   <PathaoLocationSelector onLocationChange={handleLocationChange} />
                   
                   <button
@@ -313,17 +313,17 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
                     {savingLocation ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        সেভ হচ্ছে...
+                        Saving...
                       </>
                     ) : locationSaved ? (
                       <>
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        লোকেশন সেভ হয়েছে
+                        Location Saved
                       </>
                     ) : (
                       <>
                         <Save className="w-4 h-4" />
-                        লোকেশন সেভ করুন
+                        Save Location
                       </>
                     )}
                   </button>
@@ -337,18 +337,18 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
                   {sendingToPathao ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      পাঠানো হচ্ছে...
+                      Sending...
                     </>
                   ) : (
                     <>
                       <Truck className="w-5 h-5" />
-                      পাঠাও-তে পাঠান
+                      Send to Pathao
                     </>
                   )}
                 </button>
                 {!hasLocation && (
                   <p className="text-xs text-muted-foreground text-center">
-                    * পাঠাও-তে পাঠাতে শহর এবং জোন নির্বাচন আবশ্যক
+                    * City and zone selection required for Pathao delivery
                   </p>
                 )}
               </>
@@ -359,13 +359,13 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
           <div className="space-y-3">
             <h3 className="font-semibold flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              অ্যাডমিন নোট
+              Admin Notes
             </h3>
             <div className="space-y-2">
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="অর্ডার সম্পর্কে নোট লিখুন..."
+                placeholder="Write notes about this order..."
                 className="min-h-[80px] resize-none"
               />
               <button
@@ -376,12 +376,12 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
                 {savingNotes ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    সেভ হচ্ছে...
+                    Saving...
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    নোট সেভ করুন
+                    Save Notes
                   </>
                 )}
               </button>
@@ -390,7 +390,7 @@ export const OrderDetailModal = ({ order, isOpen, onClose, onStatusChange }: Ord
 
           {/* Status Update */}
           <div className="space-y-3">
-            <h3 className="font-semibold">স্ট্যাটাস আপডেট করুন</h3>
+            <h3 className="font-semibold">Update Status</h3>
             <div className="grid grid-cols-2 gap-2">
               {statusOptions.map((status) => (
                 <button

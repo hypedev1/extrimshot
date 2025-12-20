@@ -56,10 +56,10 @@ const AdminDashboard = () => {
   }, []);
 
   const statCards = [
-    { label: 'মোট অর্ডার', value: stats.totalOrders, icon: Package, color: 'text-blue-500' },
-    { label: 'পেন্ডিং', value: stats.pendingOrders, icon: Clock, color: 'text-yellow-500' },
-    { label: 'সম্পন্ন', value: stats.confirmedOrders, icon: CheckCircle, color: 'text-green-500' },
-    { label: 'মোট বিক্রয়', value: `৳${stats.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-primary' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: Package, color: 'text-blue-500' },
+    { label: 'Pending', value: stats.pendingOrders, icon: Clock, color: 'text-yellow-500' },
+    { label: 'Completed', value: stats.confirmedOrders, icon: CheckCircle, color: 'text-green-500' },
+    { label: 'Total Sales', value: `৳${stats.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-primary' },
   ];
 
   const getStatusBadge = (status: string) => {
@@ -70,10 +70,10 @@ const AdminDashboard = () => {
       cancelled: 'bg-red-500/20 text-red-500',
     };
     const labels: Record<string, string> = {
-      pending: 'পেন্ডিং',
-      confirmed: 'কনফার্মড',
-      delivered: 'ডেলিভারড',
-      cancelled: 'বাতিল',
+      pending: 'Pending',
+      confirmed: 'Confirmed',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled',
     };
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status] || styles.pending}`}>
@@ -86,8 +86,8 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">ড্যাশবোর্ড</h1>
-          <p className="text-muted-foreground text-sm lg:text-base">আপনার স্টোরের সামগ্রিক পরিস্থিতি</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">Overview of your store</p>
         </div>
 
         {loading ? (
@@ -113,19 +113,19 @@ const AdminDashboard = () => {
             </div>
 
             <div className="card-glass p-6">
-              <h2 className="text-xl font-bold mb-4">সাম্প্রতিক অর্ডার</h2>
+              <h2 className="text-xl font-bold mb-4">Recent Orders</h2>
               {recentOrders.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">কোনো অর্ডার নেই</p>
+                <p className="text-muted-foreground text-center py-8">No orders yet</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">নাম</th>
-                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">ফোন</th>
-                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">মূল্য</th>
-                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">স্ট্যাটাস</th>
-                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">তারিখ</th>
+                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">Name</th>
+                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">Phone</th>
+                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">Amount</th>
+                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
+                        <th className="text-left py-3 px-4 text-muted-foreground font-medium">Date</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -136,7 +136,7 @@ const AdminDashboard = () => {
                           <td className="py-3 px-4">৳{order.total_amount}</td>
                           <td className="py-3 px-4">{getStatusBadge(order.status)}</td>
                           <td className="py-3 px-4 text-muted-foreground text-sm">
-                            {new Date(order.created_at).toLocaleDateString('bn-BD')}
+                            {new Date(order.created_at).toLocaleDateString('en-US')}
                           </td>
                         </tr>
                       ))}
