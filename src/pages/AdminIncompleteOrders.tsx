@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Phone, User, MapPin, Clock, Trash2, Truck } from 'lucide-react';
+import { Search, Phone, User, MapPin, Clock, Trash2, Truck, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
@@ -168,6 +168,23 @@ const AdminIncompleteOrders = () => {
                     >
                       <Truck className="w-4 h-4" />
                       অর্ডার তৈরি
+                    </button>
+                    <button
+                      onClick={() => {
+                        const name = order.customer_name || '';
+                        const phone = order.phone || '';
+                        const address = order.address || '';
+                        const tsvData = `${name}\t${phone}\t${address}`;
+                        navigator.clipboard.writeText(tsvData);
+                        toast({
+                          title: 'কপি হয়েছে',
+                          description: 'তথ্য ক্লিপবোর্ডে কপি হয়েছে'
+                        });
+                      }}
+                      className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors"
+                      title="কপি করুন"
+                    >
+                      <Copy className="w-4 h-4" />
                     </button>
                     <a
                       href={`tel:${order.phone}`}
