@@ -51,8 +51,8 @@ const AdminBlockedAttempts = () => {
     if (error) {
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'ডেটা লোড করতে সমস্যা হয়েছে'
+        title: 'Error',
+        description: 'Failed to load data'
       });
     } else {
       setAttempts(data || []);
@@ -73,13 +73,13 @@ const AdminBlockedAttempts = () => {
     if (error) {
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'মুছতে সমস্যা হয়েছে'
+        title: 'Error',
+        description: 'Failed to delete'
       });
     } else {
       toast({
-        title: 'সফল',
-        description: 'রেকর্ড মুছে ফেলা হয়েছে'
+        title: 'Success',
+        description: 'Record deleted'
       });
       fetchAttempts();
     }
@@ -94,13 +94,13 @@ const AdminBlockedAttempts = () => {
     if (error) {
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'মুছতে সমস্যা হয়েছে'
+        title: 'Error',
+        description: 'Failed to delete'
       });
     } else {
       toast({
-        title: 'সফল',
-        description: 'সব রেকর্ড মুছে ফেলা হয়েছে'
+        title: 'Success',
+        description: 'All records deleted'
       });
       fetchAttempts();
     }
@@ -111,34 +111,34 @@ const AdminBlockedAttempts = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">ব্লক হওয়া অর্ডার প্রচেষ্টা</h1>
+            <h1 className="text-2xl font-bold">Blocked Order Attempts</h1>
             <p className="text-muted-foreground">
-              যে সব কাস্টমার ডুপ্লিকেট অর্ডার করার চেষ্টা করেছে তাদের তালিকা
+              List of customers who attempted duplicate orders
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={fetchAttempts} disabled={isLoading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              রিফ্রেশ
+              Refresh
             </Button>
             {attempts.length > 0 && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive">
                     <Trash2 className="w-4 h-4 mr-2" />
-                    সব মুছুন
+                    Delete All
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না। সব ব্লক হওয়া প্রচেষ্টার রেকর্ড মুছে যাবে।
+                      This action cannot be undone. All blocked attempt records will be deleted.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleClearAll}>মুছে ফেলুন</AlertDialogAction>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleClearAll}>Delete</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -148,24 +148,24 @@ const AdminBlockedAttempts = () => {
 
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">লোড হচ্ছে...</div>
+            <div className="p-8 text-center text-muted-foreground">Loading...</div>
           ) : attempts.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Shield className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>কোনো ব্লক হওয়া প্রচেষ্টা নেই</p>
+              <p>No blocked attempts</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>সময়</TableHead>
-                    <TableHead>নাম</TableHead>
-                    <TableHead>ফোন</TableHead>
-                    <TableHead>ঠিকানা</TableHead>
-                    <TableHead>ব্লকের কারণ</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Block Reason</TableHead>
                     <TableHead>IP</TableHead>
-                    <TableHead className="text-right">অ্যাকশন</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -214,15 +214,15 @@ const AdminBlockedAttempts = () => {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>মুছে ফেলবেন?</AlertDialogTitle>
+                              <AlertDialogTitle>Delete?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                এই রেকর্ডটি মুছে ফেলা হবে।
+                                This record will be deleted.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleDelete(attempt.id)}>
-                                মুছুন
+                                Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -237,7 +237,7 @@ const AdminBlockedAttempts = () => {
         </div>
 
         <div className="text-sm text-muted-foreground">
-          মোট {attempts.length}টি ব্লক হওয়া প্রচেষ্টা
+          Total {attempts.length} blocked attempts
         </div>
       </div>
     </AdminLayout>

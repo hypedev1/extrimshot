@@ -35,8 +35,8 @@ const AdminIncompleteOrders = () => {
       console.error('Error fetching incomplete orders:', error);
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'অসম্পূর্ণ অর্ডার লোড করতে সমস্যা হয়েছে'
+        title: 'Error',
+        description: 'Failed to load incomplete orders'
       });
     } finally {
       setLoading(false);
@@ -71,15 +71,15 @@ const AdminIncompleteOrders = () => {
       if (error) throw error;
 
       toast({
-        title: 'সফল',
-        description: 'অসম্পূর্ণ অর্ডার মুছে ফেলা হয়েছে'
+        title: 'Success',
+        description: 'Incomplete order deleted'
       });
     } catch (error: any) {
       console.error('Error deleting incomplete order:', error);
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'মুছে ফেলতে সমস্যা হয়েছে'
+        title: 'Error',
+        description: 'Failed to delete'
       });
     }
   };
@@ -92,20 +92,20 @@ const AdminIncompleteOrders = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">অসম্পূর্ণ অর্ডার</h1>
+        <h1 className="text-2xl font-bold">Incomplete Orders</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card-glass p-4">
-            <p className="text-muted-foreground text-sm">মোট অসম্পূর্ণ</p>
+            <p className="text-muted-foreground text-sm">Total Incomplete</p>
             <p className="text-2xl font-bold">{orders.length}</p>
           </div>
           <div className="card-glass p-4">
-            <p className="text-muted-foreground text-sm">শুধু ফোন নম্বর</p>
+            <p className="text-muted-foreground text-sm">Phone Only</p>
             <p className="text-2xl font-bold">
               {orders.filter(o => !o.customer_name && !o.address).length}
             </p>
           </div>
           <div className="card-glass p-4">
-            <p className="text-muted-foreground text-sm">আংশিক তথ্য</p>
+            <p className="text-muted-foreground text-sm">Partial Info</p>
             <p className="text-2xl font-bold">
               {orders.filter(o => o.customer_name || o.address).length}
             </p>
@@ -117,7 +117,7 @@ const AdminIncompleteOrders = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="ফোন নম্বর বা নাম দিয়ে খুঁজুন..."
+            placeholder="Search by phone or name..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
@@ -128,11 +128,11 @@ const AdminIncompleteOrders = () => {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-            <p className="mt-4 text-muted-foreground">লোড হচ্ছে...</p>
+            <p className="mt-4 text-muted-foreground">Loading...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="text-center py-12 card-glass">
-            <p className="text-muted-foreground">কোনো অসম্পূর্ণ অর্ডার নেই</p>
+            <p className="text-muted-foreground">No incomplete orders</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -167,7 +167,7 @@ const AdminIncompleteOrders = () => {
                       className="btn-primary px-4 py-2 text-sm flex items-center gap-2"
                     >
                       <Truck className="w-4 h-4" />
-                      অর্ডার তৈরি
+                      Create Order
                     </button>
                     <button
                       onClick={() => {
@@ -177,12 +177,12 @@ const AdminIncompleteOrders = () => {
                         const tsvData = `${name}\t${phone}\t${address}`;
                         navigator.clipboard.writeText(tsvData);
                         toast({
-                          title: 'কপি হয়েছে',
-                          description: 'তথ্য ক্লিপবোর্ডে কপি হয়েছে'
+                          title: 'Copied',
+                          description: 'Data copied to clipboard'
                         });
                       }}
                       className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors"
-                      title="কপি করুন"
+                      title="Copy"
                     >
                       <Copy className="w-4 h-4" />
                     </button>
@@ -190,12 +190,12 @@ const AdminIncompleteOrders = () => {
                       href={`tel:${order.phone}`}
                       className="px-4 py-2 text-sm bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
                     >
-                      কল করুন
+                      Call
                     </a>
                     <button
                       onClick={() => deleteOrder(order.id)}
                       className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
-                      title="মুছে ফেলুন"
+                      title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
