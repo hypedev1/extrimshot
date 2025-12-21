@@ -23,15 +23,15 @@ interface Order {
 }
 
 const packageLabels: Record<string, string> = {
-  regular: 'Regular (90g)',
-  permanent: 'Permanent (180g)'
+  regular: 'রেগুলার (৯০গ্রাম)',
+  permanent: 'পার্মানেন্ট (১৮০গ্রাম)'
 };
 
 const statusOptions = [
-  { value: 'pending', label: 'Pending', color: 'bg-yellow-500/20 text-yellow-500' },
-  { value: 'confirmed', label: 'Confirmed', color: 'bg-blue-500/20 text-blue-500' },
-  { value: 'delivered', label: 'Delivered', color: 'bg-green-500/20 text-green-500' },
-  { value: 'cancelled', label: 'Cancelled', color: 'bg-red-500/20 text-red-500' },
+  { value: 'pending', label: 'পেন্ডিং', color: 'bg-yellow-500/20 text-yellow-500' },
+  { value: 'confirmed', label: 'কনফার্মড', color: 'bg-blue-500/20 text-blue-500' },
+  { value: 'delivered', label: 'ডেলিভারড', color: 'bg-green-500/20 text-green-500' },
+  { value: 'cancelled', label: 'বাতিল', color: 'bg-red-500/20 text-red-500' },
 ];
 
 const AdminOrders = () => {
@@ -54,7 +54,7 @@ const AdminOrders = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({ variant: 'destructive', title: 'Error', description: error.message });
+      toast({ variant: 'destructive', title: 'ত্রুটি', description: error.message });
     } else {
       setOrders(data || []);
     }
@@ -81,9 +81,9 @@ const AdminOrders = () => {
       .eq('id', orderId);
 
     if (error) {
-      toast({ variant: 'destructive', title: 'Error', description: error.message });
+      toast({ variant: 'destructive', title: 'ত্রুটি', description: error.message });
     } else {
-      toast({ title: 'Success', description: 'Order status updated' });
+      toast({ title: 'সফল', description: 'অর্ডার স্ট্যাটাস আপডেট হয়েছে' });
     }
   };
 
@@ -101,8 +101,8 @@ const AdminOrders = () => {
 
       if (data.success) {
         toast({
-          title: 'Success!',
-          description: `Order sent to Pathao`,
+          title: 'সফল!',
+          description: `পাঠাও-তে অর্ডার তৈরি হয়েছে`,
         });
         // Update order status to confirmed
         await updateStatus(order.id, 'confirmed');
@@ -113,8 +113,8 @@ const AdminOrders = () => {
       console.error('Pathao error:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to send order to Pathao',
+        title: 'ত্রুটি',
+        description: error.message || 'পাঠাও-তে অর্ডার পাঠাতে সমস্যা হয়েছে',
       });
     } finally {
       setSendingToPathao(null);
@@ -138,8 +138,8 @@ const AdminOrders = () => {
 
       if (data.success) {
         toast({
-          title: 'Status Updated',
-          description: `Pathao status: ${data.pathao_status}`,
+          title: 'স্ট্যাটাস আপডেট হয়েছে',
+          description: `পাঠাও স্ট্যাটাস: ${data.pathao_status}`,
         });
         fetchOrders();
       } else {
@@ -149,8 +149,8 @@ const AdminOrders = () => {
       console.error('Pathao sync error:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to sync status',
+        title: 'ত্রুটি',
+        description: error.message || 'স্ট্যাটাস সিঙ্ক করতে সমস্যা হয়েছে',
       });
     } finally {
       setSyncingStatus(null);
@@ -161,7 +161,7 @@ const AdminOrders = () => {
     const pathaoOrders = orders.filter(o => o.pathao_consignment_id && o.status !== 'delivered' && o.status !== 'cancelled');
     
     if (pathaoOrders.length === 0) {
-      toast({ title: 'No Orders', description: 'No Pathao orders to sync' });
+      toast({ title: 'কোনো অর্ডার নেই', description: 'সিঙ্ক করার মতো কোনো পাঠাও অর্ডার নেই' });
       return;
     }
 
@@ -195,8 +195,8 @@ const AdminOrders = () => {
     fetchOrders();
     
     toast({
-      title: 'Bulk Sync Complete',
-      description: `${successCount} successful, ${errorCount} failed`,
+      title: 'বাল্ক সিঙ্ক সম্পন্ন',
+      description: `${successCount} টি সফল, ${errorCount} টি ব্যর্থ`,
     });
   };
 
@@ -221,9 +221,9 @@ const AdminOrders = () => {
     
     try {
       await navigator.clipboard.writeText(copyText);
-      toast({ title: 'Copied', description: 'Order info copied to clipboard' });
+      toast({ title: 'কপি হয়েছে', description: 'অর্ডার তথ্য ক্লিপবোর্ডে কপি হয়েছে' });
     } catch (err) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to copy' });
+      toast({ variant: 'destructive', title: 'ত্রুটি', description: 'কপি করতে সমস্যা হয়েছে' });
     }
   };
 
@@ -232,15 +232,15 @@ const AdminOrders = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Orders</h1>
-            <p className="text-muted-foreground text-sm lg:text-base">View and manage all orders</p>
+            <h1 className="text-2xl lg:text-3xl font-bold">অর্ডার সমূহ</h1>
+            <p className="text-muted-foreground text-sm lg:text-base">সকল অর্ডার দেখুন এবং ম্যানেজ করুন</p>
           </div>
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Order</span>
+            <span className="hidden sm:inline">নতুন অর্ডার</span>
           </button>
         </div>
 
@@ -249,7 +249,7 @@ const AdminOrders = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search by name or phone..."
+              placeholder="নাম বা ফোন নম্বর দিয়ে খুঁজুন..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-secondary border border-border rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -260,7 +260,7 @@ const AdminOrders = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="all">All Status</option>
+            <option value="all">সকল স্ট্যাটাস</option>
             {statusOptions.map(s => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
@@ -276,8 +276,8 @@ const AdminOrders = () => {
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
-              <span className="hidden sm:inline">Pathao Sync ({pathaoOrderCount})</span>
-              <span className="sm:hidden">Sync</span>
+              <span className="hidden sm:inline">পাঠাও সিঙ্ক ({pathaoOrderCount})</span>
+              <span className="sm:hidden">সিঙ্ক</span>
             </button>
           )}
         </div>
@@ -288,7 +288,7 @@ const AdminOrders = () => {
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="card-glass p-12 text-center">
-            <p className="text-muted-foreground">No orders found</p>
+            <p className="text-muted-foreground">কোনো অর্ডার পাওয়া যায়নি</p>
           </div>
         ) : (
           <div className="card-glass overflow-hidden">
@@ -296,14 +296,14 @@ const AdminOrders = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-secondary/50">
-                    <th className="text-left py-4 px-4 font-medium">Name</th>
-                    <th className="text-left py-4 px-4 font-medium">Phone</th>
-                    <th className="text-left py-4 px-4 font-medium hidden lg:table-cell">Address</th>
-                    <th className="text-left py-4 px-4 font-medium">Package</th>
-                    <th className="text-left py-4 px-4 font-medium">Amount</th>
-                    <th className="text-left py-4 px-4 font-medium">Status</th>
-                    <th className="text-left py-4 px-4 font-medium hidden sm:table-cell">Date</th>
-                    <th className="text-left py-4 px-4 font-medium">Action</th>
+                    <th className="text-left py-4 px-4 font-medium">নাম</th>
+                    <th className="text-left py-4 px-4 font-medium">ফোন</th>
+                    <th className="text-left py-4 px-4 font-medium hidden lg:table-cell">ঠিকানা</th>
+                    <th className="text-left py-4 px-4 font-medium">প্যাকেজ</th>
+                    <th className="text-left py-4 px-4 font-medium">মূল্য</th>
+                    <th className="text-left py-4 px-4 font-medium">স্ট্যাটাস</th>
+                    <th className="text-left py-4 px-4 font-medium hidden sm:table-cell">তারিখ</th>
+                    <th className="text-left py-4 px-4 font-medium">অ্যাকশন</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -338,8 +338,8 @@ const AdminOrders = () => {
                         </div>
                       </td>
                       <td className="py-4 px-4 text-muted-foreground text-sm hidden sm:table-cell">
-                        <div>{new Date(order.created_at).toLocaleDateString('en-US')}</div>
-                        <div className="text-xs">{new Date(order.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+                        <div>{new Date(order.created_at).toLocaleDateString('bn-BD')}</div>
+                        <div className="text-xs">{new Date(order.created_at).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1">
@@ -353,7 +353,7 @@ const AdminOrders = () => {
                                 onClick={() => syncPathaoStatus(order)}
                                 disabled={syncingStatus === order.id}
                                 className="p-1 hover:bg-blue-500/20 rounded transition-colors text-blue-500 disabled:opacity-50"
-                                title="Sync Pathao Status"
+                                title="পাঠাও স্ট্যাটাস সিঙ্ক করুন"
                               >
                                 {syncingStatus === order.id ? (
                                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -367,7 +367,7 @@ const AdminOrders = () => {
                               onClick={() => sendToPathao(order)}
                               disabled={sendingToPathao === order.id}
                               className="p-2 hover:bg-orange-500/20 rounded-lg transition-colors text-orange-500 disabled:opacity-50"
-                              title="Send to Pathao"
+                              title="পাঠাও-তে পাঠান"
                             >
                               {sendingToPathao === order.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -379,7 +379,7 @@ const AdminOrders = () => {
                           <button
                             onClick={() => copyOrderToClipboard(order)}
                             className="p-2 hover:bg-secondary rounded-lg transition-colors text-primary"
-                            title="Copy"
+                            title="কপি করুন"
                           >
                             <Copy className="w-4 h-4" />
                           </button>
@@ -389,7 +389,7 @@ const AdminOrders = () => {
                               setIsModalOpen(true);
                             }}
                             className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                            title="View Details"
+                            title="বিস্তারিত দেখুন"
                           >
                             <Eye className="w-4 h-4" />
                           </button>

@@ -58,8 +58,8 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
     if (!canCreateOrder) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter customer name and address',
+        title: 'ত্রুটি',
+        description: 'কাস্টমারের নাম এবং ঠিকানা দিন',
       });
       return;
     }
@@ -67,8 +67,8 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
     if (sendToPathao && !hasLocation) {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Please select city and zone for Pathao delivery',
+        title: 'ত্রুটি',
+        description: 'পাঠাও-তে পাঠাতে শহর এবং জোন নির্বাচন করুন',
       });
       return;
     }
@@ -123,16 +123,16 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
             .eq('id', newOrder.id);
 
           toast({
-            title: 'Success!',
-            description: `Order created and sent to Pathao. Consignment ID: ${data.consignment_id}`,
+            title: 'সফল!',
+            description: `অর্ডার তৈরি এবং পাঠাও-তে পাঠানো হয়েছে। Consignment ID: ${data.consignment_id}`,
           });
         } else {
-          throw new Error(data.error || 'Failed to send to Pathao');
+          throw new Error(data.error || 'পাঠাও-তে পাঠাতে সমস্যা');
         }
       } else {
         toast({
-          title: 'Success!',
-          description: 'Order created',
+          title: 'সফল!',
+          description: 'অর্ডার তৈরি হয়েছে',
         });
       }
 
@@ -142,8 +142,8 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
       console.error('Create order error:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to create order',
+        title: 'ত্রুটি',
+        description: error.message || 'অর্ডার তৈরি করতে সমস্যা হয়েছে',
       });
     } finally {
       setCreating(false);
@@ -158,7 +158,7 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
       <div className="relative bg-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
-          <h2 className="text-lg font-bold">Create Order from Incomplete</h2>
+          <h2 className="text-lg font-bold">অসম্পূর্ণ অর্ডার থেকে অর্ডার তৈরি</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-secondary rounded-lg transition-colors"
@@ -171,7 +171,7 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
         <div className="p-6 space-y-6">
           {/* Phone (readonly) */}
           <div className="space-y-2">
-            <Label>Phone Number</Label>
+            <Label>ফোন নম্বর</Label>
             <div className="flex items-center gap-2 p-3 bg-secondary/50 rounded-xl">
               <Phone className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">{order.phone}</span>
@@ -180,31 +180,31 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
 
           {/* Customer Name */}
           <div className="space-y-2">
-            <Label htmlFor="customerName">Customer Name *</Label>
+            <Label htmlFor="customerName">কাস্টমারের নাম *</Label>
             <Input
               id="customerName"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Enter name"
+              placeholder="নাম লিখুন"
               className="bg-secondary/50"
             />
           </div>
 
           {/* Address */}
           <div className="space-y-2">
-            <Label htmlFor="address">Address *</Label>
+            <Label htmlFor="address">ঠিকানা *</Label>
             <Input
               id="address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter full address"
+              placeholder="সম্পূর্ণ ঠিকানা লিখুন"
               className="bg-secondary/50"
             />
           </div>
 
           {/* Package Type */}
           <div className="space-y-2">
-            <Label>Package</Label>
+            <Label>প্যাকেজ</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setPackageType('regular')}
@@ -214,7 +214,7 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
                     : 'bg-secondary/50 border-border hover:bg-secondary'
                 }`}
               >
-                Regular - ৳1250
+                রেগুলার - ৳১২৫০
               </button>
               <button
                 onClick={() => setPackageType('permanent')}
@@ -224,7 +224,7 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
                     : 'bg-secondary/50 border-border hover:bg-secondary'
                 }`}
               >
-                Permanent - ৳2100
+                পার্মানেন্ট - ৳২১০০
               </button>
             </div>
           </div>
@@ -233,7 +233,7 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
           <div className="space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Truck className="w-4 h-4" />
-              Courier Location (Pathao)
+              কুরিয়ার লোকেশন (পাঠাও)
             </h3>
             <div className="bg-secondary/50 rounded-xl p-4">
               <PathaoLocationSelector onLocationChange={handleLocationChange} />
@@ -250,12 +250,12 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
               {sendingToPathao ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Sending...
+                  পাঠানো হচ্ছে...
                 </>
               ) : (
                 <>
                   <Truck className="w-5 h-5" />
-                  Create Order & Send to Pathao
+                  অর্ডার তৈরি করুন ও পাঠাও-তে পাঠান
                 </>
               )}
             </button>
@@ -268,12 +268,12 @@ export const IncompleteOrderModal = ({ order, isOpen, onClose, onOrderCreated }:
               {creating && !sendingToPathao ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating...
+                  তৈরি হচ্ছে...
                 </>
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  Create Order Only
+                  শুধু অর্ডার তৈরি করুন
                 </>
               )}
             </button>

@@ -16,15 +16,15 @@ const AdminSettings = () => {
   const handleSave = () => {
     // In a real app, this would save to database
     localStorage.setItem('storeSettings', JSON.stringify(settings));
-    toast({ title: 'Success', description: 'Settings saved' });
+    toast({ title: 'সফল', description: 'সেটিংস সেভ হয়েছে' });
   };
 
   return (
     <AdminLayout>
       <div className="space-y-8 max-w-3xl">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground text-sm lg:text-base">Manage store configuration</p>
+          <h1 className="text-2xl lg:text-3xl font-bold">সেটিংস</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">স্টোর কনফিগারেশন ম্যানেজ করুন</p>
         </div>
 
         {/* Store Settings */}
@@ -33,12 +33,12 @@ const AdminSettings = () => {
             <div className="p-2 rounded-lg bg-primary/20">
               <Store className="w-5 h-5 text-primary" />
             </div>
-            <h2 className="text-lg font-semibold">Store Information</h2>
+            <h2 className="text-lg font-semibold">স্টোর তথ্য</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Store Name</label>
+              <label className="block text-sm font-medium mb-2">স্টোরের নাম</label>
               <input
                 type="text"
                 value={settings.storeName}
@@ -47,7 +47,7 @@ const AdminSettings = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Contact Number</label>
+              <label className="block text-sm font-medium mb-2">যোগাযোগ নম্বর</label>
               <input
                 type="text"
                 value={settings.storePhone}
@@ -64,12 +64,12 @@ const AdminSettings = () => {
             <div className="p-2 rounded-lg bg-green-500/20">
               <Shield className="w-5 h-5 text-green-500" />
             </div>
-            <h2 className="text-lg font-semibold">Pricing</h2>
+            <h2 className="text-lg font-semibold">মূল্য নির্ধারণ</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Product Price (৳)</label>
+              <label className="block text-sm font-medium mb-2">পণ্যের মূল্য (৳)</label>
               <input
                 type="number"
                 value={settings.productPrice}
@@ -78,7 +78,7 @@ const AdminSettings = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Delivery Charge (৳)</label>
+              <label className="block text-sm font-medium mb-2">ডেলিভারি চার্জ (৳)</label>
               <input
                 type="number"
                 value={settings.deliveryCharge}
@@ -95,13 +95,13 @@ const AdminSettings = () => {
             <div className="p-2 rounded-lg bg-blue-500/20">
               <Bell className="w-5 h-5 text-blue-500" />
             </div>
-            <h2 className="text-lg font-semibold">Notifications</h2>
+            <h2 className="text-lg font-semibold">নোটিফিকেশন</h2>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">New Order Notifications</p>
-              <p className="text-sm text-muted-foreground">Receive notifications for new orders</p>
+              <p className="font-medium">নতুন অর্ডার নোটিফিকেশন</p>
+              <p className="text-sm text-muted-foreground">নতুন অর্ডার আসলে নোটিফিকেশন পান</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -121,7 +121,7 @@ const AdminSettings = () => {
           className="btn-primary flex items-center gap-2"
         >
           <Save className="w-5 h-5" />
-          Save Settings
+          সেটিংস সেভ করুন
         </button>
       </div>
     </AdminLayout>

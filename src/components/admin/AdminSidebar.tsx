@@ -4,13 +4,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
-  { title: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-  { title: 'Orders', icon: Package, path: '/admin/orders' },
-  { title: 'Incomplete Orders', icon: AlertCircle, path: '/admin/incomplete-orders' },
-  { title: 'Fraud Prevention', icon: ShieldAlert, path: '/admin/fraud-attempts' },
-  { title: 'Blocked Attempts', icon: UserX, path: '/admin/blocked-attempts' },
-  { title: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
-  { title: 'Settings', icon: Settings, path: '/admin/settings' },
+  { title: 'ড্যাশবোর্ড', icon: LayoutDashboard, path: '/admin' },
+  { title: 'অর্ডার সমূহ', icon: Package, path: '/admin/orders' },
+  { title: 'অসম্পূর্ণ অর্ডার', icon: AlertCircle, path: '/admin/incomplete-orders' },
+  { title: 'ফ্রড প্রতিরোধ', icon: ShieldAlert, path: '/admin/fraud-attempts' },
+  { title: 'ব্লক প্রচেষ্টা', icon: UserX, path: '/admin/blocked-attempts' },
+  { title: 'পরিসংখ্যান', icon: BarChart3, path: '/admin/analytics' },
+  { title: 'সেটিংস', icon: Settings, path: '/admin/settings' },
 ];
 
 interface AdminSidebarProps {
@@ -66,7 +66,7 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
               <Users className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">Admin</p>
+              <p className="text-sm font-medium truncate">অ্যাডমিন</p>
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
@@ -101,14 +101,14 @@ export const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
             className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
             <Home className="w-5 h-5" />
-            <span>Main Site</span>
+            <span>মূল সাইট</span>
           </RouterNavLink>
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-destructive/10 text-destructive w-full transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span>Log Out</span>
+            <span>লগ আউট</span>
           </button>
         </div>
       </aside>
