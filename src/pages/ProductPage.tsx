@@ -26,8 +26,20 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="relative">
+    <div className="min-h-screen bg-background relative">
+      {/* Subtle grid background */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0 opacity-40" 
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, hsl(var(--primary) / 0.08) 1px, transparent 1px),
+            linear-gradient(to bottom, hsl(var(--primary) / 0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }} 
+      />
+      
+      <div className="relative z-10">
         {slug !== 'diabeticpack' && slug !== 'powerbooster' && <Header />}
         <AnnouncementBar />
         <RecentPurchasePopup />
