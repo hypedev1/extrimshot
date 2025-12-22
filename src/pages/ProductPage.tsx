@@ -26,29 +26,8 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <div 
-        className="fixed inset-0 pointer-events-none z-0 animate-grid-glow" 
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, hsl(var(--primary) / 0.15) 1px, transparent 1px),
-            linear-gradient(to bottom, hsl(var(--primary) / 0.15) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px'
-        }} 
-      />
-      
-      <div 
-        className="fixed inset-0 pointer-events-none z-0" 
-        style={{
-          background: `
-            radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.08) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 40% at 50% 100%, hsl(var(--accent) / 0.05) 0%, transparent 50%)
-          `
-        }} 
-      />
-      
-      <div className="relative z-10">
+    <div className="min-h-screen bg-background">
+      <div className="relative">
         {slug !== 'diabeticpack' && slug !== 'powerbooster' && <Header />}
         <AnnouncementBar />
         <RecentPurchasePopup />

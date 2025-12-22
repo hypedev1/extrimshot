@@ -1,4 +1,4 @@
-import { Circle, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface HowToUseContent {
   title: string;
@@ -24,32 +24,65 @@ export const HowToUseSection = ({ content }: HowToUseSectionProps) => {
   const data = content || defaultContent;
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-b from-background to-card/50">
-      <div className="container max-w-3xl">
-        <h2 className="text-2xl md:text-4xl font-bold text-center mb-4">
-          {data.title}
-        </h2>
-        <p className="text-center text-muted-foreground mb-10">
-          {data.subtitle}
-        </p>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {data.steps.map((step, i) => (
-            <div key={i} className="text-center bg-card/80 rounded-xl p-6 border border-border">
-              <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground text-xl font-bold flex items-center justify-center mx-auto mb-4">
-                {step.step}
-              </div>
-              <h3 className="font-bold mb-2">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">{step.desc}</p>
-            </div>
-          ))}
+    <section className="py-16 md:py-24 px-4 bg-background">
+      <div className="container max-w-4xl">
+        <div className="text-center mb-12">
+          <div className="section-divider" />
+          <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
+            {data.title}
+          </h2>
+          <p className="text-muted-foreground">
+            {data.subtitle}
+          </p>
         </div>
 
-        <div className="bg-red/10 border border-red/30 rounded-xl p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-red mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            প্রেগন্যান্ট ও সিরিয়াস মেডিকেল কন্ডিশন থাকলে অবশ্যই ডাক্তারের পরামর্শ নিন।
-          </p>
+        {/* Steps - Infographic Timeline Style */}
+        <div className="relative">
+          {/* Connection line */}
+          <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20 -translate-y-1/2 z-0" />
+          
+          <div className="grid md:grid-cols-3 gap-8 relative z-10">
+            {data.steps.map((step, i) => (
+              <div key={i} className="text-center">
+                <div className="bg-background p-2 inline-block mb-4">
+                  <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground text-3xl font-bold flex items-center justify-center mx-auto shadow-lg">
+                    {step.step}
+                  </div>
+                </div>
+                <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+                  <h3 className="font-bold text-lg text-foreground mb-2">{step.title}</h3>
+                  <p className="text-muted-foreground">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pro tips */}
+        <div className="mt-12 grid md:grid-cols-2 gap-6">
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-bold text-foreground mb-1">সেরা ফলাফলের জন্য</h4>
+                <p className="text-sm text-muted-foreground">নিয়মিত ব্যবহার করুন এবং স্বাস্থ্যকর জীবনযাপন বজায় রাখুন।</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-red/5 border border-red/20 rounded-2xl p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-red/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red" />
+              </div>
+              <div>
+                <h4 className="font-bold text-foreground mb-1">সতর্কতা</h4>
+                <p className="text-sm text-muted-foreground">প্রেগন্যান্ট ও সিরিয়াস মেডিকেল কন্ডিশন থাকলে অবশ্যই ডাক্তারের পরামর্শ নিন।</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

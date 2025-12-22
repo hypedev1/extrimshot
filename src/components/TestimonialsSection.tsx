@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Star, Quote } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -56,8 +56,18 @@ export const TestimonialsSection = () => {
   );
 
   return (
-    <section className="py-16 px-4">
+    <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-card to-background">
       <div className="container">
+        <div className="text-center mb-12">
+          <div className="section-divider" />
+          <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
+            কাস্টমারদের মতামত
+          </h2>
+          <p className="text-muted-foreground">
+            বাস্তব অভিজ্ঞতা, বাস্তব ফলাফল
+          </p>
+        </div>
+
         <Carousel
           plugins={[plugin.current]}
           className="max-w-5xl mx-auto"
@@ -69,25 +79,34 @@ export const TestimonialsSection = () => {
           <CarouselContent className="-ml-4">
             {testimonials.map((item, i) => (
               <CarouselItem key={i} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                <div className="card-glass p-6 h-full">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} className="w-4 h-4 fill-primary text-primary" />
-                    ))}
+                <div className="bg-background rounded-2xl p-6 h-full border border-border shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, j) => (
+                        <Star key={j} className="w-4 h-4 fill-accent text-accent" />
+                      ))}
+                    </div>
+                    <Quote className="w-8 h-8 text-primary/20" />
                   </div>
-                  <p className="text-muted-foreground mb-4 italic">"{item.quote}"</p>
-                  <p className="font-semibold">
-                    — {item.name}, <span className="text-muted-foreground font-normal">{item.location}</span>
-                  </p>
+                  <p className="text-foreground mb-6 leading-relaxed">"{item.quote}"</p>
+                  <div className="flex items-center gap-3 pt-4 border-t border-border">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-primary font-bold">{item.name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">{item.location}</p>
+                    </div>
+                  </div>
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
         </Carousel>
 
-        <div className="text-center mt-10">
+        <div className="text-center mt-12">
           <a href="#order" className="btn-primary inline-block">
-            ​এখনি অর্ডার করুন
+            এখনি অর্ডার করুন
           </a>
         </div>
       </div>

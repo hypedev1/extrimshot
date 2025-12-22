@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ArrowRight } from 'lucide-react';
 
 interface FinalCTAContent {
   title: string;
@@ -20,20 +20,22 @@ export const FinalCTASection = ({ content }: FinalCTASectionProps) => {
   const data = content || defaultContent;
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-b from-background to-primary/10">
+    <section className="py-16 md:py-20 px-4 bg-gradient-to-b from-background to-primary/10">
       <div className="container max-w-3xl text-center">
-        <h2 className="text-2xl md:text-4xl font-bold mb-4">
+        <div className="section-divider" />
+        <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-4">
           {data.title}
         </h2>
-        <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
           {data.subtitle}
         </p>
         
-        <a href="#order" className="btn-primary inline-block text-lg mb-6 pulse-glow">
+        <a href="#order" className="btn-primary inline-flex items-center gap-2 text-lg pulse-soft">
           {data.ctaText}
+          <ArrowRight className="w-5 h-5" />
         </a>
 
-        <p className="text-red font-medium flex items-center justify-center gap-2">
+        <p className="mt-6 text-red font-medium flex items-center justify-center gap-2">
           <AlertTriangle className="w-4 h-4" />
           স্টক সীমিত – অফার যে কোনো সময় শেষ হয়ে যেতে পারে
         </p>
