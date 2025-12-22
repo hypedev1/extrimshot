@@ -94,7 +94,7 @@ export const HowToUseSection = ({ content }: HowToUseSectionProps) => {
               </div>
               <div className="min-w-0">
                 <h4 className="font-bold text-[11px] md:text-sm text-foreground mb-0.5 leading-tight">সতর্কতা</h4>
-                <p className="text-[9px] md:text-xs text-muted-foreground leading-snug">ডাক্তারের পরামর্শ নিন</p>
+                <p className="text-[9px] md:text-xs text-muted-foreground leading-snug">প্রেগন্যান্ট মহিলাদের জন্য নয়</p>
               </div>
             </div>
           </div>
