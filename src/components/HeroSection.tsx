@@ -121,19 +121,67 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           })}
         </div>
 
-        {/* Stats bar under features */}
-        <div className="flex flex-wrap justify-center gap-8 md:gap-16 mt-12 py-6 border-t border-b border-border">
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-primary">৫০,০০০+</div>
-            <div className="text-sm text-muted-foreground">সন্তুষ্ট গ্রাহক</div>
+        {/* Enhanced Stats Section */}
+        <div className="mt-16 relative">
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-green/5 rounded-3xl" />
+          
+          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0 p-8 md:p-12">
+            {/* Stat 1 */}
+            <div className="flex flex-col items-center text-center group relative">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-teal-dark flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <Heart className="w-10 h-10 text-white" />
+              </div>
+              <div className="relative">
+                <span className="text-4xl md:text-5xl font-bold text-primary">৫০,০০০+</span>
+                <div className="absolute -top-2 -right-4 w-3 h-3 bg-primary rounded-full animate-ping" />
+              </div>
+              <p className="text-muted-foreground mt-2 font-medium">সন্তুষ্ট গ্রাহক</p>
+              {/* Divider for desktop */}
+              <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-20 bg-gradient-to-b from-transparent via-border to-transparent" />
+            </div>
+
+            {/* Stat 2 */}
+            <div className="flex flex-col items-center text-center group relative">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-orange flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <Shield className="w-10 h-10 text-white" />
+              </div>
+              <div className="relative">
+                <span className="text-4xl md:text-5xl font-bold text-accent">৯৮%</span>
+                <div className="absolute -top-2 -right-4 w-3 h-3 bg-accent rounded-full animate-ping delay-300" />
+              </div>
+              <p className="text-muted-foreground mt-2 font-medium">সফলতার হার</p>
+              {/* Divider for desktop */}
+              <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-20 bg-gradient-to-b from-transparent via-border to-transparent" />
+            </div>
+
+            {/* Stat 3 */}
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green to-primary flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <Leaf className="w-10 h-10 text-white" />
+              </div>
+              <div className="relative">
+                <span className="text-4xl md:text-5xl font-bold text-green">১০০%</span>
+                <div className="absolute -top-2 -right-4 w-3 h-3 bg-green rounded-full animate-ping delay-500" />
+              </div>
+              <p className="text-muted-foreground mt-2 font-medium">প্রাকৃতিক উপাদান</p>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-accent">৯৮%</div>
-            <div className="text-sm text-muted-foreground">সফলতার হার</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-green">১০০%</div>
-            <div className="text-sm text-muted-foreground">প্রাকৃতিক</div>
+
+          {/* Trust badges */}
+          <div className="flex flex-wrap justify-center gap-4 mt-6 pb-4">
+            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-border">
+              <Check className="w-4 h-4 text-primary" />
+              <span className="text-xs font-medium text-foreground">ল্যাব টেস্টেড</span>
+            </div>
+            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-border">
+              <Check className="w-4 h-4 text-primary" />
+              <span className="text-xs font-medium text-foreground">ডাক্তার রেকমেন্ডেড</span>
+            </div>
+            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-border">
+              <Check className="w-4 h-4 text-primary" />
+              <span className="text-xs font-medium text-foreground">মানি ব্যাক গ্যারান্টি</span>
+            </div>
           </div>
         </div>
       </div>
