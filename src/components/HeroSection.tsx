@@ -28,6 +28,7 @@ const Particle = ({ delay, color }: { delay: number; color: string }) => (
 interface HeroContent {
   title: string;
   videoUrl?: string;
+  image?: string;
   subtitle: string;
   badges: { text: string }[];
   ctaText: string;
@@ -116,6 +117,36 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
                   allowFullScreen 
                   title="Product Video" 
                 />
+              </div>
+            </div>
+          )}
+
+          {!data.videoUrl && data.image && (
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                {/* Glowing background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-teal-light/40 rounded-full blur-3xl scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 to-green/20 rounded-full blur-2xl scale-105 animate-pulse" />
+                
+                {/* Product image container */}
+                <div className="relative bg-gradient-to-br from-card to-background rounded-2xl md:rounded-3xl p-4 md:p-8 border-2 border-primary/20 shadow-2xl">
+                  <img 
+                    src={data.image} 
+                    alt="Product" 
+                    className="w-48 h-48 md:w-72 md:h-72 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  />
+                  
+                  {/* Discount badge */}
+                  <div className="absolute -top-3 -right-3 md:-top-4 md:-right-4 bg-gradient-to-br from-accent to-orange text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-lg animate-bounce">
+                    {data.discount}
+                  </div>
+                  
+                  {/* Natural badge */}
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green to-emerald-600 text-white px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-medium shadow-md flex items-center gap-1">
+                    <Leaf className="w-3 h-3" />
+                    ১০০% প্রাকৃতিক
+                  </div>
+                </div>
               </div>
             </div>
           )}

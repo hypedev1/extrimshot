@@ -3,6 +3,7 @@ export interface ProductContent {
   hero: {
     title: string;
     videoUrl?: string;
+    image?: string;
     subtitle: string;
     badges: { text: string }[];
     ctaText: string;
@@ -160,6 +161,7 @@ export const productContents: Record<string, ProductContent> = {
     hero: {
       title: 'প্রাকৃতিক উপায়ে ডায়াবেটিস নিয়ন্ত্রণ করুন - কোন কেমিক্যাল নেই, শুধু প্রকৃতির শক্তি',
       subtitle: 'ডায়াবেটিক কেয়ার প্যাক - ১০০% ভেষজ ও প্রাকৃতিক উপাদানে তৈরি। রক্তে শর্করার মাত্রা স্বাভাবিক রাখতে সাহায্য করে। কোন সাইড ইফেক্ট নেই।',
+      image: '/lovable-uploads/diabetes-pack-product.png',
       badges: [
         { text: '১০০% প্রাকৃতিক ভেষজ' },
         { text: 'ক্যাশ অন ডেলিভারি' },
