@@ -30,7 +30,7 @@ export const AboutSection = ({ content }: AboutSectionProps) => {
   ];
 
   return (
-    <section className="py-16 md:py-24 px-4 bg-background">
+    <section className="pt-8 md:pt-12 pb-16 md:pb-24 px-4 bg-background">
       <div className="container">
         <div className="text-center mb-12">
           <div className="section-divider" />
