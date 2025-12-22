@@ -20,13 +20,34 @@ const AdminDashboard = () => {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchStats = async () => {
-    const { data: orders } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
+  const fetchAllOrders = async () => {
+    const allOrders: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    
+    while (true) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+      
+      if (error) break;
+      if (!data || data.length === 0) break;
+      
+      allOrders.push(...data);
+      
+      if (data.length < batchSize) break;
+      from += batchSize;
+    }
+    
+    return allOrders;
+  };
 
-    if (orders) {
+  const fetchStats = async () => {
+    const orders = await fetchAllOrders();
+
+    if (orders.length > 0) {
       const pending = orders.filter(o => o.status === 'pending').length;
       const confirmed = orders.filter(o => o.status === 'confirmed' || o.status === 'delivered').length;
       const totalSales = orders.reduce((sum, o) => sum + o.total_amount, 0);

@@ -48,16 +48,31 @@ const AdminOrders = () => {
   const { toast } = useToast();
 
   const fetchOrders = async () => {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({ variant: 'destructive', title: 'ত্রুটি', description: error.message });
-    } else {
-      setOrders(data || []);
+    const allOrders: Order[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    
+    while (true) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+      
+      if (error) {
+        toast({ variant: 'destructive', title: 'ত্রুটি', description: error.message });
+        break;
+      }
+      
+      if (!data || data.length === 0) break;
+      
+      allOrders.push(...data);
+      
+      if (data.length < batchSize) break;
+      from += batchSize;
     }
+    
+    setOrders(allOrders);
     setLoading(false);
   };
 
