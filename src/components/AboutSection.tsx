@@ -1,3 +1,5 @@
+import { Check, Award, Beaker, ShieldCheck } from 'lucide-react';
+
 interface AboutContent {
   title: string;
   image: string;
@@ -21,29 +23,47 @@ export const AboutSection = ({ content }: AboutSectionProps) => {
 
   const data = content || defaultContent;
 
-  return (
-    <section className="py-16 px-4 bg-gradient-to-b from-background to-card/50">
-      <div className="container">
-        <h2 className="text-2xl md:text-4xl font-bold text-center mb-10">
-          {data.title}
-        </h2>
+  const highlights = [
+    { icon: Award, text: 'প্রিমিয়াম কোয়ালিটি' },
+    { icon: Beaker, text: 'ল্যাব টেস্টেড' },
+    { icon: ShieldCheck, text: 'সম্পূর্ণ নিরাপদ' }
+  ];
 
-        <div className="flex flex-col lg:flex-row items-center gap-10">
-          <div className="flex-1">
-            <img 
-              alt="Product Image" 
-              className="rounded-2xl shadow-xl w-full max-w-md mx-auto" 
-              src={data.image} 
-            />
+  return (
+    <section className="py-16 md:py-24 px-4 bg-background">
+      <div className="container">
+        <div className="text-center mb-12">
+          <div className="section-divider" />
+          <h2 className="text-2xl md:text-4xl font-bold text-foreground">
+            {data.title}
+          </h2>
+        </div>
+
+        <div className="flex flex-col lg:flex-row items-center gap-12 max-w-5xl mx-auto">
+          {/* Image with decorative elements */}
+          <div className="flex-1 relative">
+            <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
+            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-accent/10 rounded-full blur-2xl" />
+            <div className="relative bg-gradient-to-br from-teal-light to-background p-8 rounded-3xl">
+              <img 
+                alt="Product Image" 
+                className="w-full max-w-xs mx-auto drop-shadow-xl" 
+                src={data.image} 
+              />
+            </div>
           </div>
+
+          {/* Content */}
           <div className="flex-1 space-y-6">
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground leading-relaxed">
               {data.description}
             </p>
 
+            {/* Tags */}
             <div className="flex flex-wrap gap-3">
               {data.tags.map((item, i) => (
-                <span key={i} className="flex items-center gap-2 bg-accent/10 border border-accent/30 rounded-full px-4 py-2 text-sm font-medium">
+                <span key={i} className="flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-2 text-sm font-medium">
+                  <Check className="w-4 h-4" />
                   {item}
                 </span>
               ))}
@@ -52,6 +72,16 @@ export const AboutSection = ({ content }: AboutSectionProps) => {
             <p className="text-muted-foreground">
               {data.additionalInfo}
             </p>
+
+            {/* Highlight boxes */}
+            <div className="grid grid-cols-3 gap-4 pt-4">
+              {highlights.map((item, i) => (
+                <div key={i} className="text-center p-4 bg-card rounded-xl border border-border">
+                  <item.icon className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <p className="text-xs font-medium text-foreground">{item.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

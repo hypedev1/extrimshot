@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Clock, CreditCard, Lock, ShieldAlert } from 'lucide-react';
+import { Clock, CreditCard, Lock, ShieldAlert, Check, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { trackInitiateCheckout, trackPurchase, trackPixelEvent } from '@/lib/fbPixel';
@@ -237,73 +237,87 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
     }
   };
 
+  const benefits = [
+    { icon: Check, text: '১০০% প্রাকৃতিক উপাদান' },
+    { icon: Truck, text: 'সারা বাংলাদেশে ফ্রি ডেলিভারি' },
+    { icon: Lock, text: 'ক্যাশ অন ডেলিভারি' }
+  ];
+
   return (
-    <section id="order" className="py-16 px-4 bg-gradient-to-b from-card/50 to-background">
-      <div className="container max-w-4xl">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full mb-4">
+    <section id="order" className="py-16 md:py-24 px-4 bg-gradient-to-b from-card to-teal-light/30">
+      <div className="container max-w-5xl">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-5 py-2 rounded-full mb-4 shadow-lg">
             <Clock className="w-4 h-4" />
             <span className="font-semibold">স্পেশাল অফার – শুধুমাত্র আজকের জন্য!</span>
           </div>
-          <h2 className="text-2xl md:text-4xl font-bold mb-2">
+          <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-2">
             {data.title}
           </h2>
           <p className="text-muted-foreground">{data.subtitle}</p>
         </div>
 
-        <div className="card-glass p-6 md:p-8">
-          <div className="flex flex-col md:flex-row gap-8">
+        <div className="bg-background rounded-3xl shadow-xl border border-border overflow-hidden">
+          <div className="flex flex-col lg:flex-row">
             {/* Package Selection */}
-            <div className="flex-1">
-              <h3 className="text-xl font-bold mb-4 text-center md:text-left">প্যাকেজ নির্বাচন করুন</h3>
-              <div className="space-y-3">
+            <div className="flex-1 p-6 md:p-8 border-b lg:border-b-0 lg:border-r border-border">
+              <h3 className="text-xl font-bold mb-6 text-foreground">প্যাকেজ নির্বাচন করুন</h3>
+              <div className="space-y-4">
                 {data.packages.map((pkg) => (
                   <div 
                     key={pkg.id}
                     onClick={() => setFormData({ ...formData, packageType: pkg.id })}
-                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                    className={`cursor-pointer p-5 rounded-2xl border-2 transition-all ${
                       formData.packageType === pkg.id 
-                        ? 'border-primary bg-primary/10' 
-                        : 'border-border hover:border-primary/50'
+                        ? 'border-primary bg-primary/5 shadow-md' 
+                        : 'border-border hover:border-primary/50 bg-card'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        formData.packageType === pkg.id ? 'border-primary' : 'border-muted-foreground'
+                    <div className="flex items-center gap-4">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        formData.packageType === pkg.id ? 'border-primary bg-primary' : 'border-muted-foreground'
                       }`}>
                         {formData.packageType === pkg.id && (
-                          <div className="w-3 h-3 rounded-full bg-primary" />
+                          <Check className="w-4 h-4 text-primary-foreground" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold">{pkg.name}</p>
+                        <p className="font-bold text-foreground">{pkg.name}</p>
                         <p className="text-sm text-muted-foreground">{pkg.quantity}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-primary">৳{pkg.price}</p>
+                        <p className="text-2xl font-bold text-primary">৳{pkg.price}</p>
                         <p className="text-sm line-through text-muted-foreground">৳{pkg.originalPrice}</p>
                       </div>
                     </div>
-                    {pkg.popular && (
-                      <div className="mt-2 ml-8">
-                        <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded-full">সবচেয়ে জনপ্রিয়</span>
+                    {(pkg.popular || pkg.savings) && (
+                      <div className="mt-3 ml-10 flex gap-2">
+                        {pkg.popular && (
+                          <span className="text-xs bg-accent text-accent-foreground px-3 py-1 rounded-full font-medium">সবচেয়ে জনপ্রিয়</span>
+                        )}
+                        {pkg.savings && (
+                          <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">{pkg.savings}</span>
+                        )}
                       </div>
-                    )}
-                    {pkg.savings && (
-                      <div className="mt-1 ml-8 text-xs text-accent">{pkg.savings}</div>
                     )}
                   </div>
                 ))}
               </div>
 
-              <div className="mt-4 bg-accent/10 border border-accent/30 rounded-xl p-4 text-center">
-                <p className="text-accent font-semibold">💰 নির্বাচিত প্যাকেজ: ৳{selectedPackage.price}</p>
+              {/* Benefits */}
+              <div className="mt-6 space-y-3">
+                {benefits.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 text-muted-foreground">
+                    <item.icon className="w-5 h-5 text-primary" />
+                    <span className="text-sm">{item.text}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Form */}
-            <div className="flex-1">
-              <h3 className="text-xl font-bold mb-6">অর্ডার করতে নিচের ফর্মটি পূরণ করুন</h3>
+            <div className="flex-1 p-6 md:p-8 bg-card/50">
+              <h3 className="text-xl font-bold mb-6 text-foreground">অর্ডার করতে ফর্মটি পূরণ করুন</h3>
               
               {fraudBlock.blocked && (
                 <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-4 flex items-start gap-3">
@@ -321,47 +335,47 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">আপনার নাম *</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">আপনার নাম *</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     onBlur={updateIncompleteOrder}
-                    className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                     placeholder="আপনার পুরো নাম লিখুন"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">মোবাইল নাম্বার *</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">মোবাইল নাম্বার *</label>
                   <input
                     type="tel"
                     required
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     onBlur={handlePhoneBlur}
-                    className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                     placeholder="01XXXXXXXXX"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">সম্পূর্ণ ঠিকানা *</label>
+                  <label className="block text-sm font-medium mb-2 text-foreground">সম্পূর্ণ ঠিকানা *</label>
                   <textarea
                     required
                     value={formData.address}
                     onChange={e => setFormData({ ...formData, address: e.target.value })}
                     onBlur={updateIncompleteOrder}
-                    className="w-full bg-secondary border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary resize-none text-foreground"
                     rows={3}
                     placeholder="বাড়ি/ফ্ল্যাট নং, রাস্তার নাম, এলাকা, শহর"
                   />
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 rounded-lg p-3">
-                  <CreditCard className="w-4 h-4 text-primary" />
-                  <span>💳 পেমেন্ট: Cash on Delivery (হাতে পণ্য পেয়ে টাকা দিবেন)</span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-primary/5 rounded-xl p-4 border border-primary/10">
+                  <CreditCard className="w-5 h-5 text-primary" />
+                  <span>পেমেন্ট: Cash on Delivery (হাতে পণ্য পেয়ে টাকা দিবেন)</span>
                 </div>
 
                 <button
@@ -369,12 +383,12 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
                   disabled={isSubmitting || isFingerprintLoading || fraudBlock.blocked}
                   className="btn-primary w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'প্রসেস হচ্ছে...' : isFingerprintLoading ? 'লোড হচ্ছে...' : 'অর্ডার কনফার্ম করুন'}
+                  {isSubmitting ? 'প্রসেস হচ্ছে...' : isFingerprintLoading ? 'লোড হচ্ছে...' : `অর্ডার কনফার্ম করুন - ৳${selectedPackage.price}`}
                 </button>
 
-                <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>🔒 কোনো আগাম পেমেন্ট নয় – আগে পণ্য, তারপর পেমেন্ট। আপনার তথ্য ১০০% সিকিউর।</span>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Lock className="w-4 h-4" />
+                  <span>আপনার তথ্য ১০০% সিকিউর</span>
                 </div>
               </form>
             </div>
