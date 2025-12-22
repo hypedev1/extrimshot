@@ -4,6 +4,14 @@ const iconMap: Record<string, any> = {
   Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock, Check
 };
 
+// Infographic colors for each feature card
+const cardStyles = [
+  { bg: 'bg-primary/10', iconBg: 'bg-primary', border: 'border-primary/20', accent: 'text-primary' },
+  { bg: 'bg-accent/10', iconBg: 'bg-accent', border: 'border-accent/20', accent: 'text-accent' },
+  { bg: 'bg-green/10', iconBg: 'bg-green', border: 'border-green/20', accent: 'text-green' },
+  { bg: 'bg-teal-dark/10', iconBg: 'bg-teal-dark', border: 'border-teal-dark/20', accent: 'text-teal-dark' },
+];
+
 interface HeroContent {
   title: string;
   videoUrl?: string;
@@ -78,20 +86,55 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           </a>
         </div>
 
-        {/* Infographic Features Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mt-12">
+        {/* Infographic Features Grid - Enhanced */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto mt-12">
           {data.features.map((item, i) => {
             const IconComponent = iconMap[item.icon] || Zap;
+            const style = cardStyles[i % cardStyles.length];
             return (
-              <div key={i} className="infographic-card text-center group">
-                <div className="infographic-icon bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <IconComponent className="w-8 h-8 text-primary" />
+              <div 
+                key={i} 
+                className={`relative overflow-hidden rounded-2xl p-6 ${style.bg} border ${style.border} group hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
+              >
+                {/* Decorative circle */}
+                <div className={`absolute -top-6 -right-6 w-24 h-24 ${style.iconBg} opacity-10 rounded-full`} />
+                
+                {/* Icon with ring */}
+                <div className="relative mb-4">
+                  <div className={`w-16 h-16 ${style.iconBg} rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComponent className="w-8 h-8 text-white" />
+                  </div>
+                  {/* Animated ring */}
+                  <div className={`absolute inset-0 w-16 h-16 mx-auto border-2 ${style.border} rounded-2xl animate-ping opacity-20`} />
                 </div>
-                <h3 className="font-bold text-foreground mb-1">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
+                
+                {/* Content */}
+                <div className="text-center relative">
+                  <h3 className={`font-bold text-lg mb-2 ${style.accent}`}>{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+
+                {/* Bottom accent line */}
+                <div className={`absolute bottom-0 left-0 right-0 h-1 ${style.iconBg} opacity-50 group-hover:opacity-100 transition-opacity`} />
               </div>
             );
           })}
+        </div>
+
+        {/* Stats bar under features */}
+        <div className="flex flex-wrap justify-center gap-8 md:gap-16 mt-12 py-6 border-t border-b border-border">
+          <div className="text-center">
+            <div className="text-3xl md:text-4xl font-bold text-primary">৫০,০০০+</div>
+            <div className="text-sm text-muted-foreground">সন্তুষ্ট গ্রাহক</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl md:text-4xl font-bold text-accent">৯৮%</div>
+            <div className="text-sm text-muted-foreground">সফলতার হার</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl md:text-4xl font-bold text-green">১০০%</div>
+            <div className="text-sm text-muted-foreground">প্রাকৃতিক</div>
+          </div>
         </div>
       </div>
     </section>
