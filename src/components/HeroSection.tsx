@@ -1,4 +1,4 @@
-import { Check, Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock, Sparkles } from 'lucide-react';
+import { Check, Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock, Sparkles, Star } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const iconMap: Record<string, any> = {
@@ -134,10 +134,32 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <a href="#order" className="btn-primary inline-block text-lg pulse-soft">
-            {data.ctaText} – {data.discount}
-          </a>
+          {/* Trust Badge + CTA Button */}
+          <div className="flex flex-col items-center gap-4">
+            {/* Review Trust Badge */}
+            <div className="flex items-center gap-3 bg-background border border-border rounded-full px-5 py-2.5 shadow-sm">
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star 
+                    key={i} 
+                    className={`w-4 h-4 ${i < 5 ? 'fill-accent text-accent' : 'text-muted-foreground'}`} 
+                  />
+                ))}
+              </div>
+              <div className="w-px h-5 bg-border" />
+              <div className="text-sm">
+                <span className="font-bold text-foreground">4.8</span>
+                <span className="text-muted-foreground"> • </span>
+                <span className="font-semibold text-primary">11,827+</span>
+                <span className="text-muted-foreground"> রিভিউ</span>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <a href="#order" className="btn-primary inline-block text-lg pulse-soft">
+              {data.ctaText} – {data.discount}
+            </a>
+          </div>
         </div>
 
         {/* Infographic Features Grid - Enhanced */}
