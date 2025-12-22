@@ -124,13 +124,13 @@ export const AboutSection = ({ content }: AboutSectionProps) => {
               ))}
             </div>
 
-            {/* CTA */}
+            {/* CTA Button */}
             <a 
               href="#order" 
-              className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all duration-300"
+              className="btn-primary inline-flex items-center gap-2 text-base"
             >
               এখনই অর্ডার করুন
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-5 h-5" />
             </a>
           </div>
         </div>
