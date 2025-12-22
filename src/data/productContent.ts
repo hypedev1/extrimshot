@@ -241,7 +241,7 @@ export const productContents: Record<string, ProductContent> = {
       title: 'আজই অর্ডার করুন',
       subtitle: 'সীমিত সময়ের জন্য বিশেষ ছাড়',
       packages: [
-        { id: '1pack', name: '১ প্যাক', quantity: '১৫ দিনের কোর্স', price: 1250, originalPrice: 2500, savings: '৫০% সেভ' }
+        { id: '1pack', name: '১ প্যাক', quantity: '১৫ দিনের কোর্স', price: 850, originalPrice: 2500, savings: '৬৬% সেভ' }
       ]
     },
     finalCta: {
