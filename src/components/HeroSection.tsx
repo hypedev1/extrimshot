@@ -1,4 +1,5 @@
-import { Check, Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock } from 'lucide-react';
+import { Check, Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 const iconMap: Record<string, any> = {
   Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock, Check
@@ -11,6 +12,18 @@ const cardStyles = [
   { bg: 'bg-green/10', iconBg: 'bg-green', border: 'border-green/20', accent: 'text-green' },
   { bg: 'bg-teal-dark/10', iconBg: 'bg-teal-dark', border: 'border-teal-dark/20', accent: 'text-teal-dark' },
 ];
+
+// Particle component for confetti effect
+const Particle = ({ delay, color }: { delay: number; color: string }) => (
+  <div 
+    className="absolute w-2 h-2 rounded-full animate-particle opacity-0"
+    style={{
+      backgroundColor: color,
+      left: `${Math.random() * 100}%`,
+      animationDelay: `${delay}ms`,
+    }}
+  />
+);
 
 interface HeroContent {
   title: string;
@@ -27,6 +40,30 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ content }: HeroSectionProps) => {
+  const [showParticles, setShowParticles] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setShowParticles(true);
+            // Hide particles after animation
+            setTimeout(() => setShowParticles(false), 2000);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    if (statsRef.current) {
+      observer.observe(statsRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const defaultContent: HeroContent = {
     title: 'ডক্টর এ আর খান এর রেকমেন্ডেড প্রডাক্ট এক্সট্রিমশট',
     videoUrl: 'https://www.youtube.com/embed/iOaQbkKdlYA?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=iOaQbkKdlYA&playsinline=1',
@@ -43,9 +80,26 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
   };
 
   const data = content || defaultContent;
+  const particleColors = ['#2B9E9E', '#F97316', '#10B981', '#0D9488'];
 
   return (
     <section className="py-12 md:py-20 px-4 bg-gradient-to-b from-teal-light/50 to-background">
+      <style>{`
+        @keyframes particle {
+          0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-100px) scale(0);
+          }
+        }
+        .animate-particle {
+          animation: particle 1.5s ease-out forwards;
+        }
+      `}</style>
+      
       <div className="container">
         <div className="text-center mb-10">
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6 text-foreground">
@@ -121,67 +175,78 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           })}
         </div>
 
-        {/* Enhanced Stats Section */}
-        <div className="mt-16 relative">
-          {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-green/5 rounded-3xl" />
-          
-          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0 p-8 md:p-12">
-            {/* Stat 1 */}
-            <div className="flex flex-col items-center text-center group relative">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-teal-dark flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Heart className="w-10 h-10 text-white" />
-              </div>
-              <div className="relative">
-                <span className="text-4xl md:text-5xl font-bold text-primary">৫০,০০০+</span>
-                <div className="absolute -top-2 -right-4 w-3 h-3 bg-primary rounded-full animate-ping" />
-              </div>
-              <p className="text-muted-foreground mt-2 font-medium">সন্তুষ্ট গ্রাহক</p>
-              {/* Divider for desktop */}
-              <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-20 bg-gradient-to-b from-transparent via-border to-transparent" />
+        {/* Compact Stats Section with Particles */}
+        <div ref={statsRef} className="mt-12 relative overflow-hidden">
+          {/* Particle animation */}
+          {showParticles && (
+            <div className="absolute inset-0 pointer-events-none">
+              {[...Array(20)].map((_, i) => (
+                <Particle 
+                  key={i} 
+                  delay={i * 100} 
+                  color={particleColors[i % particleColors.length]} 
+                />
+              ))}
             </div>
+          )}
+          
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-green/5 rounded-2xl" />
+          
+          <div className="relative flex flex-wrap justify-center items-center gap-8 md:gap-12 py-6 px-4">
+            {/* Stat 1 */}
+            <div className="flex items-center gap-3 group">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-teal-dark flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-2xl md:text-3xl font-bold text-primary">৫০,০০০+</span>
+                <p className="text-xs text-muted-foreground">সন্তুষ্ট গ্রাহক</p>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="hidden md:block w-px h-10 bg-border" />
 
             {/* Stat 2 */}
-            <div className="flex flex-col items-center text-center group relative">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-orange flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Shield className="w-10 h-10 text-white" />
+            <div className="flex items-center gap-3 group">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-orange flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Shield className="w-6 h-6 text-white" />
               </div>
-              <div className="relative">
-                <span className="text-4xl md:text-5xl font-bold text-accent">৯৮%</span>
-                <div className="absolute -top-2 -right-4 w-3 h-3 bg-accent rounded-full animate-ping delay-300" />
+              <div>
+                <span className="text-2xl md:text-3xl font-bold text-accent">৯৮%</span>
+                <p className="text-xs text-muted-foreground">সফলতার হার</p>
               </div>
-              <p className="text-muted-foreground mt-2 font-medium">সফলতার হার</p>
-              {/* Divider for desktop */}
-              <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-20 bg-gradient-to-b from-transparent via-border to-transparent" />
             </div>
 
+            {/* Divider */}
+            <div className="hidden md:block w-px h-10 bg-border" />
+
             {/* Stat 3 */}
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green to-primary flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Leaf className="w-10 h-10 text-white" />
+            <div className="flex items-center gap-3 group">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green to-primary flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Leaf className="w-6 h-6 text-white" />
               </div>
-              <div className="relative">
-                <span className="text-4xl md:text-5xl font-bold text-green">১০০%</span>
-                <div className="absolute -top-2 -right-4 w-3 h-3 bg-green rounded-full animate-ping delay-500" />
+              <div>
+                <span className="text-2xl md:text-3xl font-bold text-green">১০০%</span>
+                <p className="text-xs text-muted-foreground">প্রাকৃতিক</p>
               </div>
-              <p className="text-muted-foreground mt-2 font-medium">প্রাকৃতিক উপাদান</p>
             </div>
           </div>
 
-          {/* Trust badges */}
-          <div className="flex flex-wrap justify-center gap-4 mt-6 pb-4">
-            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-border">
-              <Check className="w-4 h-4 text-primary" />
-              <span className="text-xs font-medium text-foreground">ল্যাব টেস্টেড</span>
-            </div>
-            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-border">
-              <Check className="w-4 h-4 text-primary" />
-              <span className="text-xs font-medium text-foreground">ডাক্তার রেকমেন্ডেড</span>
-            </div>
-            <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-border">
-              <Check className="w-4 h-4 text-primary" />
-              <span className="text-xs font-medium text-foreground">মানি ব্যাক গ্যারান্টি</span>
-            </div>
+          {/* Compact Trust badges */}
+          <div className="flex flex-wrap justify-center gap-3 pb-4">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Sparkles className="w-3 h-3 text-primary" /> ল্যাব টেস্টেড
+            </span>
+            <span className="text-border">•</span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Sparkles className="w-3 h-3 text-primary" /> ডাক্তার রেকমেন্ডেড
+            </span>
+            <span className="text-border">•</span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Sparkles className="w-3 h-3 text-primary" /> মানি ব্যাক গ্যারান্টি
+            </span>
           </div>
         </div>
       </div>
