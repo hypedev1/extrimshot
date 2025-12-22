@@ -27,15 +27,15 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Subtle grid background */}
+      {/* Grid background */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0 opacity-40" 
+        className="fixed inset-0 pointer-events-none z-0" 
         style={{
           backgroundImage: `
-            linear-gradient(to right, hsl(var(--primary) / 0.08) 1px, transparent 1px),
-            linear-gradient(to bottom, hsl(var(--primary) / 0.08) 1px, transparent 1px)
+            linear-gradient(to right, hsl(var(--primary) / 0.15) 1px, transparent 1px),
+            linear-gradient(to bottom, hsl(var(--primary) / 0.15) 1px, transparent 1px)
           `,
-          backgroundSize: '50px 50px'
+          backgroundSize: '60px 60px'
         }} 
       />
       
