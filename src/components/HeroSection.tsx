@@ -197,12 +197,12 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           })}
         </div>
 
-        {/* Compact Stats Section with Particles */}
-        <div ref={statsRef} className="mt-12 relative overflow-hidden">
+        {/* Compact Stats Section - Mobile Optimized */}
+        <div ref={statsRef} className="mt-8 md:mt-12 relative overflow-hidden">
           {/* Particle animation */}
           {showParticles && (
             <div className="absolute inset-0 pointer-events-none">
-              {[...Array(20)].map((_, i) => (
+              {[...Array(15)].map((_, i) => (
                 <Particle 
                   key={i} 
                   delay={i * 100} 
@@ -213,61 +213,56 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           )}
           
           {/* Background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-green/5 rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-green/5 rounded-xl md:rounded-2xl" />
           
-          <div className="relative flex flex-wrap justify-center items-center gap-8 md:gap-12 py-6 px-4">
+          {/* Stats Grid - Compact on Mobile */}
+          <div className="relative grid grid-cols-3 gap-2 md:gap-8 py-4 md:py-6 px-2 md:px-4">
             {/* Stat 1 */}
-            <div className="flex items-center gap-3 group">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-teal-dark flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <Heart className="w-6 h-6 text-white" />
+            <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-center md:text-left group">
+              <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-primary to-teal-dark flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Heart className="w-4 h-4 md:w-6 md:h-6 text-white" />
               </div>
               <div>
-                <span className="text-2xl md:text-3xl font-bold text-primary">৫০,০০০+</span>
-                <p className="text-xs text-muted-foreground">সন্তুষ্ট গ্রাহক</p>
+                <span className="text-lg md:text-2xl font-bold text-primary block">৫০K+</span>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">সন্তুষ্ট গ্রাহক</p>
               </div>
             </div>
-
-            {/* Divider */}
-            <div className="hidden md:block w-px h-10 bg-border" />
 
             {/* Stat 2 */}
-            <div className="flex items-center gap-3 group">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-orange flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <Shield className="w-6 h-6 text-white" />
+            <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-center md:text-left group border-x border-border/50">
+              <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-accent to-orange flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Shield className="w-4 h-4 md:w-6 md:h-6 text-white" />
               </div>
               <div>
-                <span className="text-2xl md:text-3xl font-bold text-accent">৯৮%</span>
-                <p className="text-xs text-muted-foreground">সফলতার হার</p>
+                <span className="text-lg md:text-2xl font-bold text-accent block">৯৮%</span>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">সফলতার হার</p>
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="hidden md:block w-px h-10 bg-border" />
-
             {/* Stat 3 */}
-            <div className="flex items-center gap-3 group">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green to-primary flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <Leaf className="w-6 h-6 text-white" />
+            <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-center md:text-left group">
+              <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green to-primary flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Leaf className="w-4 h-4 md:w-6 md:h-6 text-white" />
               </div>
               <div>
-                <span className="text-2xl md:text-3xl font-bold text-green">১০০%</span>
-                <p className="text-xs text-muted-foreground">প্রাকৃতিক</p>
+                <span className="text-lg md:text-2xl font-bold text-green block">১০০%</span>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">প্রাকৃতিক</p>
               </div>
             </div>
           </div>
 
-          {/* Compact Trust badges */}
-          <div className="flex flex-wrap justify-center gap-3 pb-4">
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Sparkles className="w-3 h-3 text-primary" /> ল্যাব টেস্টেড
+          {/* Trust badges - Single line on mobile */}
+          <div className="flex justify-center items-center gap-2 md:gap-3 pb-3 md:pb-4 px-2">
+            <span className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground">
+              <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" /> ল্যাব টেস্টেড
             </span>
-            <span className="text-border">•</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Sparkles className="w-3 h-3 text-primary" /> ডাক্তার রেকমেন্ডেড
+            <span className="text-border text-[10px]">•</span>
+            <span className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground">
+              <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" /> ডাক্তার রেকমেন্ডেড
             </span>
-            <span className="text-border">•</span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Sparkles className="w-3 h-3 text-primary" /> মানি ব্যাক গ্যারান্টি
+            <span className="text-border text-[10px]">•</span>
+            <span className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground">
+              <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" /> গ্যারান্টি
             </span>
           </div>
         </div>
