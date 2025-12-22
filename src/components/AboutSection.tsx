@@ -68,12 +68,6 @@ export const AboutSection = ({ content }: AboutSectionProps) => {
                 src={data.image} 
               />
             </div>
-
-            {/* Floating badge */}
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-full shadow-lg text-sm font-bold flex items-center gap-2">
-              <Check className="w-4 h-4" />
-              ১০০% অরিজিনাল
-            </div>
           </div>
 
           {/* Content */}
