@@ -129,7 +129,7 @@ export const productContents: Record<string, ProductContent> = {
       items: [
         { value: '৫০,০০০+', label: 'সন্তুষ্ট কাস্টমার' },
         { value: '৯৮%', label: 'পজিটিভ রিভিউ' },
-        { value: '৫০+', label: 'জেলা কভারেজ' },
+        { value: '৬৪', label: 'জেলা কভারেজ' },
         { value: '২৪/৭', label: 'কাস্টমার সাপোর্ট' }
       ]
     },
