@@ -36,7 +36,7 @@ const AdminAnalytics = () => {
     if (orders) {
       // Group by date
       const grouped = orders.reduce((acc: Record<string, { orders: number; sales: number }>, order) => {
-        const date = new Date(order.created_at).toLocaleDateString('bn-BD', { month: 'short', day: 'numeric' });
+        const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         if (!acc[date]) {
           acc[date] = { orders: 0, sales: 0 };
         }
@@ -67,10 +67,10 @@ const AdminAnalytics = () => {
       };
 
       const statusLabels: Record<string, string> = {
-        pending: 'পেন্ডিং',
-        confirmed: 'কনফার্মড',
-        delivered: 'ডেলিভারড',
-        cancelled: 'বাতিল',
+        pending: 'Pending',
+        confirmed: 'Confirmed',
+        delivered: 'Delivered',
+        cancelled: 'Cancelled',
       };
 
       setStatusData(
@@ -97,8 +97,8 @@ const AdminAnalytics = () => {
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">পরিসংখ্যান</h1>
-            <p className="text-muted-foreground text-sm lg:text-base">বিক্রয় ও অর্ডার বিশ্লেষণ</p>
+            <h1 className="text-2xl lg:text-3xl font-bold">Analytics</h1>
+            <p className="text-muted-foreground text-sm lg:text-base">Sales and order analysis</p>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-muted-foreground" />
@@ -107,9 +107,9 @@ const AdminAnalytics = () => {
               onChange={(e) => setDateRange(e.target.value)}
               className="bg-secondary border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="7">গত ৭ দিন</option>
-              <option value="30">গত ৩০ দিন</option>
-              <option value="90">গত ৯০ দিন</option>
+              <option value="7">Last 7 Days</option>
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
             </select>
           </div>
         </div>
@@ -125,7 +125,7 @@ const AdminAnalytics = () => {
               <div className="card-glass p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-muted-foreground text-sm">মোট অর্ডার</p>
+                    <p className="text-muted-foreground text-sm">Total Orders</p>
                     <p className="text-3xl font-bold mt-1">{totalOrders}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-blue-500/20 text-blue-500">
@@ -136,7 +136,7 @@ const AdminAnalytics = () => {
               <div className="card-glass p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-muted-foreground text-sm">মোট বিক্রয়</p>
+                    <p className="text-muted-foreground text-sm">Total Sales</p>
                     <p className="text-3xl font-bold mt-1">৳{totalSales.toLocaleString()}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-green-500/20 text-green-500">
@@ -147,7 +147,7 @@ const AdminAnalytics = () => {
               <div className="card-glass p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-muted-foreground text-sm">গড় অর্ডার মূল্য</p>
+                    <p className="text-muted-foreground text-sm">Avg Order Value</p>
                     <p className="text-3xl font-bold mt-1">৳{avgOrderValue.toLocaleString()}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-primary/20 text-primary">
@@ -161,7 +161,7 @@ const AdminAnalytics = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Orders Chart */}
               <div className="card-glass p-6">
-                <h3 className="text-lg font-semibold mb-4">দৈনিক অর্ডার</h3>
+                <h3 className="text-lg font-semibold mb-4">Daily Orders</h3>
                 {dailyData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={dailyData}>
@@ -180,14 +180,14 @@ const AdminAnalytics = () => {
                   </ResponsiveContainer>
                 ) : (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    কোনো ডেটা নেই
+                    No data
                   </div>
                 )}
               </div>
 
               {/* Sales Chart */}
               <div className="card-glass p-6">
-                <h3 className="text-lg font-semibold mb-4">দৈনিক বিক্রয়</h3>
+                <h3 className="text-lg font-semibold mb-4">Daily Sales</h3>
                 {dailyData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={dailyData}>
@@ -200,21 +200,21 @@ const AdminAnalytics = () => {
                           border: '1px solid hsl(var(--border))',
                           borderRadius: '8px'
                         }}
-                        formatter={(value: number) => [`৳${value.toLocaleString()}`, 'বিক্রয়']}
+                        formatter={(value: number) => [`৳${value.toLocaleString()}`, 'Sales']}
                       />
                       <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    কোনো ডেটা নেই
+                    No data
                   </div>
                 )}
               </div>
 
               {/* Status Distribution */}
               <div className="card-glass p-6 lg:col-span-2">
-                <h3 className="text-lg font-semibold mb-4">অর্ডার স্ট্যাটাস বিতরণ</h3>
+                <h3 className="text-lg font-semibold mb-4">Order Status Distribution</h3>
                 {statusData.length > 0 ? (
                   <div className="flex flex-col lg:flex-row items-center justify-center gap-8">
                     <ResponsiveContainer width={250} height={250}>
@@ -252,7 +252,7 @@ const AdminAnalytics = () => {
                   </div>
                 ) : (
                   <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                    কোনো ডেটা নেই
+                    No data
                   </div>
                 )}
               </div>

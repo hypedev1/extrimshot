@@ -30,8 +30,8 @@ const AdminAuth = () => {
         const { error } = await signUp(email, password);
         if (error) throw error;
         toast({
-          title: "অ্যাকাউন্ট তৈরি হয়েছে!",
-          description: "এখন লগইন করুন এবং অ্যাডমিন প্যানেলে প্রবেশ করুন।",
+          title: "Account created!",
+          description: "Now login and access the admin panel.",
         });
         setIsSignUp(false);
       } else {
@@ -41,8 +41,8 @@ const AdminAuth = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "ত্রুটি হয়েছে",
-        description: error.message || "লগইন করতে সমস্যা হয়েছে।",
+        title: "Error occurred",
+        description: error.message || "Failed to login.",
       });
     } finally {
       setIsLoading(false);
@@ -65,15 +65,15 @@ const AdminAuth = () => {
             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-gradient">অ্যাডমিন প্যানেল</h1>
+            <h1 className="text-2xl font-bold text-gradient">Admin Panel</h1>
             <p className="text-muted-foreground mt-2">
-              {isSignUp ? 'নতুন অ্যাকাউন্ট তৈরি করুন' : 'লগইন করুন'}
+              {isSignUp ? 'Create a new account' : 'Login'}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">ইমেইল</label>
+              <label className="block text-sm font-medium mb-2">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -88,7 +88,7 @@ const AdminAuth = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">পাসওয়ার্ড</label>
+              <label className="block text-sm font-medium mb-2">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -115,7 +115,7 @@ const AdminAuth = () => {
               disabled={isLoading}
               className="btn-primary w-full disabled:opacity-50"
             >
-              {isLoading ? 'প্রসেস হচ্ছে...' : isSignUp ? 'সাইন আপ করুন' : 'লগইন করুন'}
+              {isLoading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Login'}
             </button>
           </form>
 
@@ -124,7 +124,7 @@ const AdminAuth = () => {
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-primary hover:underline text-sm"
             >
-              {isSignUp ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন করুন' : 'নতুন অ্যাকাউন্ট তৈরি করুন'}
+              {isSignUp ? 'Already have an account? Login' : 'Create a new account'}
             </button>
           </div>
         </div>

@@ -4,7 +4,6 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { bn } from 'date-fns/locale';
 
 interface FraudAttempt {
   id: string;
@@ -39,8 +38,8 @@ const AdminFraudAttempts = () => {
       console.error('Error fetching fraud attempts:', error);
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
-        description: 'ডেটা লোড করতে সমস্যা হয়েছে'
+        title: 'Error',
+        description: 'Failed to load data'
       });
     } finally {
       setIsLoading(false);
@@ -79,13 +78,13 @@ const AdminFraudAttempts = () => {
       setAttempts(prev => prev.filter(a => a.id !== id));
       setSelectedAttempt(null);
       toast({
-        title: 'সফল',
-        description: 'রেকর্ড মুছে ফেলা হয়েছে'
+        title: 'Success',
+        description: 'Record deleted'
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
+        title: 'Error',
         description: error.message
       });
     }
@@ -105,13 +104,13 @@ const AdminFraudAttempts = () => {
 
       fetchAttempts();
       toast({
-        title: 'সফল',
-        description: '২৪ ঘণ্টার পুরনো রেকর্ড মুছে ফেলা হয়েছে'
+        title: 'Success',
+        description: 'Records older than 24 hours deleted'
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'ত্রুটি',
+        title: 'Error',
         description: error.message
       });
     }
@@ -148,7 +147,7 @@ const AdminFraudAttempts = () => {
   };
 
   const formatDate = (dateStr: string) => {
-    return format(new Date(dateStr), 'dd MMM yyyy, hh:mm a', { locale: bn });
+    return format(new Date(dateStr), 'dd MMM yyyy, hh:mm a');
   };
 
   const truncate = (str: string, len: number) => {
@@ -168,7 +167,7 @@ const AdminFraudAttempts = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-xs text-muted-foreground">মোট রেকর্ড</p>
+                <p className="text-xs text-muted-foreground">Total Records</p>
               </div>
             </div>
           </div>
@@ -180,7 +179,7 @@ const AdminFraudAttempts = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.last24h}</p>
-                <p className="text-xs text-muted-foreground">গত ২৪ ঘণ্টায়</p>
+                <p className="text-xs text-muted-foreground">Last 24 Hours</p>
               </div>
             </div>
           </div>
@@ -192,7 +191,7 @@ const AdminFraudAttempts = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.uniqueDevices}</p>
-                <p className="text-xs text-muted-foreground">ইউনিক ডিভাইস</p>
+                <p className="text-xs text-muted-foreground">Unique Devices</p>
               </div>
             </div>
           </div>
@@ -204,7 +203,7 @@ const AdminFraudAttempts = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.suspiciousDevices}</p>
-                <p className="text-xs text-muted-foreground">সন্দেহজনক ডিভাইস</p>
+                <p className="text-xs text-muted-foreground">Suspicious Devices</p>
               </div>
             </div>
           </div>
@@ -216,7 +215,7 @@ const AdminFraudAttempts = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="ফোন, আইপি বা ফিঙ্গারপ্রিন্ট দিয়ে খুঁজুন..."
+              placeholder="Search by phone, IP or fingerprint..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-secondary border border-border rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -228,14 +227,14 @@ const AdminFraudAttempts = () => {
               className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-xl transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">রিফ্রেশ</span>
+              <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
               onClick={handleClearOld}
               className="flex items-center gap-2 px-4 py-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-xl transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">পুরনো মুছুন</span>
+              <span className="hidden sm:inline">Delete Old</span>
             </button>
           </div>
         </div>
@@ -244,23 +243,23 @@ const AdminFraudAttempts = () => {
         <div className="card-glass overflow-hidden">
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">
-              লোড হচ্ছে...
+              Loading...
             </div>
           ) : filteredAttempts.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              কোনো রেকর্ড পাওয়া যায়নি
+              No records found
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-secondary/50">
                   <tr>
-                    <th className="text-left px-4 py-3 text-sm font-medium">ফোন</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium hidden md:table-cell">আইপি</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium hidden lg:table-cell">ডিভাইস</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium">সময়</th>
-                    <th className="text-left px-4 py-3 text-sm font-medium">স্ট্যাটাস</th>
-                    <th className="text-right px-4 py-3 text-sm font-medium">অ্যাকশন</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">Phone</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium hidden md:table-cell">IP</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium hidden lg:table-cell">Device</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">Time</th>
+                    <th className="text-left px-4 py-3 text-sm font-medium">Status</th>
+                    <th className="text-right px-4 py-3 text-sm font-medium">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -298,11 +297,11 @@ const AdminFraudAttempts = () => {
                           {isRepeatDevice || isRepeatIP ? (
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-destructive/20 text-destructive rounded-full text-xs font-medium">
                               <ShieldAlert className="w-3 h-3" />
-                              সন্দেহজনক
+                              Suspicious
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent/20 text-accent rounded-full text-xs font-medium">
-                              স্বাভাবিক
+                              Normal
                             </span>
                           )}
                         </td>
@@ -313,7 +312,7 @@ const AdminFraudAttempts = () => {
                               handleDelete(attempt.id);
                             }}
                             className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
-                            title="মুছুন"
+                            title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -338,39 +337,39 @@ const AdminFraudAttempts = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6 border-b border-border">
-                <h3 className="text-lg font-bold">রেকর্ড বিস্তারিত</h3>
+                <h3 className="text-lg font-bold">Record Details</h3>
               </div>
               <div className="p-6 space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">ফোন নম্বর</p>
+                  <p className="text-sm text-muted-foreground mb-1">Phone Number</p>
                   <p className="font-medium">{selectedAttempt.phone}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">আইপি এড্রেস</p>
+                  <p className="text-sm text-muted-foreground mb-1">IP Address</p>
                   <p className="font-medium">{selectedAttempt.ip_address || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">ফিঙ্গারপ্রিন্ট</p>
+                  <p className="text-sm text-muted-foreground mb-1">Fingerprint</p>
                   <p className="font-mono text-sm break-all">{selectedAttempt.fingerprint}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">স্ক্রিন রেজোলিউশন</p>
+                  <p className="text-sm text-muted-foreground mb-1">Screen Resolution</p>
                   <p className="font-medium">{selectedAttempt.screen_resolution || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">টাইমজোন</p>
+                  <p className="text-sm text-muted-foreground mb-1">Timezone</p>
                   <p className="font-medium">{selectedAttempt.timezone || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">ভাষা</p>
+                  <p className="text-sm text-muted-foreground mb-1">Language</p>
                   <p className="font-medium">{selectedAttempt.language || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">ইউজার এজেন্ট</p>
+                  <p className="text-sm text-muted-foreground mb-1">User Agent</p>
                   <p className="text-xs font-mono break-all text-muted-foreground">{selectedAttempt.user_agent || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">সময়</p>
+                  <p className="text-sm text-muted-foreground mb-1">Time</p>
                   <p className="font-medium">{formatDate(selectedAttempt.created_at)}</p>
                 </div>
               </div>
@@ -380,13 +379,13 @@ const AdminFraudAttempts = () => {
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-xl hover:bg-destructive/90 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
-                  মুছে ফেলুন
+                  Delete
                 </button>
                 <button
                   onClick={() => setSelectedAttempt(null)}
                   className="flex-1 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-xl transition-colors"
                 >
-                  বন্ধ করুন
+                  Close
                 </button>
               </div>
             </div>
