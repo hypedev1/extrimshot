@@ -216,9 +216,20 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-green/5 rounded-xl md:rounded-2xl" />
           
           {/* Stats Grid - Compact on Mobile */}
-          <div className="relative grid grid-cols-2 gap-4 md:gap-12 py-4 md:py-6 px-4 md:px-8">
+          <div className="relative grid grid-cols-3 gap-2 md:gap-8 py-4 md:py-6 px-2 md:px-4">
             {/* Stat 1 */}
             <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-center md:text-left group">
+              <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-primary to-teal-dark flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Heart className="w-4 h-4 md:w-6 md:h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-lg md:text-2xl font-bold text-primary block">৫০K+</span>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">অর্ডার</p>
+              </div>
+            </div>
+
+            {/* Stat 2 */}
+            <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-center md:text-left group border-x border-border/50">
               <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-accent to-orange flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <Shield className="w-4 h-4 md:w-6 md:h-6 text-white" />
               </div>
@@ -228,7 +239,7 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
               </div>
             </div>
 
-            {/* Stat 2 */}
+            {/* Stat 3 */}
             <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-center md:text-left group">
               <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green to-primary flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <Leaf className="w-4 h-4 md:w-6 md:h-6 text-white" />
