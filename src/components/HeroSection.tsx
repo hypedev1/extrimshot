@@ -224,7 +224,7 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
               </div>
               <div>
                 <span className="text-lg md:text-2xl font-bold text-primary block">৫০K+</span>
-                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">সন্তুষ্ট গ্রাহক</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">অর্ডার</p>
               </div>
             </div>
 
