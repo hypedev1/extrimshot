@@ -4,7 +4,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 interface Order {
   id: string;
   customer_name: string;
@@ -309,6 +309,107 @@ const AdminDashboard = () => {
                 <div className="p-4 rounded-full bg-primary/20">
                   <TrendingUp className="w-8 h-8 text-primary" />
                 </div>
+              </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              {/* Orders Trend Chart */}
+              <div className="card-glass p-4 lg:p-6">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Orders Trend
+                </h2>
+                {analytics.dailyOrders.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No data for selected period</p>
+                ) : (
+                  <div className="h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={analytics.dailyOrders}>
+                        <defs>
+                          <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                          tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          stroke="hsl(var(--border))"
+                        />
+                        <YAxis 
+                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                          stroke="hsl(var(--border))"
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            color: 'hsl(var(--foreground))'
+                          }}
+                          labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                          formatter={(value: number) => [value, 'Orders']}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="count" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          fillOpacity={1} 
+                          fill="url(#colorOrders)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Revenue Trend Chart */}
+              <div className="card-glass p-4 lg:p-6">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Revenue Trend
+                </h2>
+                {analytics.dailyOrders.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No data for selected period</p>
+                ) : (
+                  <div className="h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.dailyOrders}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                          tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          stroke="hsl(var(--border))"
+                        />
+                        <YAxis 
+                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                          stroke="hsl(var(--border))"
+                          tickFormatter={(value) => `৳${(value / 1000).toFixed(0)}k`}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            color: 'hsl(var(--foreground))'
+                          }}
+                          labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                          formatter={(value: number) => [`৳${value.toLocaleString()}`, 'Revenue']}
+                        />
+                        <Bar 
+                          dataKey="revenue" 
+                          fill="hsl(var(--primary))" 
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             </div>
 
