@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle, RefreshCw, Plus } from 'lucide-react';
+import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle, RefreshCw, Plus, Check } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { CreateOrderModal } from '@/components/admin/CreateOrderModal';
@@ -34,6 +34,8 @@ const statusOptions = [
   { value: 'cancelled', label: 'Cancelled', color: 'bg-red-500/20 text-red-500' },
 ];
 
+const ACKNOWLEDGED_ORDER_KEY = 'admin_acknowledged_order_id';
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,16 @@ const AdminOrders = () => {
   const [sendingToPathao, setSendingToPathao] = useState<string | null>(null);
   const [syncingStatus, setSyncingStatus] = useState<string | null>(null);
   const [bulkSyncing, setBulkSyncing] = useState(false);
+  const [acknowledgedOrderId, setAcknowledgedOrderId] = useState<string | null>(() => {
+    return localStorage.getItem(ACKNOWLEDGED_ORDER_KEY);
+  });
   const { toast } = useToast();
+
+  const acknowledgeOrder = (orderId: string) => {
+    setAcknowledgedOrderId(orderId);
+    localStorage.setItem(ACKNOWLEDGED_ORDER_KEY, orderId);
+    toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
+  };
 
   const fetchOrders = async () => {
     const allOrders: Order[] = [];
@@ -323,7 +334,12 @@ const AdminOrders = () => {
                 </thead>
                 <tbody>
                   {filteredOrders.map((order) => (
-                    <tr key={order.id} className="border-t border-border hover:bg-secondary/30">
+                    <tr 
+                      key={order.id} 
+                      className={`border-t border-border hover:bg-secondary/30 transition-colors ${
+                        acknowledgedOrderId === order.id ? 'bg-green-500/20' : ''
+                      }`}
+                    >
                       <td className="py-4 px-4 font-medium">{order.customer_name}</td>
                       <td className="py-4 px-4">
                         <a href={`tel:${order.phone}`} className="flex items-center gap-1 text-primary hover:underline">
@@ -358,6 +374,17 @@ const AdminOrders = () => {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => acknowledgeOrder(order.id)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              acknowledgedOrderId === order.id 
+                                ? 'bg-green-500 text-white' 
+                                : 'hover:bg-green-500/20 text-green-500'
+                            }`}
+                            title="Mark as last confirmed"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
                           {order.pathao_consignment_id ? (
                             <div className="flex items-center gap-1">
                               <div className="flex items-center gap-1 text-green-500" title={`Pathao ID: ${order.pathao_consignment_id}`}>

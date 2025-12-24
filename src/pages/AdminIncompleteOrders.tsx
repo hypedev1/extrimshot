@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Phone, User, MapPin, Clock, Trash2, Truck, Copy } from 'lucide-react';
+import { Search, Phone, User, MapPin, Clock, Trash2, Truck, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
+
+const ACKNOWLEDGED_INCOMPLETE_ORDER_KEY = 'admin_acknowledged_incomplete_order_id';
 
 interface IncompleteOrder {
   id: string;
@@ -20,7 +22,16 @@ const AdminIncompleteOrders = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<IncompleteOrder | null>(null);
+  const [acknowledgedOrderId, setAcknowledgedOrderId] = useState<string | null>(() => {
+    return localStorage.getItem(ACKNOWLEDGED_INCOMPLETE_ORDER_KEY);
+  });
   const { toast } = useToast();
+
+  const acknowledgeOrder = (orderId: string) => {
+    setAcknowledgedOrderId(orderId);
+    localStorage.setItem(ACKNOWLEDGED_INCOMPLETE_ORDER_KEY, orderId);
+    toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
+  };
 
   const fetchOrders = async () => {
     try {
@@ -137,7 +148,12 @@ const AdminIncompleteOrders = () => {
         ) : (
           <div className="grid gap-4">
             {filteredOrders.map(order => (
-              <div key={order.id} className="card-glass p-4">
+              <div 
+                key={order.id} 
+                className={`card-glass p-4 transition-colors ${
+                  acknowledgedOrderId === order.id ? 'bg-green-500/20 border-green-500/30' : ''
+                }`}
+              >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -162,6 +178,17 @@ const AdminIncompleteOrders = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => acknowledgeOrder(order.id)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        acknowledgedOrderId === order.id 
+                          ? 'bg-green-500 text-white' 
+                          : 'hover:bg-green-500/20 text-green-500'
+                      }`}
+                      title="Mark as last confirmed"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => setSelectedOrder(order)}
                       className="btn-primary px-4 py-2 text-sm flex items-center gap-2"
