@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, Package, FileText, X, Volume2 } from 'lucide-react';
+import { Package, FileText, X, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Notification {
@@ -14,58 +14,35 @@ interface Notification {
 export const OrderNotificationBanner = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [audioInitialized, setAudioInitialized] = useState(false);
+  const orderSoundRef = useRef<HTMLAudioElement | null>(null);
+  const incompleteSoundRef = useRef<HTMLAudioElement | null>(null);
 
-  // Play Shopify-like ka-ching sound
+  // Initialize audio elements
+  useEffect(() => {
+    // Preload the Shopify sale sound for orders
+    orderSoundRef.current = new Audio('/sounds/shopify-sale.mp3');
+    orderSoundRef.current.preload = 'auto';
+    
+    // Create a softer notification sound for incomplete orders
+    incompleteSoundRef.current = new Audio('/sounds/shopify-sale.mp3');
+    incompleteSoundRef.current.preload = 'auto';
+    incompleteSoundRef.current.volume = 0.4;
+    incompleteSoundRef.current.playbackRate = 1.3;
+    
+    return () => {
+      orderSoundRef.current = null;
+      incompleteSoundRef.current = null;
+    };
+  }, []);
+
+  // Play Shopify sale sound
   const playOrderSound = () => {
-    if (!soundEnabled) return;
+    if (!soundEnabled || !orderSoundRef.current) return;
     
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const duration = 0.8;
-      const buffer = ctx.createBuffer(2, ctx.sampleRate * duration, ctx.sampleRate);
-      
-      for (let channel = 0; channel < 2; channel++) {
-        const data = buffer.getChannelData(channel);
-        for (let i = 0; i < data.length; i++) {
-          const t = i / ctx.sampleRate;
-          // Bright, cheerful "ka-ching" frequencies
-          const freq1 = 1318.51; // E6
-          const freq2 = 1567.98; // G6
-          const freq3 = 2093.00; // C7
-          
-          const envelope = Math.exp(-t * 3.5) * Math.sin(Math.PI * t / duration);
-          
-          data[i] = (
-            Math.sin(2 * Math.PI * freq1 * t) * 0.4 +
-            Math.sin(2 * Math.PI * freq2 * t) * 0.35 +
-            Math.sin(2 * Math.PI * freq3 * t) * 0.25
-          ) * envelope;
-          
-          // Second "ching" hit
-          if (t > 0.12 && t < 0.6) {
-            const t2 = t - 0.12;
-            const envelope2 = Math.exp(-t2 * 4);
-            data[i] += (
-              Math.sin(2 * Math.PI * 1975.53 * t2) * 0.3 + // B6
-              Math.sin(2 * Math.PI * 2637.02 * t2) * 0.2   // E7
-            ) * envelope2;
-          }
-        }
-      }
-      
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      
-      const gainNode = ctx.createGain();
-      gainNode.gain.value = 0.6;
-      
-      source.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      source.start();
-      
-      // Cleanup
-      source.onended = () => ctx.close();
+      orderSoundRef.current.currentTime = 0;
+      orderSoundRef.current.volume = 0.8;
+      orderSoundRef.current.play().catch(e => console.log('Audio play failed:', e));
     } catch (e) {
       console.error('Audio playback failed:', e);
     }
@@ -76,34 +53,25 @@ export const OrderNotificationBanner = () => {
     if (!soundEnabled) return;
     
     try {
+      // Create a quick soft beep for incomplete orders
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const duration = 0.4;
+      const duration = 0.3;
       const buffer = ctx.createBuffer(2, ctx.sampleRate * duration, ctx.sampleRate);
       
       for (let channel = 0; channel < 2; channel++) {
         const data = buffer.getChannelData(channel);
         for (let i = 0; i < data.length; i++) {
           const t = i / ctx.sampleRate;
-          const freq = 659.25 + (channel * 10); // E5
-          const envelope = Math.exp(-t * 8) * Math.sin(Math.PI * t / duration);
-          
-          data[i] = (
-            Math.sin(2 * Math.PI * freq * t) * 0.5 +
-            Math.sin(2 * Math.PI * freq * 1.5 * t) * 0.2
-          ) * envelope * 0.4;
+          const freq = 880; // A5 note
+          const envelope = Math.exp(-t * 10) * Math.sin(Math.PI * t / duration);
+          data[i] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.3;
         }
       }
       
       const source = ctx.createBufferSource();
       source.buffer = buffer;
-      
-      const gainNode = ctx.createGain();
-      gainNode.gain.value = 0.35;
-      
-      source.connect(gainNode);
-      gainNode.connect(ctx.destination);
+      source.connect(ctx.destination);
       source.start();
-      
       source.onended = () => ctx.close();
     } catch (e) {
       console.error('Audio playback failed:', e);
@@ -128,16 +96,6 @@ export const OrderNotificationBanner = () => {
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
-
-  // Initialize audio on user interaction
-  useEffect(() => {
-    const handleInteraction = () => {
-      setAudioInitialized(true);
-      document.removeEventListener('click', handleInteraction);
-    };
-    document.addEventListener('click', handleInteraction);
-    return () => document.removeEventListener('click', handleInteraction);
-  }, []);
 
   useEffect(() => {
     // Subscribe to new orders
