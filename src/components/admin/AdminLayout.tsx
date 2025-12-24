@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminSidebar, MobileMenuButton } from './AdminSidebar';
+import { OrderNotificationBanner } from './OrderNotificationBanner';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -36,6 +37,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Real-time order notifications */}
+      <OrderNotificationBanner />
+      
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
