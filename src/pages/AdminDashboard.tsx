@@ -38,7 +38,7 @@ const AdminDashboard = () => {
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [incompleteOrdersCount, setIncompleteOrdersCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [datePreset, setDatePreset] = useState<DatePreset>('last7days');
+  const [datePreset, setDatePreset] = useState<DatePreset>('all');
 
   const getDateRange = (preset: DatePreset): { start: Date; end: Date } => {
     const now = new Date();
