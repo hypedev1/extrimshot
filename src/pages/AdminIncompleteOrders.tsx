@@ -35,13 +35,30 @@ const AdminIncompleteOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('incomplete_orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let allOrders: IncompleteOrder[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
-      setOrders(data || []);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('incomplete_orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + batchSize - 1);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allOrders = [...allOrders, ...data];
+          from += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      setOrders(allOrders);
     } catch (error: any) {
       console.error('Error fetching incomplete orders:', error);
       toast({
