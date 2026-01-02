@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, CreditCard, Lock, ShieldAlert, Check, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { trackInitiateCheckout, trackPurchase, trackPixelEvent } from '@/lib/fbPixel';
+import { trackInitiateCheckout, trackPurchase, trackPixelEvent, trackIncompletePurchase } from '@/lib/fbPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
 
@@ -101,6 +101,17 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         
         if (!error && data) {
           incompleteOrderIdRef.current = data.id;
+          
+          // Send Purchase event to Facebook for incomplete orders
+          try {
+            await trackIncompletePurchase(
+              { phone, name: formData.name.trim() || undefined },
+              selectedPackage.price,
+              data.id
+            );
+          } catch (trackError) {
+            console.error('Failed to track incomplete purchase:', trackError);
+          }
         }
       } catch (err) {
         console.error('Failed to track incomplete order:', err);

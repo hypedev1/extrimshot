@@ -115,6 +115,20 @@ export const trackPurchase = async (
   });
 };
 
+// Track incomplete order as Purchase event to Facebook
+export const trackIncompletePurchase = async (
+  userData: { phone: string; name?: string },
+  value: number,
+  incompleteOrderId: string
+) => {
+  await trackEvent('Purchase', userData, {
+    value,
+    currency: 'BDT',
+    content_name: 'Extrimshot - Incomplete',
+    order_id: `incomplete_${incompleteOrderId}`,
+  });
+};
+
 export const trackLead = async (userData: { phone?: string; name?: string }) => {
   await trackEvent('Lead', userData);
 };
