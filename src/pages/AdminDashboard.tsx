@@ -1,10 +1,20 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Package, DollarSign, Clock, CheckCircle, TrendingUp, TrendingDown, Users, ShoppingCart, XCircle, Truck, BarChart3, Calendar } from 'lucide-react';
+import { Package, DollarSign, Clock, CheckCircle, TrendingUp, TrendingDown, Users, ShoppingCart, XCircle, Truck, BarChart3, Calendar, Timer } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+
+// Bangladesh Standard Time offset: UTC+6
+const BST_OFFSET = 6;
+
+const getBSTHour = (date: Date): number => {
+  const utcHours = date.getUTCHours();
+  const bstHours = (utcHours + BST_OFFSET) % 24;
+  return bstHours === 0 ? 24 : bstHours; // Use 1-24 format
+};
+
 interface Order {
   id: string;
   customer_name: string;
@@ -14,6 +24,19 @@ interface Order {
   total_amount: number;
   status: string;
   created_at: string;
+}
+
+interface IncompleteOrder {
+  id: string;
+  created_at: string;
+}
+
+interface HourlyData {
+  hour: number;
+  label: string;
+  orders: number;
+  incomplete: number;
+  revenue: number;
 }
 
 interface AnalyticsData {
@@ -30,15 +53,18 @@ interface AnalyticsData {
   ordersByStatus: Record<string, number>;
   dailyOrders: { date: string; count: number; revenue: number }[];
   topPackages: { name: string; count: number; revenue: number }[];
+  hourlyData: HourlyData[];
 }
 
 type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'all';
+type HourFilter = 'all' | string; // 'all' or '1' to '24'
 
 const AdminDashboard = () => {
   const [allOrders, setAllOrders] = useState<Order[]>([]);
-  const [incompleteOrdersCount, setIncompleteOrdersCount] = useState(0);
+  const [allIncompleteOrders, setAllIncompleteOrders] = useState<IncompleteOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [datePreset, setDatePreset] = useState<DatePreset>('all');
+  const [hourFilter, setHourFilter] = useState<HourFilter>('all');
 
   const getDateRange = (preset: DatePreset): { start: Date; end: Date } => {
     const now = new Date();
@@ -74,7 +100,7 @@ const AdminDashboard = () => {
     return { start, end };
   };
 
-  const filteredOrders = useMemo(() => {
+  const dateFilteredOrders = useMemo(() => {
     if (datePreset === 'all') return allOrders;
     
     const { start, end } = getDateRange(datePreset);
@@ -84,8 +110,41 @@ const AdminDashboard = () => {
     });
   }, [allOrders, datePreset]);
 
+  const dateFilteredIncompleteOrders = useMemo(() => {
+    if (datePreset === 'all') return allIncompleteOrders;
+    
+    const { start, end } = getDateRange(datePreset);
+    return allIncompleteOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= start && orderDate <= end;
+    });
+  }, [allIncompleteOrders, datePreset]);
+
+  const filteredOrders = useMemo(() => {
+    if (hourFilter === 'all') return dateFilteredOrders;
+    
+    const targetHour = parseInt(hourFilter);
+    return dateFilteredOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      const bstHour = getBSTHour(orderDate);
+      return bstHour === targetHour;
+    });
+  }, [dateFilteredOrders, hourFilter]);
+
+  const filteredIncompleteOrdersCount = useMemo(() => {
+    if (hourFilter === 'all') return dateFilteredIncompleteOrders.length;
+    
+    const targetHour = parseInt(hourFilter);
+    return dateFilteredIncompleteOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      const bstHour = getBSTHour(orderDate);
+      return bstHour === targetHour;
+    }).length;
+  }, [dateFilteredIncompleteOrders, hourFilter]);
+
   const analytics: AnalyticsData = useMemo(() => {
     const orders = filteredOrders;
+    const incompleteCount = filteredIncompleteOrdersCount;
     
     const pending = orders.filter(o => o.status === 'pending').length;
     const confirmed = orders.filter(o => o.status === 'confirmed').length;
@@ -135,8 +194,41 @@ const AdminDashboard = () => {
       .map(([name, count]) => ({ name, count, revenue: revenueByPackage[name] || 0 }))
       .sort((a, b) => b.count - a.count);
 
-    // Conversion rate (orders / incomplete orders * 100)
-    const totalAttempts = orders.length + incompleteOrdersCount;
+    // Hourly breakdown (using date-filtered orders, not hour-filtered)
+    const hourlyMap: Record<number, { orders: number; incomplete: number; revenue: number }> = {};
+    for (let i = 1; i <= 24; i++) {
+      hourlyMap[i] = { orders: 0, incomplete: 0, revenue: 0 };
+    }
+    
+    dateFilteredOrders.forEach(order => {
+      const orderDate = new Date(order.created_at);
+      const bstHour = getBSTHour(orderDate);
+      hourlyMap[bstHour].orders++;
+      if (order.status !== 'cancelled') {
+        hourlyMap[bstHour].revenue += order.total_amount;
+      }
+    });
+
+    dateFilteredIncompleteOrders.forEach(order => {
+      const orderDate = new Date(order.created_at);
+      const bstHour = getBSTHour(orderDate);
+      hourlyMap[bstHour].incomplete++;
+    });
+
+    const hourlyData: HourlyData[] = Object.entries(hourlyMap).map(([hour, data]) => {
+      const h = parseInt(hour);
+      const displayHour = h === 24 ? 12 : h > 12 ? h - 12 : h;
+      const ampm = h < 12 || h === 24 ? 'AM' : 'PM';
+      const label = h === 12 ? '12 PM' : h === 24 ? '12 AM' : `${displayHour} ${ampm}`;
+      return {
+        hour: h,
+        label,
+        ...data
+      };
+    }).sort((a, b) => a.hour - b.hour);
+
+    // Conversion rate
+    const totalAttempts = orders.length + incompleteCount;
     const conversionRate = totalAttempts > 0 ? (orders.length / totalAttempts) * 100 : 0;
 
     return {
@@ -148,13 +240,14 @@ const AdminDashboard = () => {
       totalSales,
       avgOrderValue: isNaN(avgOrderValue) ? 0 : avgOrderValue,
       conversionRate,
-      incompleteOrders: incompleteOrdersCount,
+      incompleteOrders: incompleteCount,
       ordersByPackage,
       ordersByStatus,
       dailyOrders,
-      topPackages
+      topPackages,
+      hourlyData
     };
-  }, [filteredOrders, incompleteOrdersCount]);
+  }, [filteredOrders, filteredIncompleteOrdersCount, dateFilteredOrders, dateFilteredIncompleteOrders]);
 
   const fetchAllOrders = async () => {
     const orders: Order[] = [];
@@ -180,23 +273,39 @@ const AdminDashboard = () => {
     return orders;
   };
 
-  const fetchIncompleteOrders = async () => {
-    const { count } = await supabase
-      .from('incomplete_orders')
-      .select('*', { count: 'exact', head: true });
+  const fetchAllIncompleteOrders = async () => {
+    const incompleteOrders: IncompleteOrder[] = [];
+    let from = 0;
+    const batchSize = 1000;
     
-    return count || 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from('incomplete_orders')
+        .select('id, created_at')
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
+      
+      if (error) break;
+      if (!data || data.length === 0) break;
+      
+      incompleteOrders.push(...data);
+      
+      if (data.length < batchSize) break;
+      from += batchSize;
+    }
+    
+    return incompleteOrders;
   };
 
   const fetchData = async () => {
     setLoading(true);
     const [orders, incomplete] = await Promise.all([
       fetchAllOrders(),
-      fetchIncompleteOrders()
+      fetchAllIncompleteOrders()
     ]);
     
     setAllOrders(orders);
-    setIncompleteOrdersCount(incomplete);
+    setAllIncompleteOrders(incomplete);
     setLoading(false);
   };
 
@@ -222,6 +331,17 @@ const AdminDashboard = () => {
     { value: 'last15days', label: 'Last 15 Days' },
     { value: 'last30days', label: 'Last 30 Days' },
     { value: 'all', label: 'All Time' },
+  ];
+
+  const hourOptions = [
+    { value: 'all', label: 'All Hours' },
+    ...Array.from({ length: 24 }, (_, i) => {
+      const hour = i + 1;
+      const displayHour = hour === 24 ? 12 : hour > 12 ? hour - 12 : hour;
+      const ampm = hour < 12 || hour === 24 ? 'AM' : 'PM';
+      const label = hour === 12 ? '12 PM' : hour === 24 ? '12 AM' : `${displayHour} ${ampm}`;
+      return { value: String(hour), label: `${label} (Hour ${hour})` };
+    })
   ];
 
   const getPackageLabel = (pkg: string) => {
@@ -256,20 +376,38 @@ const AdminDashboard = () => {
             <p className="text-muted-foreground text-sm lg:text-base">Campaign performance & insights</p>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DatePreset)}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                {datePresets.map((preset) => (
-                  <SelectItem key={preset.value} value={preset.value}>
-                    {preset.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DatePreset)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  {datePresets.map((preset) => (
+                    <SelectItem key={preset.value} value={preset.value}>
+                      {preset.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Timer className="w-4 h-4 text-muted-foreground" />
+              <Select value={hourFilter} onValueChange={(v) => setHourFilter(v as HourFilter)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Select hour" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {hourOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <span className="text-xs text-muted-foreground">(BST +6)</span>
           </div>
         </div>
 
@@ -410,6 +548,112 @@ const AdminDashboard = () => {
                     </ResponsiveContainer>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Hourly Breakdown Section */}
+            <div className="card-glass p-4 lg:p-6">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Timer className="w-5 h-5" />
+                Hourly Breakdown (BST +6)
+              </h2>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.hourlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="label" 
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                      stroke="hsl(var(--border))"
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis 
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                      stroke="hsl(var(--border))"
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'orders') return [value, 'Orders'];
+                        if (name === 'incomplete') return [value, 'Incomplete'];
+                        if (name === 'revenue') return [`৳${value.toLocaleString()}`, 'Revenue'];
+                        return [value, name];
+                      }}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="orders" 
+                      fill="hsl(var(--primary))" 
+                      name="Orders"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="incomplete" 
+                      fill="hsl(25, 95%, 53%)" 
+                      name="Incomplete"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Hourly Performance Table */}
+            <div className="card-glass p-4 lg:p-6">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Timer className="w-5 h-5" />
+                Hourly Performance Table
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-2 text-muted-foreground font-medium text-sm">Hour (BST)</th>
+                      <th className="text-right py-3 px-2 text-muted-foreground font-medium text-sm">Orders</th>
+                      <th className="text-right py-3 px-2 text-muted-foreground font-medium text-sm">Incomplete</th>
+                      <th className="text-right py-3 px-2 text-muted-foreground font-medium text-sm">Revenue</th>
+                      <th className="text-right py-3 px-2 text-muted-foreground font-medium text-sm">Conv. Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.hourlyData.map((hourData) => {
+                      const total = hourData.orders + hourData.incomplete;
+                      const convRate = total > 0 ? ((hourData.orders / total) * 100).toFixed(1) : '0.0';
+                      return (
+                        <tr key={hourData.hour} className="border-b border-border/50 hover:bg-secondary/50">
+                          <td className="py-2 px-2 font-medium text-sm">
+                            {hourData.label}
+                          </td>
+                          <td className="py-2 px-2 text-right text-sm">{hourData.orders}</td>
+                          <td className="py-2 px-2 text-right text-sm text-orange-500">{hourData.incomplete}</td>
+                          <td className="py-2 px-2 text-right text-sm text-primary font-medium">৳{hourData.revenue.toLocaleString()}</td>
+                          <td className="py-2 px-2 text-right text-sm">
+                            <span className={hourData.orders > 0 ? 'text-green-500' : 'text-muted-foreground'}>
+                              {convRate}%
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-secondary/50 font-bold">
+                      <td className="py-3 px-2 text-sm">Total</td>
+                      <td className="py-3 px-2 text-right text-sm">{analytics.hourlyData.reduce((sum, h) => sum + h.orders, 0)}</td>
+                      <td className="py-3 px-2 text-right text-sm text-orange-500">{analytics.hourlyData.reduce((sum, h) => sum + h.incomplete, 0)}</td>
+                      <td className="py-3 px-2 text-right text-sm text-primary">৳{analytics.hourlyData.reduce((sum, h) => sum + h.revenue, 0).toLocaleString()}</td>
+                      <td className="py-3 px-2 text-right text-sm">{analytics.conversionRate.toFixed(1)}%</td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             </div>
 
