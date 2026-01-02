@@ -495,6 +495,44 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <>
+            {/* Heads Up - Combined Revenue Section */}
+            <div className="card-glass p-4 lg:p-6 bg-gradient-to-r from-emerald-500/10 via-primary/10 to-orange-500/10 border-2 border-emerald-500/30">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-2 rounded-full bg-emerald-500/20">
+                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+                </div>
+                <h2 className="text-lg font-bold">Heads Up - Total Potential Revenue</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg bg-background/50">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Orders Revenue</p>
+                  <p className="text-2xl font-bold text-emerald-500">৳{analytics.totalSales.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{analytics.totalOrders} confirmed orders</p>
+                </div>
+                <div className="p-4 rounded-lg bg-background/50">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Incomplete Est. Revenue</p>
+                  <p className="text-2xl font-bold text-orange-500">
+                    ৳{(analytics.incompleteOrders * (analytics.avgOrderValue || 1250)).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{analytics.incompleteOrders} incomplete × ৳{Math.round(analytics.avgOrderValue || 1250).toLocaleString()} avg</p>
+                </div>
+                <div className="p-4 rounded-lg bg-background/50">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Combined Potential</p>
+                  <p className="text-2xl font-bold text-primary">
+                    ৳{(analytics.totalSales + (analytics.incompleteOrders * (analytics.avgOrderValue || 1250))).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Total if all converted</p>
+                </div>
+                <div className="p-4 rounded-lg bg-background/50">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Lost Revenue Est.</p>
+                  <p className="text-2xl font-bold text-red-500">
+                    ৳{(analytics.incompleteOrders * (analytics.avgOrderValue || 1250)).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Potential recovery target</p>
+                </div>
+              </div>
+            </div>
+
             {/* Main Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
               {statCards.map((stat) => (
