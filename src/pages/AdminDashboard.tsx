@@ -495,6 +495,23 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <>
+            {/* Main Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+              {statCards.map((stat) => (
+                <div key={stat.label} className="card-glass p-4 lg:p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-muted-foreground text-xs lg:text-sm truncate">{stat.label}</p>
+                      <p className="text-xl lg:text-2xl font-bold mt-1 truncate">{stat.value}</p>
+                    </div>
+                    <div className={`p-2 lg:p-3 rounded-xl ${stat.bgColor} ${stat.color} shrink-0`}>
+                      <stat.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Heads Up - Combined Revenue Section */}
             <div className="card-glass p-4 lg:p-6 bg-gradient-to-r from-emerald-500/10 via-primary/10 to-orange-500/10 border-2 border-emerald-500/30">
               <div className="flex items-center gap-2 mb-3">
@@ -531,23 +548,6 @@ const AdminDashboard = () => {
                   <p className="text-xs text-muted-foreground mt-1">Potential recovery target</p>
                 </div>
               </div>
-            </div>
-
-            {/* Main Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
-              {statCards.map((stat) => (
-                <div key={stat.label} className="card-glass p-4 lg:p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0">
-                      <p className="text-muted-foreground text-xs lg:text-sm truncate">{stat.label}</p>
-                      <p className="text-xl lg:text-2xl font-bold mt-1 truncate">{stat.value}</p>
-                    </div>
-                    <div className={`p-2 lg:p-3 rounded-xl ${stat.bgColor} ${stat.color} shrink-0`}>
-                      <stat.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
 
             {/* Conversion Rate Banner */}
