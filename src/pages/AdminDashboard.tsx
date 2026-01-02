@@ -59,12 +59,23 @@ interface AnalyticsData {
 type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'all';
 type HourFilter = 'all' | string; // 'all' or '1' to '24'
 
+interface TimeRangeComparison {
+  todayOrders: number;
+  yesterdayOrders: number;
+  todayIncomplete: number;
+  yesterdayIncomplete: number;
+  todayRevenue: number;
+  yesterdayRevenue: number;
+}
+
 const AdminDashboard = () => {
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [allIncompleteOrders, setAllIncompleteOrders] = useState<IncompleteOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [datePreset, setDatePreset] = useState<DatePreset>('all');
   const [hourFilter, setHourFilter] = useState<HourFilter>('all');
+  const [startHour, setStartHour] = useState<string>('19'); // Default 7 PM
+  const [endHour, setEndHour] = useState<string>('23'); // Default 11 PM
 
   const getDateRange = (preset: DatePreset): { start: Date; end: Date } => {
     const now = new Date();
@@ -249,6 +260,58 @@ const AdminDashboard = () => {
     };
   }, [filteredOrders, filteredIncompleteOrdersCount, dateFilteredOrders, dateFilteredIncompleteOrders]);
 
+  // Time range comparison for today vs yesterday
+  const timeRangeComparison: TimeRangeComparison = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
+    const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
+
+    const startH = parseInt(startHour);
+    const endH = parseInt(endHour);
+
+    // Filter orders for today within the time range
+    const todayOrders = allOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      if (orderDate < todayStart) return false;
+      const bstHour = getBSTHour(orderDate);
+      return bstHour >= startH && bstHour <= endH;
+    });
+
+    // Filter orders for yesterday within the time range
+    const yesterdayOrders = allOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      if (orderDate < yesterdayStart || orderDate > yesterdayEnd) return false;
+      const bstHour = getBSTHour(orderDate);
+      return bstHour >= startH && bstHour <= endH;
+    });
+
+    // Filter incomplete orders for today within the time range
+    const todayIncomplete = allIncompleteOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      if (orderDate < todayStart) return false;
+      const bstHour = getBSTHour(orderDate);
+      return bstHour >= startH && bstHour <= endH;
+    });
+
+    // Filter incomplete orders for yesterday within the time range
+    const yesterdayIncomplete = allIncompleteOrders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      if (orderDate < yesterdayStart || orderDate > yesterdayEnd) return false;
+      const bstHour = getBSTHour(orderDate);
+      return bstHour >= startH && bstHour <= endH;
+    });
+
+    return {
+      todayOrders: todayOrders.length,
+      yesterdayOrders: yesterdayOrders.length,
+      todayIncomplete: todayIncomplete.length,
+      yesterdayIncomplete: yesterdayIncomplete.length,
+      todayRevenue: todayOrders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + o.total_amount, 0),
+      yesterdayRevenue: yesterdayOrders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + o.total_amount, 0),
+    };
+  }, [allOrders, allIncompleteOrders, startHour, endHour]);
+
   const fetchAllOrders = async () => {
     const orders: Order[] = [];
     let from = 0;
@@ -343,6 +406,21 @@ const AdminDashboard = () => {
       return { value: String(hour), label: `${label} (Hour ${hour})` };
     })
   ];
+
+  const timeRangeHourOptions = Array.from({ length: 24 }, (_, i) => {
+    const hour = i + 1;
+    const displayHour = hour === 24 ? 12 : hour > 12 ? hour - 12 : hour;
+    const ampm = hour < 12 || hour === 24 ? 'AM' : 'PM';
+    const label = hour === 12 ? '12 PM' : hour === 24 ? '12 AM' : `${displayHour} ${ampm}`;
+    return { value: String(hour), label };
+  });
+
+  const getTimeRangeLabel = (hour: string) => {
+    const h = parseInt(hour);
+    const displayHour = h === 24 ? 12 : h > 12 ? h - 12 : h;
+    const ampm = h < 12 || h === 24 ? 'AM' : 'PM';
+    return h === 12 ? '12 PM' : h === 24 ? '12 AM' : `${displayHour} ${ampm}`;
+  };
 
   const getPackageLabel = (pkg: string) => {
     const labels: Record<string, string> = {
@@ -450,7 +528,150 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Charts Section */}
+            {/* Time Range Comparison - Today vs Yesterday */}
+            <div className="card-glass p-4 lg:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                  <Timer className="w-5 h-5" />
+                  Time Range Comparison (Today vs Yesterday)
+                </h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-muted-foreground">From</span>
+                  <Select value={startHour} onValueChange={setStartHour}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {timeRangeHourOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">to</span>
+                  <Select value={endHour} onValueChange={setEndHour}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {timeRangeHourOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">(BST +6)</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                Comparing orders between {getTimeRangeLabel(startHour)} and {getTimeRangeLabel(endHour)}
+              </p>
+
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Today Orders */}
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                  <p className="text-sm text-muted-foreground">Today Orders</p>
+                  <p className="text-2xl font-bold text-primary">{timeRangeComparison.todayOrders}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {timeRangeComparison.todayOrders > timeRangeComparison.yesterdayOrders ? (
+                      <>
+                        <TrendingUp className="w-4 h-4 text-green-500" />
+                        <span className="text-xs text-green-500">
+                          +{timeRangeComparison.todayOrders - timeRangeComparison.yesterdayOrders} from yesterday
+                        </span>
+                      </>
+                    ) : timeRangeComparison.todayOrders < timeRangeComparison.yesterdayOrders ? (
+                      <>
+                        <TrendingDown className="w-4 h-4 text-red-500" />
+                        <span className="text-xs text-red-500">
+                          {timeRangeComparison.todayOrders - timeRangeComparison.yesterdayOrders} from yesterday
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Same as yesterday</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Yesterday Orders */}
+                <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-sm text-muted-foreground">Yesterday Orders</p>
+                  <p className="text-2xl font-bold">{timeRangeComparison.yesterdayOrders}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Same time range</p>
+                </div>
+
+                {/* Today Revenue */}
+                <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-sm text-muted-foreground">Today Revenue</p>
+                  <p className="text-2xl font-bold text-emerald-500">৳{timeRangeComparison.todayRevenue.toLocaleString()}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {timeRangeComparison.todayRevenue > timeRangeComparison.yesterdayRevenue ? (
+                      <>
+                        <TrendingUp className="w-4 h-4 text-green-500" />
+                        <span className="text-xs text-green-500">
+                          +৳{(timeRangeComparison.todayRevenue - timeRangeComparison.yesterdayRevenue).toLocaleString()}
+                        </span>
+                      </>
+                    ) : timeRangeComparison.todayRevenue < timeRangeComparison.yesterdayRevenue ? (
+                      <>
+                        <TrendingDown className="w-4 h-4 text-red-500" />
+                        <span className="text-xs text-red-500">
+                          -৳{(timeRangeComparison.yesterdayRevenue - timeRangeComparison.todayRevenue).toLocaleString()}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Same as yesterday</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Yesterday Revenue */}
+                <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-sm text-muted-foreground">Yesterday Revenue</p>
+                  <p className="text-2xl font-bold">৳{timeRangeComparison.yesterdayRevenue.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Same time range</p>
+                </div>
+
+                {/* Today Incomplete */}
+                <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                  <p className="text-sm text-muted-foreground">Today Incomplete</p>
+                  <p className="text-2xl font-bold text-orange-500">{timeRangeComparison.todayIncomplete}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Yesterday: {timeRangeComparison.yesterdayIncomplete}
+                  </p>
+                </div>
+
+                {/* Comparison Summary */}
+                <div className="p-4 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
+                  <p className="text-sm text-muted-foreground">Performance</p>
+                  {timeRangeComparison.yesterdayOrders > 0 ? (
+                    <>
+                      <p className="text-2xl font-bold">
+                        {timeRangeComparison.todayOrders >= timeRangeComparison.yesterdayOrders ? (
+                          <span className="text-green-500">
+                            {((timeRangeComparison.todayOrders / timeRangeComparison.yesterdayOrders) * 100).toFixed(0)}%
+                          </span>
+                        ) : (
+                          <span className="text-red-500">
+                            {((timeRangeComparison.todayOrders / timeRangeComparison.yesterdayOrders) * 100).toFixed(0)}%
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">of yesterday's orders</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-2xl font-bold text-primary">{timeRangeComparison.todayOrders}</p>
+                      <p className="text-xs text-muted-foreground mt-1">No orders yesterday</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               {/* Orders Trend Chart */}
               <div className="card-glass p-4 lg:p-6">
