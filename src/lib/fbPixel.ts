@@ -6,6 +6,11 @@ declare global {
   }
 }
 
+// Generate unique event ID for deduplication
+const generateEventId = () => {
+  return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+};
+
 // Get Facebook cookies for deduplication
 const getFbCookies = () => {
   const cookies = document.cookie.split(';').reduce((acc, cookie) => {
@@ -20,14 +25,18 @@ const getFbCookies = () => {
   };
 };
 
-// Track event on frontend (browser pixel)
-export const trackPixelEvent = (eventName: string, params?: Record<string, any>) => {
+// Track event on frontend (browser pixel) with eventID for deduplication
+export const trackPixelEvent = (eventName: string, params?: Record<string, any>, eventId?: string) => {
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', eventName, params);
+    if (eventId) {
+      window.fbq('track', eventName, params, { eventID: eventId });
+    } else {
+      window.fbq('track', eventName, params);
+    }
   }
 };
 
-// Track event via server-side CAPI
+// Track event via server-side CAPI with eventID for deduplication
 export const trackCAPIEvent = async (
   eventName: string,
   userData?: {
@@ -39,7 +48,8 @@ export const trackCAPIEvent = async (
     currency?: string;
     content_name?: string;
     order_id?: string;
-  }
+  },
+  eventId?: string
 ) => {
   try {
     const { fbc, fbp } = getFbCookies();
@@ -47,6 +57,7 @@ export const trackCAPIEvent = async (
     await supabase.functions.invoke('fb-capi', {
       body: {
         event_name: eventName,
+        event_id: eventId,
         event_source_url: window.location.href,
         user_data: {
           ...userData,
@@ -62,7 +73,7 @@ export const trackCAPIEvent = async (
   }
 };
 
-// Combined tracking - both browser and server
+// Combined tracking - both browser and server with deduplication
 export const trackEvent = async (
   eventName: string,
   userData?: {
@@ -76,11 +87,14 @@ export const trackEvent = async (
     order_id?: string;
   }
 ) => {
-  // Browser pixel
-  trackPixelEvent(eventName, customData);
+  // Generate unique event ID for deduplication
+  const eventId = generateEventId();
   
-  // Server-side CAPI
-  await trackCAPIEvent(eventName, userData, customData);
+  // Browser pixel with eventID
+  trackPixelEvent(eventName, customData, eventId);
+  
+  // Server-side CAPI with same eventID
+  await trackCAPIEvent(eventName, userData, customData, eventId);
 };
 
 // Standard events

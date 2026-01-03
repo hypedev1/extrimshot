@@ -10,6 +10,7 @@ const FB_API_VERSION = 'v18.0';
 
 interface EventData {
   event_name: string;
+  event_id?: string;
   event_time?: number;
   event_source_url?: string;
   action_source?: string;
@@ -36,6 +37,7 @@ interface EventData {
 
 interface RequestBody {
   event_name: string;
+  event_id?: string;
   event_source_url?: string;
   user_data?: {
     phone?: string;
@@ -74,7 +76,7 @@ serve(async (req) => {
     }
 
     const body: RequestBody = await req.json();
-    const { event_name, event_source_url, user_data, custom_data } = body;
+    const { event_name, event_id, event_source_url, user_data, custom_data } = body;
 
     // Get client IP from headers
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 
@@ -114,11 +116,14 @@ serve(async (req) => {
 
     const eventData: EventData = {
       event_name,
+      event_id: event_id || `server_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
       event_time: Math.floor(Date.now() / 1000),
       event_source_url: event_source_url || 'https://extrimshot.com',
       action_source: 'website',
       user_data: hashedUserData,
     };
+
+    console.log('Sending event to Facebook CAPI:', event_name, 'with event_id:', eventData.event_id);
 
     if (custom_data) {
       eventData.custom_data = {
