@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, CreditCard, Lock, ShieldAlert, Check, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { trackInitiateCheckout, trackPurchase, trackPixelEvent, trackIncompleteLead } from '@/lib/fbPixel';
+import { trackInitiateCheckout, trackPurchase, trackPixelEvent, trackIncompletePurchase } from '@/lib/fbPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
 
@@ -102,15 +102,15 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         if (!error && data) {
           incompleteOrderIdRef.current = data.id;
           
-          // Send Lead event to Facebook for incomplete orders (NOT Purchase)
+          // Send Purchase event to Facebook for incomplete orders
           try {
-            await trackIncompleteLead(
+            await trackIncompletePurchase(
               { phone, name: formData.name.trim() || undefined },
               selectedPackage.price,
               data.id
             );
           } catch (trackError) {
-            console.error('Failed to track incomplete lead:', trackError);
+            console.error('Failed to track incomplete purchase:', trackError);
           }
         }
       } catch (err) {
@@ -209,19 +209,18 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
 
       if (error) throw error;
 
-      try {
-        await trackPurchase(
-          { phone: formData.phone, name: formData.name },
-          selectedPackage.price,
-          orderResult.id
-        );
-
-        trackPixelEvent('Lead', {
-          value: selectedPackage.price,
-          currency: 'BDT',
-        });
-      } catch (trackError) {
-        console.error('Tracking error:', trackError);
+      // Only fire Purchase event if user didn't already go through incomplete flow
+      // This prevents double counting: incomplete already fired Purchase, so skip here
+      if (!incompleteOrderIdRef.current) {
+        try {
+          await trackPurchase(
+            { phone: formData.phone, name: formData.name },
+            selectedPackage.price,
+            orderResult.id
+          );
+        } catch (trackError) {
+          console.error('Tracking error:', trackError);
+        }
       }
 
       if (incompleteOrderIdRef.current) {
