@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FB_PIXEL_ID = '1119431000005922';
+const FB_PIXEL_ID = '1418127093286432';
 const FB_API_VERSION = 'v18.0';
 
 interface EventData {
