@@ -5,7 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FB_PIXEL_ID = '1418127093286432';
+const FB_PIXEL_IDS = [
+  { id: '1418127093286432', tokenEnv: 'FB_CAPI_ACCESS_TOKEN' },
+  { id: '1119431000005922', tokenEnv: 'FB_CAPI_ACCESS_TOKEN_2' },
+];
 const FB_API_VERSION = 'v18.0';
 
 interface EventData {
@@ -70,11 +73,6 @@ serve(async (req) => {
   }
 
   try {
-    const accessToken = Deno.env.get('FB_CAPI_ACCESS_TOKEN');
-    if (!accessToken) {
-      throw new Error('FB_CAPI_ACCESS_TOKEN not configured');
-    }
-
     const body: RequestBody = await req.json();
     const { event_name, event_id, event_source_url, user_data, custom_data } = body;
 
@@ -114,16 +112,16 @@ serve(async (req) => {
     if (user_data?.fbc) hashedUserData.fbc = user_data.fbc;
     if (user_data?.fbp) hashedUserData.fbp = user_data.fbp;
 
+    const generatedEventId = event_id || `server_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+
     const eventData: EventData = {
       event_name,
-      event_id: event_id || `server_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
+      event_id: generatedEventId,
       event_time: Math.floor(Date.now() / 1000),
       event_source_url: event_source_url || 'https://extrimshot.com',
       action_source: 'website',
       user_data: hashedUserData,
     };
-
-    console.log('Sending event to Facebook CAPI:', event_name, 'with event_id:', eventData.event_id);
 
     if (custom_data) {
       eventData.custom_data = {
@@ -135,30 +133,48 @@ serve(async (req) => {
       };
     }
 
-    console.log('Sending event to Facebook CAPI:', event_name);
+    console.log('Sending event to Facebook CAPI:', event_name, 'with event_id:', generatedEventId);
 
-    const fbResponse = await fetch(
-      `https://graph.facebook.com/${FB_API_VERSION}/${FB_PIXEL_ID}/events`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: [eventData],
-          access_token: accessToken,
-        }),
-      }
+    // Send to all configured pixels
+    const results = await Promise.all(
+      FB_PIXEL_IDS.map(async ({ id, tokenEnv }) => {
+        const accessToken = Deno.env.get(tokenEnv);
+        if (!accessToken) {
+          console.warn(`${tokenEnv} not configured, skipping pixel ${id}`);
+          return { pixelId: id, success: false, error: 'Token not configured' };
+        }
+
+        try {
+          const fbResponse = await fetch(
+            `https://graph.facebook.com/${FB_API_VERSION}/${id}/events`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                data: [eventData],
+                access_token: accessToken,
+              }),
+            }
+          );
+
+          const fbResult = await fbResponse.json();
+          console.log(`Facebook CAPI response for pixel ${id}:`, JSON.stringify(fbResult));
+
+          if (!fbResponse.ok) {
+            return { pixelId: id, success: false, error: fbResult };
+          }
+
+          return { pixelId: id, success: true, result: fbResult };
+        } catch (err: any) {
+          console.error(`Error sending to pixel ${id}:`, err);
+          return { pixelId: id, success: false, error: err.message };
+        }
+      })
     );
 
-    const fbResult = await fbResponse.json();
-    console.log('Facebook CAPI response:', JSON.stringify(fbResult));
-
-    if (!fbResponse.ok) {
-      throw new Error(`Facebook API error: ${JSON.stringify(fbResult)}`);
-    }
-
-    return new Response(JSON.stringify({ success: true, result: fbResult }), {
+    return new Response(JSON.stringify({ success: true, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
