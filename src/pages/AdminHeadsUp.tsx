@@ -23,16 +23,35 @@ const AdminHeadsUp = () => {
   const [incompleteOrders, setIncompleteOrders] = useState<IncompleteOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchBatch = async (table: 'orders' | 'incomplete_orders', selectFields: string) => {
+    const results: any[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data, error } = await supabase
+        .from(table)
+        .select(selectFields)
+        .order('created_at', { ascending: true })
+        .range(from, from + batchSize - 1);
+      if (error || !data || data.length === 0) break;
+      results.push(...data);
+      if (data.length < batchSize) break;
+      from += batchSize;
+    }
+    return results;
+  };
+
   const fetchAll = async () => {
     setLoading(true);
-    const [ordersRes, incompleteRes] = await Promise.all([
-      supabase.from('orders').select('id, total_amount, status, created_at').order('created_at', { ascending: true }),
-      supabase.from('incomplete_orders').select('id, created_at').order('created_at', { ascending: true }),
+    const [ordersData, incompleteData] = await Promise.all([
+      fetchBatch('orders', 'id, total_amount, status, created_at'),
+      fetchBatch('incomplete_orders', 'id, created_at'),
     ]);
-    setOrders(ordersRes.data || []);
-    setIncompleteOrders(incompleteRes.data || []);
+    setOrders(ordersData as Order[]);
+    setIncompleteOrders(incompleteData as IncompleteOrder[]);
     setLoading(false);
   };
+
 
   useEffect(() => {
     fetchAll();
