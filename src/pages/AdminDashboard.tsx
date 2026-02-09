@@ -439,7 +439,7 @@ const AdminDashboard = () => {
     { label: 'Confirmed', value: analytics.confirmedOrders, icon: CheckCircle, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
     { label: 'Delivered', value: analytics.deliveredOrders, icon: Truck, color: 'text-green-500', bgColor: 'bg-green-500/10' },
     { label: 'Cancelled', value: analytics.cancelledOrders, icon: XCircle, color: 'text-red-500', bgColor: 'bg-red-500/10' },
-    { label: 'Total Revenue', value: `৳${analytics.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-primary', bgColor: 'bg-primary/10' },
+    { label: 'Total Revenue', value: `৳${(analytics.totalSales + (analytics.incompleteOrders * (analytics.avgOrderValue || 1250))).toLocaleString()}`, icon: DollarSign, color: 'text-primary', bgColor: 'bg-primary/10' },
     { label: 'Avg Order Value', value: `৳${Math.round(analytics.avgOrderValue).toLocaleString()}`, icon: TrendingUp, color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
     { label: 'Incomplete Orders', value: analytics.incompleteOrders, icon: Users, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
   ];
