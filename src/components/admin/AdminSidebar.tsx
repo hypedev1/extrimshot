@@ -1,10 +1,11 @@
-import { LayoutDashboard, Package, LogOut, Home, Menu, X, Settings, BarChart3, Users, AlertCircle, ShieldAlert, UserX } from 'lucide-react';
+import { LayoutDashboard, Package, LogOut, Home, Menu, X, Settings, BarChart3, Users, AlertCircle, ShieldAlert, UserX, Eye } from 'lucide-react';
 import { NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
   { title: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
+  { title: 'Heads Up', icon: Eye, path: '/admin/heads-up' },
   { title: 'Orders', icon: Package, path: '/admin/orders' },
   { title: 'Incomplete Orders', icon: AlertCircle, path: '/admin/incomplete-orders' },
   { title: 'Fraud Prevention', icon: ShieldAlert, path: '/admin/fraud-attempts' },
