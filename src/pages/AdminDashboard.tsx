@@ -512,40 +512,54 @@ const AdminDashboard = () => {
               ))}
             </div>
 
-            {/* Heads Up - Combined Revenue Section */}
-            <div className="card-glass p-4 lg:p-6 bg-gradient-to-r from-emerald-500/10 via-primary/10 to-orange-500/10 border-2 border-emerald-500/30">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-2 rounded-full bg-emerald-500/20">
-                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+            {/* Revenue Overview - Shopify Style */}
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <h2 className="text-base font-semibold text-foreground">Revenue Overview</h2>
                 </div>
-                <h2 className="text-lg font-bold">Heads Up - Total Potential Revenue</h2>
+                <span className="text-xs text-muted-foreground">{datePreset === 'all' ? 'All Time' : datePreset.replace('_', ' ')}</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-lg bg-background/50">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Orders Revenue</p>
-                  <p className="text-2xl font-bold text-emerald-500">৳{analytics.totalSales.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{analytics.totalOrders} confirmed orders</p>
+
+              {/* Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
+                {/* Orders Revenue */}
+                <div className="px-5 py-5">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Orders Revenue</p>
+                  <p className="text-3xl font-bold text-foreground tracking-tight">৳{analytics.totalSales.toLocaleString()}</p>
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                      <TrendingUp className="w-3 h-3" />
+                      {analytics.totalOrders}
+                    </span>
+                    <span className="text-xs text-muted-foreground">confirmed orders</span>
+                  </div>
                 </div>
-                <div className="p-4 rounded-lg bg-background/50">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Incomplete Est. Revenue</p>
-                  <p className="text-2xl font-bold text-orange-500">
-                    ৳{(analytics.incompleteOrders * (analytics.avgOrderValue || 1250)).toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">{analytics.incompleteOrders} incomplete × ৳{Math.round(analytics.avgOrderValue || 1250).toLocaleString()} avg</p>
+
+                {/* Incomplete Orders Revenue */}
+                <div className="px-5 py-5">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Incomplete Orders Revenue</p>
+                  <p className="text-3xl font-bold text-foreground tracking-tight">৳{(analytics.incompleteOrders * (analytics.avgOrderValue || 1250)).toLocaleString()}</p>
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-orange-600 bg-orange-500/10 px-1.5 py-0.5 rounded-full">
+                      {analytics.incompleteOrders}
+                    </span>
+                    <span className="text-xs text-muted-foreground">incomplete orders</span>
+                  </div>
                 </div>
-                <div className="p-4 rounded-lg bg-background/50">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Combined Potential</p>
-                  <p className="text-2xl font-bold text-primary">
-                    ৳{(analytics.totalSales + (analytics.incompleteOrders * (analytics.avgOrderValue || 1250))).toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Total if all converted</p>
-                </div>
-                <div className="p-4 rounded-lg bg-background/50">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Lost Revenue Est.</p>
-                  <p className="text-2xl font-bold text-red-500">
-                    ৳{(analytics.incompleteOrders * (analytics.avgOrderValue || 1250)).toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Potential recovery target</p>
+
+                {/* Combined Revenue */}
+                <div className="px-5 py-5 bg-muted/30">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Combined Revenue</p>
+                  <p className="text-3xl font-bold text-primary tracking-tight">৳{(analytics.totalSales + (analytics.incompleteOrders * (analytics.avgOrderValue || 1250))).toLocaleString()}</p>
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                      {analytics.totalOrders + analytics.incompleteOrders}
+                    </span>
+                    <span className="text-xs text-muted-foreground">total orders</span>
+                  </div>
                 </div>
               </div>
             </div>
