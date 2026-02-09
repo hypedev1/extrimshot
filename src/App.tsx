@@ -16,6 +16,7 @@ import AdminFraudAttempts from "./pages/AdminFraudAttempts";
 import AdminBlockedAttempts from "./pages/AdminBlockedAttempts";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminSettings from "./pages/AdminSettings";
+import AdminHeadsUp from "./pages/AdminHeadsUp";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/admin/auth" element={<AdminAuth />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/heads-up" element={<AdminHeadsUp />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/incomplete-orders" element={<AdminIncompleteOrders />} />
             <Route path="/admin/fraud-attempts" element={<AdminFraudAttempts />} />
