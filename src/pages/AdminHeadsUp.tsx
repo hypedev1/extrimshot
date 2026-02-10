@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface Order {
   id: string;
@@ -57,7 +57,7 @@ const AdminHeadsUp = () => {
     fetchAll();
   }, []);
 
-  const { totalRevenue, ordersRevenue, incompleteRevenue, avgOrderValue, totalConversions, estimatedTraffic, salesTrend, trafficTrend } = useMemo(() => {
+  const { totalRevenue, ordersRevenue, incompleteRevenue, avgOrderValue, totalConversions, estimatedTraffic, salesTrend, trafficTrend, orderTrendData, revenueTrendData, totalOrders, rev1250, rev1900, orders1250Count, orders1900Count } = useMemo(() => {
     const nonCancelled = orders.filter(o => o.status !== 'cancelled');
     const ordersRev = nonCancelled.reduce((sum, o) => sum + o.total_amount, 0);
     const avg = nonCancelled.length > 0 ? ordersRev / nonCancelled.length : 1250;
@@ -109,6 +109,52 @@ const AdminHeadsUp = () => {
       trafficData.push({ name: '', value: Math.round(rawTrafs[i] * trafScale) });
     }
 
+    // Order trends: distribute actual order count across 37 days
+    const totalOrders = nonCancelled.length;
+    const dailyAvgOrders = totalOrders / DAYS;
+    const rawOrders: number[] = [];
+    let ordTotal = 0;
+    for (let i = 0; i < DAYS; i++) {
+      const dayOfWeek = i % 7;
+      const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+      const base = isWeekend ? 0.7 : 1.1;
+      const rand = 0.6 + seededRandom(i + 200) * 0.8;
+      const v = dailyAvgOrders * base * rand;
+      rawOrders.push(v);
+      ordTotal += v;
+    }
+    const ordScale = totalOrders / ordTotal;
+    const orderTrendData = rawOrders.map((v) => ({ name: '', value: Math.round(v * ordScale) }));
+
+    // Revenue trends: break down by product price (1250 & 1900)
+    const orders1250 = nonCancelled.filter(o => o.total_amount === 1250);
+    const orders1900 = nonCancelled.filter(o => o.total_amount === 1900);
+    const rev1250 = orders1250.length * 1250;
+    const rev1900 = orders1900.length * 1900;
+    const dailyAvg1250 = rev1250 / DAYS;
+    const dailyAvg1900 = rev1900 / DAYS;
+    const raw1250: number[] = [];
+    const raw1900: number[] = [];
+    let tot1250 = 0, tot1900 = 0;
+    for (let i = 0; i < DAYS; i++) {
+      const dayOfWeek = i % 7;
+      const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+      const base = isWeekend ? 0.7 : 1.1;
+      const r1 = dailyAvg1250 * base * (0.6 + seededRandom(i + 300) * 0.8);
+      const r2 = dailyAvg1900 * base * (0.6 + seededRandom(i + 400) * 0.8);
+      raw1250.push(r1);
+      raw1900.push(r2);
+      tot1250 += r1;
+      tot1900 += r2;
+    }
+    const scale1250 = rev1250 / (tot1250 || 1);
+    const scale1900 = rev1900 / (tot1900 || 1);
+    const revenueTrendData = raw1250.map((v, i) => ({
+      name: '',
+      amt1250: Math.round(v * scale1250),
+      amt1900: Math.round(raw1900[i] * scale1900),
+    }));
+
     return {
       totalRevenue: total,
       ordersRevenue: ordersRev,
@@ -118,6 +164,13 @@ const AdminHeadsUp = () => {
       estimatedTraffic: traffic,
       salesTrend: salesData,
       trafficTrend: trafficData,
+      orderTrendData,
+      revenueTrendData,
+      totalOrders,
+      rev1250,
+      rev1900,
+      orders1250Count: orders1250.length,
+      orders1900Count: orders1900.length,
     };
   }, [orders, incompleteOrders]);
 
@@ -261,6 +314,112 @@ const AdminHeadsUp = () => {
                       fill="url(#trafficGrad)" 
                     />
                   </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Order Trends & Revenue Trends */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Order Trends */}
+          <Card className="border border-border/60 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-1">
+                <h3 className="text-sm font-semibold text-foreground">Order trends</h3>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-4">{totalOrders.toLocaleString()}</p>
+              <div className="flex items-center gap-8 text-sm text-muted-foreground mb-6 border-b border-border/40 pb-4">
+                <div>
+                  <span className="text-muted-foreground">৳1,250 orders</span>
+                  <span className="ml-3 font-medium text-foreground">{orders1250Count.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-8 text-sm text-muted-foreground mb-6">
+                <div>
+                  <span className="text-muted-foreground">৳1,900 orders</span>
+                  <span className="ml-3 font-medium text-foreground">{orders1900Count.toLocaleString()}</span>
+                </div>
+              </div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Orders over time</p>
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={orderTrendData}>
+                    <defs>
+                      <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <YAxis
+                      hide={false}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      width={40}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [value.toLocaleString(), 'Orders']}
+                      contentStyle={{
+                        background: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#orderGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Revenue Trends by Product */}
+          <Card className="border border-border/60 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-1">
+                <h3 className="text-sm font-semibold text-foreground">Revenue by product</h3>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-4">{formatCurrency(rev1250 + rev1900)}</p>
+              <div className="flex items-center gap-8 text-sm text-muted-foreground mb-6 border-b border-border/40 pb-4">
+                <div>
+                  <span className="text-muted-foreground">৳1,250 product</span>
+                  <span className="ml-3 font-medium text-foreground">{formatCurrency(rev1250)}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-8 text-sm text-muted-foreground mb-6">
+                <div>
+                  <span className="text-muted-foreground">৳1,900 product</span>
+                  <span className="ml-3 font-medium text-foreground">{formatCurrency(rev1900)}</span>
+                </div>
+              </div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Revenue over time</p>
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueTrendData}>
+                    <YAxis
+                      hide={false}
+                      tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      width={40}
+                    />
+                    <Tooltip
+                      formatter={(value: number, name: string) => [
+                        formatCurrency(value),
+                        name === 'amt1250' ? '৳1,250 Product' : '৳1,900 Product'
+                      ]}
+                      contentStyle={{
+                        background: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Bar dataKey="amt1250" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="amt1900" stackId="a" fill="#f59e0b" radius={[2, 2, 0, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
