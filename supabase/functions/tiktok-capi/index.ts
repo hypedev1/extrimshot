@@ -100,7 +100,7 @@ serve(async (req) => {
       pixel_code: TIKTOK_PIXEL_ID,
       event: event,
       event_id: generatedEventId,
-      timestamp: new Date().toISOString(),
+      event_time: Math.floor(Date.now() / 1000),
       context: {
         page: {
           url: event_source_url || 'https://extrimshot.com',
