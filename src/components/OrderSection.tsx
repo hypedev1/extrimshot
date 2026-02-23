@@ -4,7 +4,7 @@ import { Clock, CreditCard, Lock, ShieldAlert, Check, Truck } from 'lucide-react
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { trackInitiateCheckout, trackPurchase, trackPixelEvent, trackIncompletePurchase } from '@/lib/fbPixel';
-import { trackTtInitiateCheckout, trackTtCompletePayment, trackTtSubmitForm } from '@/lib/tiktokPixel';
+import { trackTtInitiateCheckout, trackTtCompletePayment, trackTtIncompletePurchase } from '@/lib/tiktokPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
 
@@ -111,7 +111,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
               selectedPackage.price,
               data.id
             );
-            await trackTtSubmitForm({ phone, name: formData.name.trim() || undefined });
+            await trackTtIncompletePurchase({ phone, name: formData.name.trim() || undefined }, selectedPackage.price, data.id);
           } catch (trackError) {
             console.error('Failed to track incomplete purchase:', trackError);
           }
