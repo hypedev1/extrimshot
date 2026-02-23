@@ -126,6 +126,16 @@ export const trackTtCompletePayment = async (
   });
 };
 
-export const trackTtSubmitForm = async (userData: { phone?: string; name?: string }) => {
-  await trackTtEvent('SubmitForm', userData);
+export const trackTtIncompletePurchase = async (
+  userData: { phone: string; name?: string },
+  value: number,
+  orderId: string
+) => {
+  await trackTtEvent('CompletePayment', userData, {
+    value,
+    currency: 'BDT',
+    content_name: 'Extrimshot',
+    content_id: 'extrimshot',
+    order_id: `incomplete_${orderId}`,
+  });
 };
