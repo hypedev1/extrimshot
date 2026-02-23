@@ -4,6 +4,7 @@ import { Clock, CreditCard, Lock, ShieldAlert, Check, Truck } from 'lucide-react
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { trackInitiateCheckout, trackPurchase, trackPixelEvent, trackIncompletePurchase } from '@/lib/fbPixel';
+import { trackTtInitiateCheckout, trackTtCompletePayment, trackTtSubmitForm } from '@/lib/tiktokPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
 
@@ -68,6 +69,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             trackInitiateCheckout(selectedPackage.price);
+            trackTtInitiateCheckout(selectedPackage.price);
             observer.disconnect();
           }
         });
@@ -102,13 +104,14 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         if (!error && data) {
           incompleteOrderIdRef.current = data.id;
           
-          // Send Purchase event to Facebook for incomplete orders
+          // Send Purchase event to Facebook + TikTok for incomplete orders
           try {
             await trackIncompletePurchase(
               { phone, name: formData.name.trim() || undefined },
               selectedPackage.price,
               data.id
             );
+            await trackTtSubmitForm({ phone, name: formData.name.trim() || undefined });
           } catch (trackError) {
             console.error('Failed to track incomplete purchase:', trackError);
           }
@@ -211,6 +214,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
 
       // Only fire Purchase event if user didn't already go through incomplete flow
       // This prevents double counting: incomplete already fired Purchase, so skip here
+      // Track purchase on FB + TikTok
       if (!incompleteOrderIdRef.current) {
         try {
           await trackPurchase(
@@ -219,8 +223,17 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
             orderResult.id
           );
         } catch (trackError) {
-          console.error('Tracking error:', trackError);
+          console.error('FB tracking error:', trackError);
         }
+      }
+      try {
+        await trackTtCompletePayment(
+          { phone: formData.phone, name: formData.name },
+          selectedPackage.price,
+          orderResult.id
+        );
+      } catch (trackError) {
+        console.error('TikTok tracking error:', trackError);
       }
 
       if (incompleteOrderIdRef.current) {
