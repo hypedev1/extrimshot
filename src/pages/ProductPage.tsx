@@ -16,7 +16,7 @@ import { OrderSection } from '@/components/OrderSection';
 import { FinalCTASection } from '@/components/FinalCTASection';
 
 const ProductPage = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug = 'powerbooster' } = useParams<{ slug: string }>();
   
   const product = products.find(p => p.slug === slug);
   const productContent = slug ? getProductContent(slug) : undefined;
