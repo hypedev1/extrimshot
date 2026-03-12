@@ -250,7 +250,7 @@ const AdminOrders = () => {
     }
 
     setBulkSyncing(false);
-    fetchOrders();
+    fetchOrders(0, false);
     
     toast({
       title: 'Bulk Sync Complete',
