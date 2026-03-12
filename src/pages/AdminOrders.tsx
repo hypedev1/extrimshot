@@ -483,6 +483,18 @@ const AdminOrders = () => {
                 </tbody>
               </table>
             </div>
+            {hasMore && (
+              <div className="p-4 border-t border-border flex justify-center">
+                <button
+                  onClick={loadMoreOrders}
+                  disabled={loadingMore}
+                  className="px-4 py-2 rounded-xl border border-border bg-secondary hover:bg-secondary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loadingMore ? 'Loading more...' : 'Load more orders'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
