@@ -345,6 +345,10 @@ const AdminOrders = () => {
           )}
         </div>
 
+        <p className="text-sm text-muted-foreground">
+          Showing {orders.length} order{orders.length !== 1 ? 's' : ''}{totalOrdersCount > 0 ? ` of ${totalOrdersCount}` : ''}
+        </p>
+
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
