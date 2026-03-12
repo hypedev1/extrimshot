@@ -256,6 +256,9 @@ const AdminOrders = () => {
       title: 'Bulk Sync Complete',
       description: `${successCount} succeeded, ${errorCount} failed`,
     });
+  const loadMoreOrders = async () => {
+    if (loadingMore || !hasMore) return;
+    await fetchOrders(currentPage + 1, true);
   };
 
   const pathaoOrderCount = orders.filter(o => o.pathao_consignment_id && o.status !== 'delivered' && o.status !== 'cancelled').length;
