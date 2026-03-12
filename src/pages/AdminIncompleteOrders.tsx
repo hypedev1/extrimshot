@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
 
 const ACKNOWLEDGED_INCOMPLETE_ORDER_KEY = 'admin_acknowledged_incomplete_order_id';
+const INCOMPLETE_PAGE_SIZE = 250;
 
 interface IncompleteOrder {
   id: string;
@@ -20,6 +21,10 @@ interface IncompleteOrder {
 const AdminIncompleteOrders = () => {
   const [orders, setOrders] = useState<IncompleteOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalIncompleteCount, setTotalIncompleteCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<IncompleteOrder | null>(null);
   const [acknowledgedOrderId, setAcknowledgedOrderId] = useState<string | null>(() => {
@@ -33,32 +38,50 @@ const AdminIncompleteOrders = () => {
     toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async (page = 0, append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
-      let allOrders: IncompleteOrder[] = [];
-      let from = 0;
-      const batchSize = 1000;
-      let hasMore = true;
+      const from = page * INCOMPLETE_PAGE_SIZE;
+      const to = from + INCOMPLETE_PAGE_SIZE - 1;
 
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('incomplete_orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .range(from, from + batchSize - 1);
+      const ordersPromise = supabase
+        .from('incomplete_orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          allOrders = [...allOrders, ...data];
-          from += batchSize;
-          hasMore = data.length === batchSize;
-        } else {
-          hasMore = false;
-        }
+      const countPromise = !append && page === 0
+        ? supabase.from('incomplete_orders').select('id', { count: 'exact', head: true })
+        : Promise.resolve({ count: null, error: null });
+
+      const [{ data, error }, countResult] = await Promise.all([ordersPromise, countPromise]);
+
+      if (error) throw error;
+      if (countResult.error) throw countResult.error;
+
+      const pageData = data ?? [];
+
+      if (append) {
+        setOrders((prev) => {
+          const map = new Map(prev.map((order) => [order.id, order]));
+          pageData.forEach((order) => map.set(order.id, order));
+          return Array.from(map.values());
+        });
+      } else {
+        setOrders(pageData);
       }
 
-      setOrders(allOrders);
+      if (typeof countResult.count === 'number') {
+        setTotalIncompleteCount(countResult.count);
+      }
+
+      setCurrentPage(page);
+      setHasMore(pageData.length === INCOMPLETE_PAGE_SIZE);
     } catch (error: any) {
       console.error('Error fetching incomplete orders:', error);
       toast({
@@ -66,13 +89,15 @@ const AdminIncompleteOrders = () => {
         title: 'Error',
         description: 'Failed to load incomplete orders'
       });
+      if (!append) setOrders([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(0, false);
 
     // Subscribe to realtime changes
     const channel = supabase
@@ -80,14 +105,14 @@ const AdminIncompleteOrders = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'incomplete_orders' },
-        () => fetchOrders()
+        () => fetchOrders(0, false)
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchOrders]);
 
   const deleteOrder = async (id: string) => {
     try {
