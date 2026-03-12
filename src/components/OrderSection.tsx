@@ -212,40 +212,25 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
 
       if (error) throw error;
 
-      // Only fire Purchase event if user didn't already go through incomplete flow
-      // This prevents double counting: incomplete already fired Purchase, so skip here
-      // Track purchase on FB + TikTok
+      // Fire-and-forget: don't block order completion on tracking calls
       if (!incompleteOrderIdRef.current) {
-        try {
-          await trackPurchase(
-            { phone: formData.phone, name: formData.name },
-            selectedPackage.price,
-            orderResult.id
-          );
-        } catch (trackError) {
-          console.error('FB tracking error:', trackError);
-        }
-      }
-      try {
-        await trackTtCompletePayment(
+        trackPurchase(
           { phone: formData.phone, name: formData.name },
           selectedPackage.price,
           orderResult.id
-        );
-      } catch (trackError) {
-        console.error('TikTok tracking error:', trackError);
+        ).catch(e => console.error('FB tracking error:', e));
       }
+      trackTtCompletePayment(
+        { phone: formData.phone, name: formData.name },
+        selectedPackage.price,
+        orderResult.id
+      ).catch(e => console.error('TikTok tracking error:', e));
 
+      // Clean up incomplete orders (fire-and-forget)
       if (incompleteOrderIdRef.current) {
-        await supabase
-          .from('incomplete_orders')
-          .delete()
-          .eq('id', incompleteOrderIdRef.current);
+        supabase.from('incomplete_orders').delete().eq('id', incompleteOrderIdRef.current).then();
       } else if (formData.phone.trim()) {
-        await supabase
-          .from('incomplete_orders')
-          .delete()
-          .eq('phone', formData.phone.trim());
+        supabase.from('incomplete_orders').delete().eq('phone', formData.phone.trim()).then();
       }
 
       navigate('/thank-you');
