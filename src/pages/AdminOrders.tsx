@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Search, ChevronDown, Eye, Phone, Copy, Truck, Loader2, CheckCircle, RefreshCw, Plus, Check } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
@@ -35,10 +35,15 @@ const statusOptions = [
 ];
 
 const ACKNOWLEDGED_ORDER_KEY = 'admin_acknowledged_order_id';
+const ORDERS_PAGE_SIZE = 250;
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -58,47 +63,74 @@ const AdminOrders = () => {
     toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
   };
 
-  const fetchOrders = async () => {
-    const allOrders: Order[] = [];
-    let from = 0;
-    const batchSize = 1000;
-    
-    while (true) {
-      const { data, error } = await supabase
+  const fetchOrders = useCallback(async (page = 0, append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      const from = page * ORDERS_PAGE_SIZE;
+      const to = from + ORDERS_PAGE_SIZE - 1;
+
+      const ordersPromise = supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false })
-        .range(from, from + batchSize - 1);
-      
-      if (error) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
-        break;
+        .range(from, to);
+
+      const countPromise = !append && page === 0
+        ? supabase.from('orders').select('id', { count: 'exact', head: true })
+        : Promise.resolve({ count: null, error: null });
+
+      const [{ data, error }, countResult] = await Promise.all([ordersPromise, countPromise]);
+
+      if (error) throw error;
+      if (countResult.error) throw countResult.error;
+
+      const pageData = data ?? [];
+
+      if (append) {
+        setOrders((prev) => {
+          const map = new Map(prev.map((order) => [order.id, order]));
+          pageData.forEach((order) => map.set(order.id, order));
+          return Array.from(map.values());
+        });
+      } else {
+        setOrders(pageData);
       }
-      
-      if (!data || data.length === 0) break;
-      
-      allOrders.push(...data);
-      
-      if (data.length < batchSize) break;
-      from += batchSize;
+
+      if (typeof countResult.count === 'number') {
+        setTotalOrdersCount(countResult.count);
+      }
+
+      setCurrentPage(page);
+      setHasMore(pageData.length === ORDERS_PAGE_SIZE);
+    } catch (error: any) {
+      console.error('Failed to fetch orders:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to load orders' });
+      if (!append) setOrders([]);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
-    
-    setOrders(allOrders);
-    setLoading(false);
-  };
+  }, [toast]);
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(0, false);
 
     const channel = supabase
       .channel('orders-list')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchOrders(0, false);
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchOrders]);
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     const { error } = await supabase
@@ -167,7 +199,7 @@ const AdminOrders = () => {
           title: 'Status Updated',
           description: `Pathao status: ${data.pathao_status}`,
         });
-        fetchOrders();
+        fetchOrders(0, false);
       } else {
         throw new Error(data.error || 'Unknown error');
       }
@@ -218,12 +250,17 @@ const AdminOrders = () => {
     }
 
     setBulkSyncing(false);
-    fetchOrders();
+    fetchOrders(0, false);
     
     toast({
       title: 'Bulk Sync Complete',
       description: `${successCount} succeeded, ${errorCount} failed`,
     });
+  };
+
+  const loadMoreOrders = async () => {
+    if (loadingMore || !hasMore) return;
+    await fetchOrders(currentPage + 1, true);
   };
 
   const pathaoOrderCount = orders.filter(o => o.pathao_consignment_id && o.status !== 'delivered' && o.status !== 'cancelled').length;
@@ -307,6 +344,10 @@ const AdminOrders = () => {
             </button>
           )}
         </div>
+
+        <p className="text-sm text-muted-foreground">
+          Showing {orders.length} order{orders.length !== 1 ? 's' : ''}{totalOrdersCount > 0 ? ` of ${totalOrdersCount}` : ''}
+        </p>
 
         {loading ? (
           <div className="flex justify-center py-12">
@@ -442,6 +483,18 @@ const AdminOrders = () => {
                 </tbody>
               </table>
             </div>
+            {hasMore && (
+              <div className="p-4 border-t border-border flex justify-center">
+                <button
+                  onClick={loadMoreOrders}
+                  disabled={loadingMore}
+                  className="px-4 py-2 rounded-xl border border-border bg-secondary hover:bg-secondary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loadingMore ? 'Loading more...' : 'Load more orders'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -459,7 +512,7 @@ const AdminOrders = () => {
       <CreateOrderModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onOrderCreated={fetchOrders}
+        onOrderCreated={() => fetchOrders(0, false)}
       />
     </AdminLayout>
   );
