@@ -199,7 +199,7 @@ const AdminOrders = () => {
           title: 'Status Updated',
           description: `Pathao status: ${data.pathao_status}`,
         });
-        fetchOrders();
+        fetchOrders(0, false);
       } else {
         throw new Error(data.error || 'Unknown error');
       }
