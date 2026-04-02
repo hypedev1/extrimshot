@@ -8,6 +8,7 @@ const corsHeaders = {
 const FB_PIXEL_IDS = [
   { id: '1418127093286432', tokenEnv: 'FB_CAPI_ACCESS_TOKEN' },
   { id: '1119431000005922', tokenEnv: 'FB_CAPI_ACCESS_TOKEN_2' },
+  { id: '1694063674774794', tokenEnv: 'FB_CAPI_ACCESS_TOKEN_3' },
 ];
 const FB_API_VERSION = 'v18.0';
 
