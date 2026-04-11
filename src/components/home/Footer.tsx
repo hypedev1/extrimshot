@@ -20,9 +20,9 @@ export const Footer = () => {
 
           {/* Contact */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-sm">
-            <a href="tel:01335167186" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+            <a href="tel:01335167180" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
               <Phone className="w-4 h-4" />
-              <span>01335167186</span>
+              <span>01335167180</span>
             </a>
             <a href="mailto:support@extrimshot.com" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
               <Mail className="w-4 h-4" />

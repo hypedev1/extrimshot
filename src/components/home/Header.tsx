@@ -21,9 +21,9 @@ export const Header = () => {
       {/* Top bar - hides on scroll */}
       <div className={`bg-primary/10 overflow-hidden transition-all duration-300 ${isScrolled ? 'max-h-0 py-0' : 'max-h-20 py-2'}`}>
         <div className="container flex items-center justify-between text-sm px-4">
-          <a href="tel:01335167186" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+          <a href="tel:01335167180" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
             <Phone className="w-3 h-3" />
-            <span>হটলাইন: 01335167186</span>
+            <span>হটলাইন: 01335167180</span>
           </a>
           <div className="hidden md:flex items-center gap-4 text-muted-foreground">
             <span>🚚 সারা বাংলাদেশে ক্যাশ অন ডেলিভারি</span>
