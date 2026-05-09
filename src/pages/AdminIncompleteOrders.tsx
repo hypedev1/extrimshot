@@ -12,6 +12,7 @@ const INCOMPLETE_PAGE_SIZE = 250;
 
 interface IncompleteOrder {
   id: string;
+  serial_number: number;
   phone: string;
   customer_name: string | null;
   address: string | null;
