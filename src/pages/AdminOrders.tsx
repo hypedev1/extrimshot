@@ -457,6 +457,7 @@ const AdminOrders = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-secondary/50">
+                    <th className="text-left py-4 px-4 font-medium">SL</th>
                     <th className="text-left py-4 px-4 font-medium">Name</th>
                     <th className="text-left py-4 px-4 font-medium">Phone</th>
                     <th className="text-left py-4 px-4 font-medium hidden lg:table-cell">Address</th>
