@@ -145,18 +145,25 @@ const AdminIncompleteOrders = () => {
   };
 
   const [exporting, setExporting] = useState<null | 'xlsx' | 'csv'>(null);
+  const [exportStart, setExportStart] = useState('');
+  const [exportEnd, setExportEnd] = useState('');
   const downloadExport = async (format: 'xlsx' | 'csv') => {
     setExporting(format);
     try {
       const all: IncompleteOrder[] = [];
       const pageSize = 1000;
       let from = 0;
+      const startISO = exportStart ? new Date(exportStart).toISOString() : null;
+      const endISO = exportEnd ? new Date(exportEnd).toISOString() : null;
       while (true) {
-        const { data, error } = await supabase
+        let q = supabase
           .from('incomplete_orders')
           .select('*')
           .order('created_at', { ascending: false })
           .range(from, from + pageSize - 1);
+        if (startISO) q = q.gte('created_at', startISO);
+        if (endISO) q = q.lte('created_at', endISO);
+        const { data, error } = await q;
         if (error) throw error;
         const batch = (data ?? []) as IncompleteOrder[];
         all.push(...batch);
@@ -164,12 +171,9 @@ const AdminIncompleteOrders = () => {
         from += pageSize;
       }
       const rows = all.map(o => ({
-        'ID': o.id,
-        'Phone': o.phone,
         'Name': o.customer_name || '',
+        'Phone Number': o.phone,
         'Address': o.address || '',
-        'Created At': new Date(o.created_at).toLocaleString(),
-        'Updated At': new Date(o.updated_at).toLocaleString(),
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
       const dateStr = new Date().toISOString().split('T')[0];
