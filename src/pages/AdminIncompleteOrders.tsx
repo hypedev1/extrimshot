@@ -192,7 +192,17 @@ const AdminIncompleteOrders = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Incomplete Orders</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold">Incomplete Orders</h1>
+          <button
+            onClick={downloadExcel}
+            disabled={exporting}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+          >
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            <span className="hidden sm:inline">Download Excel</span>
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card-glass p-4">
             <p className="text-muted-foreground text-sm">Total Incomplete</p>
