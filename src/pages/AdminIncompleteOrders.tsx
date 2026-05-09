@@ -12,6 +12,7 @@ const INCOMPLETE_PAGE_SIZE = 250;
 
 interface IncompleteOrder {
   id: string;
+  serial_number: number;
   phone: string;
   customer_name: string | null;
   address: string | null;
@@ -159,7 +160,7 @@ const AdminIncompleteOrders = () => {
         let q = supabase
           .from('incomplete_orders')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('serial_number', { ascending: true })
           .range(from, from + pageSize - 1);
         if (startISO) q = q.gte('created_at', startISO);
         if (endISO) q = q.lte('created_at', endISO);
@@ -171,6 +172,7 @@ const AdminIncompleteOrders = () => {
         from += pageSize;
       }
       const rows = all.map(o => ({
+        'SL': o.serial_number,
         'Name': o.customer_name || '',
         'Phone Number': o.phone,
         'Address': o.address || '',
@@ -302,6 +304,7 @@ const AdminIncompleteOrders = () => {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">#{order.serial_number}</span>
                         <Phone className="w-4 h-4 text-primary" />
                         <span className="font-semibold">{order.phone}</span>
                       </div>

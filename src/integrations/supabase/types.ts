@@ -54,6 +54,7 @@ export type Database = {
           customer_name: string | null
           id: string
           phone: string
+          serial_number: number
           updated_at: string
         }
         Insert: {
@@ -62,6 +63,7 @@ export type Database = {
           customer_name?: string | null
           id?: string
           phone: string
+          serial_number?: number
           updated_at?: string
         }
         Update: {
@@ -70,6 +72,7 @@ export type Database = {
           customer_name?: string | null
           id?: string
           phone?: string
+          serial_number?: number
           updated_at?: string
         }
         Relationships: []
