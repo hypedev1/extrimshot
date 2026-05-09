@@ -160,7 +160,7 @@ const AdminIncompleteOrders = () => {
         let q = supabase
           .from('incomplete_orders')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('serial_number', { ascending: true })
           .range(from, from + pageSize - 1);
         if (startISO) q = q.gte('created_at', startISO);
         if (endISO) q = q.lte('created_at', endISO);
@@ -172,6 +172,7 @@ const AdminIncompleteOrders = () => {
         from += pageSize;
       }
       const rows = all.map(o => ({
+        'SL': o.serial_number,
         'Name': o.customer_name || '',
         'Phone Number': o.phone,
         'Address': o.address || '',
