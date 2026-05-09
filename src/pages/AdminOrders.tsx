@@ -291,6 +291,51 @@ const AdminOrders = () => {
     }
   };
 
+  const [exporting, setExporting] = useState(false);
+  const downloadExcel = async () => {
+    setExporting(true);
+    try {
+      const all: Order[] = [];
+      const pageSize = 1000;
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        const batch = data ?? [];
+        all.push(...batch as Order[]);
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+      const rows = all.map(o => ({
+        'Order ID': o.id,
+        'Name': o.customer_name,
+        'Phone': o.phone,
+        'Address': o.address,
+        'Package': packageLabels[o.package_type] || o.package_type,
+        'Amount': o.total_amount,
+        'Status': o.status,
+        'Pathao Consignment': o.pathao_consignment_id || '',
+        'Created At': new Date(o.created_at).toLocaleString(),
+        'Updated At': new Date(o.updated_at).toLocaleString(),
+        'Notes': (o as any).notes || '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+      XLSX.writeFile(wb, `orders-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast({ title: 'Exported', description: `${rows.length} orders downloaded` });
+    } catch (err: any) {
+      console.error('Export error:', err);
+      toast({ variant: 'destructive', title: 'Export failed', description: err.message || 'Could not export orders' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
