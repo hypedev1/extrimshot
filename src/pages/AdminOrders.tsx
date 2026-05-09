@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Order {
   id: string;
+  serial_number: number;
   customer_name: string;
   phone: string;
   address: string;
