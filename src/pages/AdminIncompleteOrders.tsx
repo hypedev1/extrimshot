@@ -144,9 +144,9 @@ const AdminIncompleteOrders = () => {
     await fetchOrders(currentPage + 1, true);
   };
 
-  const [exporting, setExporting] = useState(false);
-  const downloadExcel = async () => {
-    setExporting(true);
+  const [exporting, setExporting] = useState<null | 'xlsx' | 'csv'>(null);
+  const downloadExport = async (format: 'xlsx' | 'csv') => {
+    setExporting(format);
     try {
       const all: IncompleteOrder[] = [];
       const pageSize = 1000;
@@ -172,15 +172,27 @@ const AdminIncompleteOrders = () => {
         'Updated At': new Date(o.updated_at).toLocaleString(),
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Incomplete Orders');
-      XLSX.writeFile(wb, `incomplete-orders-${new Date().toISOString().split('T')[0]}.xlsx`);
+      const dateStr = new Date().toISOString().split('T')[0];
+      if (format === 'csv') {
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `incomplete-orders-${dateStr}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Incomplete Orders');
+        XLSX.writeFile(wb, `incomplete-orders-${dateStr}.xlsx`);
+      }
       toast({ title: 'Exported', description: `${rows.length} incomplete orders downloaded` });
     } catch (err: any) {
       console.error('Export error:', err);
       toast({ variant: 'destructive', title: 'Export failed', description: err.message || 'Could not export' });
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
@@ -194,14 +206,24 @@ const AdminIncompleteOrders = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Incomplete Orders</h1>
-          <button
-            onClick={downloadExcel}
-            disabled={exporting}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
-          >
-            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            <span className="hidden sm:inline">Download Excel</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => downloadExport('xlsx')}
+              disabled={!!exporting}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+            >
+              {exporting === 'xlsx' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              <span className="hidden sm:inline">Excel</span>
+            </button>
+            <button
+              onClick={() => downloadExport('csv')}
+              disabled={!!exporting}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+            >
+              {exporting === 'csv' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              <span className="hidden sm:inline">CSV</span>
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card-glass p-4">

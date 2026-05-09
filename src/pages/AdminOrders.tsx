@@ -291,9 +291,9 @@ const AdminOrders = () => {
     }
   };
 
-  const [exporting, setExporting] = useState(false);
-  const downloadExcel = async () => {
-    setExporting(true);
+  const [exporting, setExporting] = useState<null | 'xlsx' | 'csv'>(null);
+  const downloadExport = async (format: 'xlsx' | 'csv') => {
+    setExporting(format);
     try {
       const all: Order[] = [];
       const pageSize = 1000;
@@ -324,15 +324,27 @@ const AdminOrders = () => {
         'Notes': (o as any).notes || '',
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-      XLSX.writeFile(wb, `orders-${new Date().toISOString().split('T')[0]}.xlsx`);
+      const dateStr = new Date().toISOString().split('T')[0];
+      if (format === 'csv') {
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orders-${dateStr}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+        XLSX.writeFile(wb, `orders-${dateStr}.xlsx`);
+      }
       toast({ title: 'Exported', description: `${rows.length} orders downloaded` });
     } catch (err: any) {
       console.error('Export error:', err);
       toast({ variant: 'destructive', title: 'Export failed', description: err.message || 'Could not export orders' });
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
@@ -346,12 +358,20 @@ const AdminOrders = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={downloadExcel}
-              disabled={exporting}
+              onClick={() => downloadExport('xlsx')}
+              disabled={!!exporting}
               className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
             >
-              {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              <span className="hidden sm:inline">Download Excel</span>
+              {exporting === 'xlsx' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              <span className="hidden sm:inline">Excel</span>
+            </button>
+            <button
+              onClick={() => downloadExport('csv')}
+              disabled={!!exporting}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+            >
+              {exporting === 'csv' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              <span className="hidden sm:inline">CSV</span>
             </button>
             <button
               onClick={() => setIsCreateModalOpen(true)}
