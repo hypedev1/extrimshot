@@ -344,13 +344,23 @@ const AdminOrders = () => {
             <h1 className="text-2xl lg:text-3xl font-bold">Orders</h1>
             <p className="text-muted-foreground text-sm lg:text-base">View and manage all orders</p>
           </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Order</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadExcel}
+              disabled={exporting}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+            >
+              {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              <span className="hidden sm:inline">Download Excel</span>
+            </button>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Order</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
