@@ -476,6 +476,7 @@ const AdminOrders = () => {
                         acknowledgedOrderId === order.id ? 'bg-green-500/20' : ''
                       }`}
                     >
+                      <td className="py-4 px-4 font-mono text-sm text-muted-foreground">#{order.serial_number}</td>
                       <td className="py-4 px-4 font-medium">{order.customer_name}</td>
                       <td className="py-4 px-4">
                         <a href={`tel:${order.phone}`} className="flex items-center gap-1 text-primary hover:underline">
