@@ -304,6 +304,7 @@ const AdminIncompleteOrders = () => {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">#{order.serial_number}</span>
                         <Phone className="w-4 h-4 text-primary" />
                         <span className="font-semibold">{order.phone}</span>
                       </div>
