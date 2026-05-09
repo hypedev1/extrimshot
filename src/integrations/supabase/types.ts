@@ -123,6 +123,7 @@ export type Database = {
           pathao_consignment_id: string | null
           pathao_zone_id: number | null
           phone: string
+          serial_number: number
           status: string
           total_amount: number
           updated_at: string
@@ -139,6 +140,7 @@ export type Database = {
           pathao_consignment_id?: string | null
           pathao_zone_id?: number | null
           phone: string
+          serial_number?: number
           status?: string
           total_amount?: number
           updated_at?: string
@@ -155,6 +157,7 @@ export type Database = {
           pathao_consignment_id?: string | null
           pathao_zone_id?: number | null
           phone?: string
+          serial_number?: number
           status?: string
           total_amount?: number
           updated_at?: string

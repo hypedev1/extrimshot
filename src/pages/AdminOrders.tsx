@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Order {
   id: string;
+  serial_number: number;
   customer_name: string;
   phone: string;
   address: string;
@@ -306,7 +307,7 @@ const AdminOrders = () => {
         let q = supabase
           .from('orders')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('serial_number', { ascending: true })
           .range(from, from + pageSize - 1);
         if (startISO) q = q.gte('created_at', startISO);
         if (endISO) q = q.lte('created_at', endISO);
@@ -318,6 +319,7 @@ const AdminOrders = () => {
         from += pageSize;
       }
       const rows = all.map(o => ({
+        'SL': o.serial_number,
         'Name': o.customer_name,
         'Phone Number': o.phone,
         'Address': o.address,
@@ -455,6 +457,7 @@ const AdminOrders = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-secondary/50">
+                    <th className="text-left py-4 px-4 font-medium">SL</th>
                     <th className="text-left py-4 px-4 font-medium">Name</th>
                     <th className="text-left py-4 px-4 font-medium">Phone</th>
                     <th className="text-left py-4 px-4 font-medium hidden lg:table-cell">Address</th>
@@ -473,6 +476,7 @@ const AdminOrders = () => {
                         acknowledgedOrderId === order.id ? 'bg-green-500/20' : ''
                       }`}
                     >
+                      <td className="py-4 px-4 font-mono text-sm text-muted-foreground">#{order.serial_number}</td>
                       <td className="py-4 px-4 font-medium">{order.customer_name}</td>
                       <td className="py-4 px-4">
                         <a href={`tel:${order.phone}`} className="flex items-center gap-1 text-primary hover:underline">
