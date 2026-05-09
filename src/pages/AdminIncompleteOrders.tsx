@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Phone, User, MapPin, Clock, Trash2, Truck, Copy, Check } from 'lucide-react';
+import { Search, Phone, User, MapPin, Clock, Trash2, Truck, Copy, Check, Download, Loader2 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
