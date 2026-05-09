@@ -355,7 +355,24 @@ const AdminOrders = () => {
             <h1 className="text-2xl lg:text-3xl font-bold">Orders</h1>
             <p className="text-muted-foreground text-sm lg:text-base">View and manage all orders</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1">
+              <input
+                type="datetime-local"
+                value={exportStart}
+                onChange={(e) => setExportStart(e.target.value)}
+                className="bg-secondary border border-border rounded-lg px-2 py-2 text-xs"
+                title="Export from"
+              />
+              <span className="text-muted-foreground text-xs">to</span>
+              <input
+                type="datetime-local"
+                value={exportEnd}
+                onChange={(e) => setExportEnd(e.target.value)}
+                className="bg-secondary border border-border rounded-lg px-2 py-2 text-xs"
+                title="Export to"
+              />
+            </div>
             <button
               onClick={() => downloadExport('xlsx')}
               disabled={!!exporting}
