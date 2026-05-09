@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Phone, User, MapPin, Clock, Trash2, Truck, Copy, Check } from 'lucide-react';
+import { Search, Phone, User, MapPin, Clock, Trash2, Truck, Copy, Check, Download, Loader2 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
@@ -143,6 +144,46 @@ const AdminIncompleteOrders = () => {
     await fetchOrders(currentPage + 1, true);
   };
 
+  const [exporting, setExporting] = useState(false);
+  const downloadExcel = async () => {
+    setExporting(true);
+    try {
+      const all: IncompleteOrder[] = [];
+      const pageSize = 1000;
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('incomplete_orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        const batch = (data ?? []) as IncompleteOrder[];
+        all.push(...batch);
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+      const rows = all.map(o => ({
+        'ID': o.id,
+        'Phone': o.phone,
+        'Name': o.customer_name || '',
+        'Address': o.address || '',
+        'Created At': new Date(o.created_at).toLocaleString(),
+        'Updated At': new Date(o.updated_at).toLocaleString(),
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Incomplete Orders');
+      XLSX.writeFile(wb, `incomplete-orders-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast({ title: 'Exported', description: `${rows.length} incomplete orders downloaded` });
+    } catch (err: any) {
+      console.error('Export error:', err);
+      toast({ variant: 'destructive', title: 'Export failed', description: err.message || 'Could not export' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const filteredOrders = orders.filter(order =>
     order.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -151,7 +192,17 @@ const AdminIncompleteOrders = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Incomplete Orders</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold">Incomplete Orders</h1>
+          <button
+            onClick={downloadExcel}
+            disabled={exporting}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+          >
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            <span className="hidden sm:inline">Download Excel</span>
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="card-glass p-4">
             <p className="text-muted-foreground text-sm">Total Incomplete</p>
