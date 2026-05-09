@@ -144,9 +144,9 @@ const AdminIncompleteOrders = () => {
     await fetchOrders(currentPage + 1, true);
   };
 
-  const [exporting, setExporting] = useState(false);
-  const downloadExcel = async () => {
-    setExporting(true);
+  const [exporting, setExporting] = useState<null | 'xlsx' | 'csv'>(null);
+  const downloadExport = async (format: 'xlsx' | 'csv') => {
+    setExporting(format);
     try {
       const all: IncompleteOrder[] = [];
       const pageSize = 1000;
@@ -172,15 +172,27 @@ const AdminIncompleteOrders = () => {
         'Updated At': new Date(o.updated_at).toLocaleString(),
       }));
       const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Incomplete Orders');
-      XLSX.writeFile(wb, `incomplete-orders-${new Date().toISOString().split('T')[0]}.xlsx`);
+      const dateStr = new Date().toISOString().split('T')[0];
+      if (format === 'csv') {
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `incomplete-orders-${dateStr}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Incomplete Orders');
+        XLSX.writeFile(wb, `incomplete-orders-${dateStr}.xlsx`);
+      }
       toast({ title: 'Exported', description: `${rows.length} incomplete orders downloaded` });
     } catch (err: any) {
       console.error('Export error:', err);
       toast({ variant: 'destructive', title: 'Export failed', description: err.message || 'Could not export' });
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   };
 
