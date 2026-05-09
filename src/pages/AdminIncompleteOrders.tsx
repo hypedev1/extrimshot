@@ -144,6 +144,46 @@ const AdminIncompleteOrders = () => {
     await fetchOrders(currentPage + 1, true);
   };
 
+  const [exporting, setExporting] = useState(false);
+  const downloadExcel = async () => {
+    setExporting(true);
+    try {
+      const all: IncompleteOrder[] = [];
+      const pageSize = 1000;
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('incomplete_orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        const batch = (data ?? []) as IncompleteOrder[];
+        all.push(...batch);
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+      const rows = all.map(o => ({
+        'ID': o.id,
+        'Phone': o.phone,
+        'Name': o.customer_name || '',
+        'Address': o.address || '',
+        'Created At': new Date(o.created_at).toLocaleString(),
+        'Updated At': new Date(o.updated_at).toLocaleString(),
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Incomplete Orders');
+      XLSX.writeFile(wb, `incomplete-orders-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast({ title: 'Exported', description: `${rows.length} incomplete orders downloaded` });
+    } catch (err: any) {
+      console.error('Export error:', err);
+      toast({ variant: 'destructive', title: 'Export failed', description: err.message || 'Could not export' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const filteredOrders = orders.filter(order =>
     order.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()))
