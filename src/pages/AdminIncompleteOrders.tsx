@@ -210,7 +210,24 @@ const AdminIncompleteOrders = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Incomplete Orders</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1">
+              <input
+                type="datetime-local"
+                value={exportStart}
+                onChange={(e) => setExportStart(e.target.value)}
+                className="bg-secondary border border-border rounded-lg px-2 py-2 text-xs"
+                title="Export from"
+              />
+              <span className="text-muted-foreground text-xs">to</span>
+              <input
+                type="datetime-local"
+                value={exportEnd}
+                onChange={(e) => setExportEnd(e.target.value)}
+                className="bg-secondary border border-border rounded-lg px-2 py-2 text-xs"
+                title="Export to"
+              />
+            </div>
             <button
               onClick={() => downloadExport('xlsx')}
               disabled={!!exporting}
