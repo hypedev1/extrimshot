@@ -609,34 +609,40 @@ const AdminDashboard = () => {
 
           {datePreset === 'custom' && (
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="flex flex-col md:flex-row md:items-end gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">From</label>
+              <div className="flex flex-col md:flex-row md:items-end gap-3 flex-wrap">
+                <div className="flex flex-col gap-1 w-full md:w-auto">
+                  <label className="text-xs font-medium text-muted-foreground">Start Date &amp; Time</label>
                   <input
-                    type="date"
+                    type="datetime-local"
+                    step={1}
                     value={customStart}
-                    max={customEnd || undefined}
+                    max={customEnd || nowMax}
                     onChange={(e) => setCustomStart(e.target.value)}
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">To</label>
+                <div className="flex flex-col gap-1 w-full md:w-auto">
+                  <label className="text-xs font-medium text-muted-foreground">End Date &amp; Time</label>
                   <input
-                    type="date"
+                    type="datetime-local"
+                    step={1}
                     value={customEnd}
                     min={customStart || undefined}
+                    max={nowMax}
                     onChange={(e) => setCustomEnd(e.target.value)}
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
-                <Button onClick={handleApplyCustom} className="h-10">
+                <Button onClick={handleApplyCustom} className="h-10 w-full md:w-auto">
                   Apply Filter
                 </Button>
                 {customError && (
-                  <span className="text-xs text-destructive md:ml-2">{customError}</span>
+                  <span className="text-xs text-destructive md:ml-2 w-full md:w-auto">{customError}</span>
                 )}
               </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Format: YYYY-MM-DD HH:mm:ss · Uses your local timezone
+              </p>
             </div>
           )}
         </div>
