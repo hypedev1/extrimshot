@@ -625,7 +625,7 @@ const AdminDashboard = () => {
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   <h2 className="text-base font-semibold text-foreground">Revenue Overview</h2>
                 </div>
-                <span className="text-xs text-muted-foreground">{datePreset === 'all' ? 'All Time' : datePreset.replace('_', ' ')}</span>
+                <span className="text-xs text-muted-foreground">{selectedRangeLabel}</span>
               </div>
 
               {/* Cards */}
