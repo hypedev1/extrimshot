@@ -431,8 +431,37 @@ const AdminDashboard = () => {
     { value: 'last7days', label: 'Last 7 Days' },
     { value: 'last15days', label: 'Last 15 Days' },
     { value: 'last30days', label: 'Last 30 Days' },
+    { value: 'thisMonth', label: 'This Month' },
+    { value: 'lastMonth', label: 'Last Month' },
+    { value: 'custom', label: 'Custom Date Range' },
     { value: 'all', label: 'All Time' },
   ];
+
+  const handleApplyCustom = () => {
+    if (!customStart || !customEnd) {
+      setCustomError('Please select both start and end dates.');
+      return;
+    }
+    if (customEnd < customStart) {
+      setCustomError('End date cannot be earlier than start date.');
+      return;
+    }
+    setCustomError('');
+    setAppliedCustom({ start: customStart, end: customEnd });
+  };
+
+  const selectedRangeLabel = (() => {
+    if (datePreset === 'all') return 'All Time';
+    if (datePreset === 'custom') {
+      if (!appliedCustom) return 'Custom Date Range (not applied)';
+      const s = new Date(appliedCustom.start + 'T00:00:00');
+      const e = new Date(appliedCustom.end + 'T00:00:00');
+      return `${formatDateDisplay(s)} – ${formatDateDisplay(e)}`;
+    }
+    const preset = datePresets.find(p => p.value === datePreset);
+    const { start, end } = getDateRange(datePreset);
+    return `${preset?.label ?? ''} (${formatDateDisplay(start)} – ${formatDateDisplay(end)})`;
+  })();
 
   const hourOptions = [
     { value: 'all', label: 'All Hours' },
