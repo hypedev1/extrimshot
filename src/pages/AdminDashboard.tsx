@@ -100,8 +100,8 @@ const AdminDashboard = () => {
   const [startHour, setStartHour] = useState<string>('19'); // Default 7 PM
   const [endHour, setEndHour] = useState<string>('23'); // Default 11 PM
   const today = new Date();
-  const [customStart, setCustomStart] = useState<string>(formatDateInput(today));
-  const [customEnd, setCustomEnd] = useState<string>(formatDateInput(today));
+  const [customStart, setCustomStart] = useState<string>(formatDateTimeInput(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0)));
+  const [customEnd, setCustomEnd] = useState<string>(formatDateTimeInput(today));
   const [appliedCustom, setAppliedCustom] = useState<{ start: string; end: string } | null>(null);
   const [customError, setCustomError] = useState<string>('');
 
