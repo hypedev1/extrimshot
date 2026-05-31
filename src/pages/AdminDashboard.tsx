@@ -56,8 +56,18 @@ interface AnalyticsData {
   hourlyData: HourlyData[];
 }
 
-type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'all';
+type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'custom' | 'all';
 type HourFilter = 'all' | string; // 'all' or '1' to '24'
+
+const formatDateInput = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const formatDateDisplay = (d: Date) =>
+  d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 interface TimeRangeComparison {
   todayOrders: number;
