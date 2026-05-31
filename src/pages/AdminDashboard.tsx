@@ -149,23 +149,25 @@ const AdminDashboard = () => {
 
   const dateFilteredOrders = useMemo(() => {
     if (datePreset === 'all') return allOrders;
+    if (datePreset === 'custom' && !appliedCustom) return allOrders;
     
     const { start, end } = getDateRange(datePreset);
     return allOrders.filter(order => {
       const orderDate = new Date(order.created_at);
       return orderDate >= start && orderDate <= end;
     });
-  }, [allOrders, datePreset]);
+  }, [allOrders, datePreset, appliedCustom]);
 
   const dateFilteredIncompleteOrders = useMemo(() => {
     if (datePreset === 'all') return allIncompleteOrders;
+    if (datePreset === 'custom' && !appliedCustom) return allIncompleteOrders;
     
     const { start, end } = getDateRange(datePreset);
     return allIncompleteOrders.filter(order => {
       const orderDate = new Date(order.created_at);
       return orderDate >= start && orderDate <= end;
     });
-  }, [allIncompleteOrders, datePreset]);
+  }, [allIncompleteOrders, datePreset, appliedCustom]);
 
   const filteredOrders = useMemo(() => {
     if (hourFilter === 'all') return dateFilteredOrders;
