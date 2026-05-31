@@ -451,6 +451,10 @@ const AdminDashboard = () => {
   }, []);
 
   const datePresets = [
+    { value: 'last1h', label: 'Last 1 Hour' },
+    { value: 'last6h', label: 'Last 6 Hours' },
+    { value: 'last12h', label: 'Last 12 Hours' },
+    { value: 'last24h', label: 'Last 24 Hours' },
     { value: 'today', label: 'Today' },
     { value: 'yesterday', label: 'Yesterday' },
     { value: 'last3days', label: 'Last 3 Days' },
@@ -463,13 +467,26 @@ const AdminDashboard = () => {
     { value: 'all', label: 'All Time' },
   ];
 
+  const nowMax = formatDateTimeInput(new Date());
+
   const handleApplyCustom = () => {
     if (!customStart || !customEnd) {
-      setCustomError('Please select both start and end dates.');
+      setCustomError('Please select both start and end date/time.');
       return;
     }
-    if (customEnd < customStart) {
-      setCustomError('End date cannot be earlier than start date.');
+    const startDt = parseLocalDateTime(customStart);
+    const endDt = parseLocalDateTime(customEnd);
+    if (isNaN(startDt.getTime()) || isNaN(endDt.getTime())) {
+      setCustomError('Invalid date/time value.');
+      return;
+    }
+    if (endDt.getTime() < startDt.getTime()) {
+      setCustomError('End date/time cannot be earlier than start date/time.');
+      return;
+    }
+    const now = new Date();
+    if (startDt.getTime() > now.getTime() || endDt.getTime() > now.getTime()) {
+      setCustomError('Future date/time values are not allowed.');
       return;
     }
     setCustomError('');
@@ -480,12 +497,16 @@ const AdminDashboard = () => {
     if (datePreset === 'all') return 'All Time';
     if (datePreset === 'custom') {
       if (!appliedCustom) return 'Custom Date Range (not applied)';
-      const s = new Date(appliedCustom.start + 'T00:00:00');
-      const e = new Date(appliedCustom.end + 'T00:00:00');
-      return `${formatDateDisplay(s)} – ${formatDateDisplay(e)}`;
+      const s = parseLocalDateTime(appliedCustom.start);
+      const e = parseLocalDateTime(appliedCustom.end);
+      return `${formatDateTimeDisplay(s)} → ${formatDateTimeDisplay(e)}`;
     }
     const preset = datePresets.find(p => p.value === datePreset);
     const { start, end } = getDateRange(datePreset);
+    const isHourPreset = ['last1h', 'last6h', 'last12h', 'last24h'].includes(datePreset);
+    if (isHourPreset) {
+      return `${preset?.label ?? ''} (${formatDateTimeDisplay(start)} → ${formatDateTimeDisplay(end)})`;
+    }
     return `${preset?.label ?? ''} (${formatDateDisplay(start)} – ${formatDateDisplay(end)})`;
   })();
 
