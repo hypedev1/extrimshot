@@ -107,10 +107,26 @@ const AdminDashboard = () => {
 
   const getDateRange = (preset: DatePreset): { start: Date; end: Date } => {
     const now = new Date();
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     let start: Date;
 
     switch (preset) {
+      case 'last1h':
+        start = new Date(now.getTime() - 1 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
+      case 'last6h':
+        start = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
+      case 'last12h':
+        start = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
+      case 'last24h':
+        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
       case 'today':
         start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         break;
@@ -136,16 +152,13 @@ const AdminDashboard = () => {
       case 'lastMonth': {
         start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
         const lastDayPrev = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
-        end.setFullYear(start.getFullYear(), start.getMonth(), lastDayPrev);
+        end = new Date(start.getFullYear(), start.getMonth(), lastDayPrev, 23, 59, 59, 999);
         break;
       }
       case 'custom': {
         if (appliedCustom) {
-          const [sy, sm, sd] = appliedCustom.start.split('-').map(Number);
-          const [ey, em, ed] = appliedCustom.end.split('-').map(Number);
-          start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
-          end.setFullYear(ey, em - 1, ed);
-          end.setHours(23, 59, 59, 999);
+          start = parseLocalDateTime(appliedCustom.start);
+          end = parseLocalDateTime(appliedCustom.end);
         } else {
           start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         }
