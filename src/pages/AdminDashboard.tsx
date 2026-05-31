@@ -515,45 +515,83 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header with Date Filter */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Analytics Dashboard</h1>
-            <p className="text-muted-foreground text-sm lg:text-base">Campaign performance & insights</p>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DatePreset)}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Select period" />
-                </SelectTrigger>
-                <SelectContent>
-                  {datePresets.map((preset) => (
-                    <SelectItem key={preset.value} value={preset.value}>
-                      {preset.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold">Analytics Dashboard</h1>
+              <p className="text-muted-foreground text-sm lg:text-base">Campaign performance & insights</p>
+              <p className="mt-1 text-xs lg:text-sm font-medium text-primary">
+                Showing: {selectedRangeLabel}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Timer className="w-4 h-4 text-muted-foreground" />
-              <Select value={hourFilter} onValueChange={(v) => setHourFilter(v as HourFilter)}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Select hour" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {hourOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DatePreset)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {datePresets.map((preset) => (
+                      <SelectItem key={preset.value} value={preset.value}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Timer className="w-4 h-4 text-muted-foreground" />
+                <Select value={hourFilter} onValueChange={(v) => setHourFilter(v as HourFilter)}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Select hour" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {hourOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="text-xs text-muted-foreground">(BST +6)</span>
             </div>
-            <span className="text-xs text-muted-foreground">(BST +6)</span>
           </div>
+
+          {datePreset === 'custom' && (
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex flex-col md:flex-row md:items-end gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">From</label>
+                  <input
+                    type="date"
+                    value={customStart}
+                    max={customEnd || undefined}
+                    onChange={(e) => setCustomStart(e.target.value)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">To</label>
+                  <input
+                    type="date"
+                    value={customEnd}
+                    min={customStart || undefined}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <Button onClick={handleApplyCustom} className="h-10">
+                  Apply Filter
+                </Button>
+                {customError && (
+                  <span className="text-xs text-destructive md:ml-2">{customError}</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {loading ? (
