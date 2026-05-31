@@ -117,6 +117,27 @@ const AdminDashboard = () => {
       case 'last30days':
         start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
         break;
+      case 'thisMonth':
+        start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        break;
+      case 'lastMonth': {
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+        const lastDayPrev = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        end.setFullYear(start.getFullYear(), start.getMonth(), lastDayPrev);
+        break;
+      }
+      case 'custom': {
+        if (appliedCustom) {
+          const [sy, sm, sd] = appliedCustom.start.split('-').map(Number);
+          const [ey, em, ed] = appliedCustom.end.split('-').map(Number);
+          start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+          end.setFullYear(ey, em - 1, ed);
+          end.setHours(23, 59, 59, 999);
+        } else {
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        }
+        break;
+      }
       case 'all':
       default:
         start = new Date(2020, 0, 1);
