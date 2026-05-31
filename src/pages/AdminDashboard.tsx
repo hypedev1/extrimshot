@@ -56,18 +56,31 @@ interface AnalyticsData {
   hourlyData: HourlyData[];
 }
 
-type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'custom' | 'all';
+type DatePreset =
+  | 'last1h' | 'last6h' | 'last12h' | 'last24h'
+  | 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days'
+  | 'thisMonth' | 'lastMonth' | 'custom' | 'all';
 type HourFilter = 'all' | string; // 'all' or '1' to '24'
 
-const formatDateInput = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Local datetime string in `YYYY-MM-DDTHH:mm:ss` format (suitable for datetime-local input with step=1)
+const formatDateTimeInput = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+// Parse `YYYY-MM-DDTHH:mm[:ss]` as local time
+const parseLocalDateTime = (s: string): Date => {
+  const [datePart, timePart = '00:00:00'] = s.split('T');
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm, ss = 0] = timePart.split(':').map(Number);
+  return new Date(y, m - 1, d, hh, mm, ss, 0);
 };
 
 const formatDateDisplay = (d: Date) =>
   d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+const formatDateTimeDisplay = (d: Date) =>
+  `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
 interface TimeRangeComparison {
   todayOrders: number;
@@ -87,17 +100,33 @@ const AdminDashboard = () => {
   const [startHour, setStartHour] = useState<string>('19'); // Default 7 PM
   const [endHour, setEndHour] = useState<string>('23'); // Default 11 PM
   const today = new Date();
-  const [customStart, setCustomStart] = useState<string>(formatDateInput(today));
-  const [customEnd, setCustomEnd] = useState<string>(formatDateInput(today));
+  const [customStart, setCustomStart] = useState<string>(formatDateTimeInput(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0)));
+  const [customEnd, setCustomEnd] = useState<string>(formatDateTimeInput(today));
   const [appliedCustom, setAppliedCustom] = useState<{ start: string; end: string } | null>(null);
   const [customError, setCustomError] = useState<string>('');
 
   const getDateRange = (preset: DatePreset): { start: Date; end: Date } => {
     const now = new Date();
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     let start: Date;
 
     switch (preset) {
+      case 'last1h':
+        start = new Date(now.getTime() - 1 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
+      case 'last6h':
+        start = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
+      case 'last12h':
+        start = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
+      case 'last24h':
+        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        end = new Date(now);
+        break;
       case 'today':
         start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         break;
@@ -123,16 +152,13 @@ const AdminDashboard = () => {
       case 'lastMonth': {
         start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
         const lastDayPrev = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
-        end.setFullYear(start.getFullYear(), start.getMonth(), lastDayPrev);
+        end = new Date(start.getFullYear(), start.getMonth(), lastDayPrev, 23, 59, 59, 999);
         break;
       }
       case 'custom': {
         if (appliedCustom) {
-          const [sy, sm, sd] = appliedCustom.start.split('-').map(Number);
-          const [ey, em, ed] = appliedCustom.end.split('-').map(Number);
-          start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
-          end.setFullYear(ey, em - 1, ed);
-          end.setHours(23, 59, 59, 999);
+          start = parseLocalDateTime(appliedCustom.start);
+          end = parseLocalDateTime(appliedCustom.end);
         } else {
           start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
         }
@@ -425,6 +451,10 @@ const AdminDashboard = () => {
   }, []);
 
   const datePresets = [
+    { value: 'last1h', label: 'Last 1 Hour' },
+    { value: 'last6h', label: 'Last 6 Hours' },
+    { value: 'last12h', label: 'Last 12 Hours' },
+    { value: 'last24h', label: 'Last 24 Hours' },
     { value: 'today', label: 'Today' },
     { value: 'yesterday', label: 'Yesterday' },
     { value: 'last3days', label: 'Last 3 Days' },
@@ -437,13 +467,26 @@ const AdminDashboard = () => {
     { value: 'all', label: 'All Time' },
   ];
 
+  const nowMax = formatDateTimeInput(new Date());
+
   const handleApplyCustom = () => {
     if (!customStart || !customEnd) {
-      setCustomError('Please select both start and end dates.');
+      setCustomError('Please select both start and end date/time.');
       return;
     }
-    if (customEnd < customStart) {
-      setCustomError('End date cannot be earlier than start date.');
+    const startDt = parseLocalDateTime(customStart);
+    const endDt = parseLocalDateTime(customEnd);
+    if (isNaN(startDt.getTime()) || isNaN(endDt.getTime())) {
+      setCustomError('Invalid date/time value.');
+      return;
+    }
+    if (endDt.getTime() < startDt.getTime()) {
+      setCustomError('End date/time cannot be earlier than start date/time.');
+      return;
+    }
+    const now = new Date();
+    if (startDt.getTime() > now.getTime() || endDt.getTime() > now.getTime()) {
+      setCustomError('Future date/time values are not allowed.');
       return;
     }
     setCustomError('');
@@ -454,12 +497,16 @@ const AdminDashboard = () => {
     if (datePreset === 'all') return 'All Time';
     if (datePreset === 'custom') {
       if (!appliedCustom) return 'Custom Date Range (not applied)';
-      const s = new Date(appliedCustom.start + 'T00:00:00');
-      const e = new Date(appliedCustom.end + 'T00:00:00');
-      return `${formatDateDisplay(s)} – ${formatDateDisplay(e)}`;
+      const s = parseLocalDateTime(appliedCustom.start);
+      const e = parseLocalDateTime(appliedCustom.end);
+      return `${formatDateTimeDisplay(s)} → ${formatDateTimeDisplay(e)}`;
     }
     const preset = datePresets.find(p => p.value === datePreset);
     const { start, end } = getDateRange(datePreset);
+    const isHourPreset = ['last1h', 'last6h', 'last12h', 'last24h'].includes(datePreset);
+    if (isHourPreset) {
+      return `${preset?.label ?? ''} (${formatDateTimeDisplay(start)} → ${formatDateTimeDisplay(end)})`;
+    }
     return `${preset?.label ?? ''} (${formatDateDisplay(start)} – ${formatDateDisplay(end)})`;
   })();
 
@@ -562,34 +609,40 @@ const AdminDashboard = () => {
 
           {datePreset === 'custom' && (
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="flex flex-col md:flex-row md:items-end gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">From</label>
+              <div className="flex flex-col md:flex-row md:items-end gap-3 flex-wrap">
+                <div className="flex flex-col gap-1 w-full md:w-auto">
+                  <label className="text-xs font-medium text-muted-foreground">Start Date &amp; Time</label>
                   <input
-                    type="date"
+                    type="datetime-local"
+                    step={1}
                     value={customStart}
-                    max={customEnd || undefined}
+                    max={customEnd || nowMax}
                     onChange={(e) => setCustomStart(e.target.value)}
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">To</label>
+                <div className="flex flex-col gap-1 w-full md:w-auto">
+                  <label className="text-xs font-medium text-muted-foreground">End Date &amp; Time</label>
                   <input
-                    type="date"
+                    type="datetime-local"
+                    step={1}
                     value={customEnd}
                     min={customStart || undefined}
+                    max={nowMax}
                     onChange={(e) => setCustomEnd(e.target.value)}
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
-                <Button onClick={handleApplyCustom} className="h-10">
+                <Button onClick={handleApplyCustom} className="h-10 w-full md:w-auto">
                   Apply Filter
                 </Button>
                 {customError && (
-                  <span className="text-xs text-destructive md:ml-2">{customError}</span>
+                  <span className="text-xs text-destructive md:ml-2 w-full md:w-auto">{customError}</span>
                 )}
               </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Format: YYYY-MM-DD HH:mm:ss · Uses your local timezone
+              </p>
             </div>
           )}
         </div>
