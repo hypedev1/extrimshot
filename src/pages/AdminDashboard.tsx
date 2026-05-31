@@ -56,8 +56,18 @@ interface AnalyticsData {
   hourlyData: HourlyData[];
 }
 
-type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'all';
+type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'custom' | 'all';
 type HourFilter = 'all' | string; // 'all' or '1' to '24'
+
+const formatDateInput = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const formatDateDisplay = (d: Date) =>
+  d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 interface TimeRangeComparison {
   todayOrders: number;
@@ -76,6 +86,11 @@ const AdminDashboard = () => {
   const [hourFilter, setHourFilter] = useState<HourFilter>('all');
   const [startHour, setStartHour] = useState<string>('19'); // Default 7 PM
   const [endHour, setEndHour] = useState<string>('23'); // Default 11 PM
+  const today = new Date();
+  const [customStart, setCustomStart] = useState<string>(formatDateInput(today));
+  const [customEnd, setCustomEnd] = useState<string>(formatDateInput(today));
+  const [appliedCustom, setAppliedCustom] = useState<{ start: string; end: string } | null>(null);
+  const [customError, setCustomError] = useState<string>('');
 
   const getDateRange = (preset: DatePreset): { start: Date; end: Date } => {
     const now = new Date();
@@ -102,6 +117,27 @@ const AdminDashboard = () => {
       case 'last30days':
         start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29, 0, 0, 0, 0);
         break;
+      case 'thisMonth':
+        start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        break;
+      case 'lastMonth': {
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+        const lastDayPrev = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        end.setFullYear(start.getFullYear(), start.getMonth(), lastDayPrev);
+        break;
+      }
+      case 'custom': {
+        if (appliedCustom) {
+          const [sy, sm, sd] = appliedCustom.start.split('-').map(Number);
+          const [ey, em, ed] = appliedCustom.end.split('-').map(Number);
+          start = new Date(sy, sm - 1, sd, 0, 0, 0, 0);
+          end.setFullYear(ey, em - 1, ed);
+          end.setHours(23, 59, 59, 999);
+        } else {
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        }
+        break;
+      }
       case 'all':
       default:
         start = new Date(2020, 0, 1);
@@ -113,23 +149,25 @@ const AdminDashboard = () => {
 
   const dateFilteredOrders = useMemo(() => {
     if (datePreset === 'all') return allOrders;
+    if (datePreset === 'custom' && !appliedCustom) return allOrders;
     
     const { start, end } = getDateRange(datePreset);
     return allOrders.filter(order => {
       const orderDate = new Date(order.created_at);
       return orderDate >= start && orderDate <= end;
     });
-  }, [allOrders, datePreset]);
+  }, [allOrders, datePreset, appliedCustom]);
 
   const dateFilteredIncompleteOrders = useMemo(() => {
     if (datePreset === 'all') return allIncompleteOrders;
+    if (datePreset === 'custom' && !appliedCustom) return allIncompleteOrders;
     
     const { start, end } = getDateRange(datePreset);
     return allIncompleteOrders.filter(order => {
       const orderDate = new Date(order.created_at);
       return orderDate >= start && orderDate <= end;
     });
-  }, [allIncompleteOrders, datePreset]);
+  }, [allIncompleteOrders, datePreset, appliedCustom]);
 
   const filteredOrders = useMemo(() => {
     if (hourFilter === 'all') return dateFilteredOrders;
@@ -393,8 +431,37 @@ const AdminDashboard = () => {
     { value: 'last7days', label: 'Last 7 Days' },
     { value: 'last15days', label: 'Last 15 Days' },
     { value: 'last30days', label: 'Last 30 Days' },
+    { value: 'thisMonth', label: 'This Month' },
+    { value: 'lastMonth', label: 'Last Month' },
+    { value: 'custom', label: 'Custom Date Range' },
     { value: 'all', label: 'All Time' },
   ];
+
+  const handleApplyCustom = () => {
+    if (!customStart || !customEnd) {
+      setCustomError('Please select both start and end dates.');
+      return;
+    }
+    if (customEnd < customStart) {
+      setCustomError('End date cannot be earlier than start date.');
+      return;
+    }
+    setCustomError('');
+    setAppliedCustom({ start: customStart, end: customEnd });
+  };
+
+  const selectedRangeLabel = (() => {
+    if (datePreset === 'all') return 'All Time';
+    if (datePreset === 'custom') {
+      if (!appliedCustom) return 'Custom Date Range (not applied)';
+      const s = new Date(appliedCustom.start + 'T00:00:00');
+      const e = new Date(appliedCustom.end + 'T00:00:00');
+      return `${formatDateDisplay(s)} – ${formatDateDisplay(e)}`;
+    }
+    const preset = datePresets.find(p => p.value === datePreset);
+    const { start, end } = getDateRange(datePreset);
+    return `${preset?.label ?? ''} (${formatDateDisplay(start)} – ${formatDateDisplay(end)})`;
+  })();
 
   const hourOptions = [
     { value: 'all', label: 'All Hours' },
@@ -448,45 +515,83 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header with Date Filter */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Analytics Dashboard</h1>
-            <p className="text-muted-foreground text-sm lg:text-base">Campaign performance & insights</p>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DatePreset)}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Select period" />
-                </SelectTrigger>
-                <SelectContent>
-                  {datePresets.map((preset) => (
-                    <SelectItem key={preset.value} value={preset.value}>
-                      {preset.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold">Analytics Dashboard</h1>
+              <p className="text-muted-foreground text-sm lg:text-base">Campaign performance & insights</p>
+              <p className="mt-1 text-xs lg:text-sm font-medium text-primary">
+                Showing: {selectedRangeLabel}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Timer className="w-4 h-4 text-muted-foreground" />
-              <Select value={hourFilter} onValueChange={(v) => setHourFilter(v as HourFilter)}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Select hour" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {hourOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <Select value={datePreset} onValueChange={(v) => setDatePreset(v as DatePreset)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {datePresets.map((preset) => (
+                      <SelectItem key={preset.value} value={preset.value}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Timer className="w-4 h-4 text-muted-foreground" />
+                <Select value={hourFilter} onValueChange={(v) => setHourFilter(v as HourFilter)}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Select hour" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {hourOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="text-xs text-muted-foreground">(BST +6)</span>
             </div>
-            <span className="text-xs text-muted-foreground">(BST +6)</span>
           </div>
+
+          {datePreset === 'custom' && (
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex flex-col md:flex-row md:items-end gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">From</label>
+                  <input
+                    type="date"
+                    value={customStart}
+                    max={customEnd || undefined}
+                    onChange={(e) => setCustomStart(e.target.value)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">To</label>
+                  <input
+                    type="date"
+                    value={customEnd}
+                    min={customStart || undefined}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <Button onClick={handleApplyCustom} className="h-10">
+                  Apply Filter
+                </Button>
+                {customError && (
+                  <span className="text-xs text-destructive md:ml-2">{customError}</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -520,7 +625,7 @@ const AdminDashboard = () => {
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   <h2 className="text-base font-semibold text-foreground">Revenue Overview</h2>
                 </div>
-                <span className="text-xs text-muted-foreground">{datePreset === 'all' ? 'All Time' : datePreset.replace('_', ' ')}</span>
+                <span className="text-xs text-muted-foreground">{selectedRangeLabel}</span>
               </div>
 
               {/* Cards */}
