@@ -56,18 +56,31 @@ interface AnalyticsData {
   hourlyData: HourlyData[];
 }
 
-type DatePreset = 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'custom' | 'all';
+type DatePreset =
+  | 'last1h' | 'last6h' | 'last12h' | 'last24h'
+  | 'today' | 'yesterday' | 'last3days' | 'last7days' | 'last15days' | 'last30days'
+  | 'thisMonth' | 'lastMonth' | 'custom' | 'all';
 type HourFilter = 'all' | string; // 'all' or '1' to '24'
 
-const formatDateInput = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Local datetime string in `YYYY-MM-DDTHH:mm:ss` format (suitable for datetime-local input with step=1)
+const formatDateTimeInput = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+// Parse `YYYY-MM-DDTHH:mm[:ss]` as local time
+const parseLocalDateTime = (s: string): Date => {
+  const [datePart, timePart = '00:00:00'] = s.split('T');
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm, ss = 0] = timePart.split(':').map(Number);
+  return new Date(y, m - 1, d, hh, mm, ss, 0);
 };
 
 const formatDateDisplay = (d: Date) =>
   d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+const formatDateTimeDisplay = (d: Date) =>
+  `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
 interface TimeRangeComparison {
   todayOrders: number;
