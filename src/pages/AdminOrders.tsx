@@ -65,7 +65,7 @@ const AdminOrders = () => {
     toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
   };
 
-  const fetchOrders = useCallback(async (page = 0, append = false) => {
+  const fetchOrders = useCallback(async (page = 0, append = false, search = '', status = 'all') => {
     if (append) {
       setLoadingMore(true);
     } else {
@@ -76,20 +76,20 @@ const AdminOrders = () => {
       const from = page * ORDERS_PAGE_SIZE;
       const to = from + ORDERS_PAGE_SIZE - 1;
 
-      const ordersPromise = supabase
-        .from('orders')
-        .select('*')
+      const trimmed = search.trim();
+      let q = supabase.from('orders').select('*', { count: 'exact' });
+      if (status !== 'all') q = q.eq('status', status);
+      if (trimmed) {
+        const esc = trimmed.replace(/[%,()]/g, '\\$&');
+        const pattern = `%${esc}%`;
+        q = q.or(`customer_name.ilike.${pattern},phone.ilike.${pattern},address.ilike.${pattern}`);
+      }
+
+      const { data, error, count } = await q
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      const countPromise = !append && page === 0
-        ? supabase.from('orders').select('id', { count: 'exact', head: true })
-        : Promise.resolve({ count: null, error: null });
-
-      const [{ data, error }, countResult] = await Promise.all([ordersPromise, countPromise]);
-
       if (error) throw error;
-      if (countResult.error) throw countResult.error;
 
       const pageData = data ?? [];
 
@@ -103,8 +103,8 @@ const AdminOrders = () => {
         setOrders(pageData);
       }
 
-      if (typeof countResult.count === 'number') {
-        setTotalOrdersCount(countResult.count);
+      if (typeof count === 'number') {
+        setTotalOrdersCount(count);
       }
 
       setCurrentPage(page);
@@ -119,20 +119,26 @@ const AdminOrders = () => {
     }
   }, [toast]);
 
+  // Debounced server-side search + status refetch
   useEffect(() => {
-    fetchOrders(0, false);
+    const handle = setTimeout(() => {
+      fetchOrders(0, false, searchTerm, filterStatus);
+    }, searchTerm ? 300 : 0);
+    return () => clearTimeout(handle);
+  }, [searchTerm, filterStatus, fetchOrders]);
 
+  useEffect(() => {
     const channel = supabase
       .channel('orders-list')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchOrders(0, false);
+        fetchOrders(0, false, searchTerm, filterStatus);
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, searchTerm, filterStatus]);
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     const { error } = await supabase
@@ -201,7 +207,7 @@ const AdminOrders = () => {
           title: 'Status Updated',
           description: `Pathao status: ${data.pathao_status}`,
         });
-        fetchOrders(0, false);
+        fetchOrders(0, false, searchTerm, filterStatus);
       } else {
         throw new Error(data.error || 'Unknown error');
       }
@@ -252,7 +258,7 @@ const AdminOrders = () => {
     }
 
     setBulkSyncing(false);
-    fetchOrders(0, false);
+    fetchOrders(0, false, searchTerm, filterStatus);
     
     toast({
       title: 'Bulk Sync Complete',
@@ -262,18 +268,13 @@ const AdminOrders = () => {
 
   const loadMoreOrders = async () => {
     if (loadingMore || !hasMore) return;
-    await fetchOrders(currentPage + 1, true);
+    await fetchOrders(currentPage + 1, true, searchTerm, filterStatus);
   };
 
   const pathaoOrderCount = orders.filter(o => o.pathao_consignment_id && o.status !== 'delivered' && o.status !== 'cancelled').length;
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.phone.includes(searchTerm);
-    const matchesFilter = filterStatus === 'all' || order.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  // Server-side search & status filter handled in fetchOrders; render all loaded orders.
+  const filteredOrders = orders;
 
   const getStatusStyle = (status: string) => {
     return statusOptions.find(s => s.value === status)?.color || 'bg-gray-500/20 text-gray-500';
@@ -608,7 +609,7 @@ const AdminOrders = () => {
       <CreateOrderModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onOrderCreated={() => fetchOrders(0, false)}
+        onOrderCreated={() => fetchOrders(0, false, searchTerm, filterStatus)}
       />
     </AdminLayout>
   );

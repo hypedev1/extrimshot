@@ -40,7 +40,7 @@ const AdminIncompleteOrders = () => {
     toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
   };
 
-  const fetchOrders = useCallback(async (page = 0, append = false) => {
+  const fetchOrders = useCallback(async (page = 0, append = false, search = '') => {
     if (append) {
       setLoadingMore(true);
     } else {
@@ -51,20 +51,19 @@ const AdminIncompleteOrders = () => {
       const from = page * INCOMPLETE_PAGE_SIZE;
       const to = from + INCOMPLETE_PAGE_SIZE - 1;
 
-      const ordersPromise = supabase
-        .from('incomplete_orders')
-        .select('*')
+      const trimmed = search.trim();
+      let q = supabase.from('incomplete_orders').select('*', { count: 'exact' });
+      if (trimmed) {
+        const esc = trimmed.replace(/[%,()]/g, '\\$&');
+        const pattern = `%${esc}%`;
+        q = q.or(`customer_name.ilike.${pattern},phone.ilike.${pattern},address.ilike.${pattern}`);
+      }
+
+      const { data, error, count } = await q
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      const countPromise = !append && page === 0
-        ? supabase.from('incomplete_orders').select('id', { count: 'exact', head: true })
-        : Promise.resolve({ count: null, error: null });
-
-      const [{ data, error }, countResult] = await Promise.all([ordersPromise, countPromise]);
-
       if (error) throw error;
-      if (countResult.error) throw countResult.error;
 
       const pageData = data ?? [];
 
@@ -78,8 +77,8 @@ const AdminIncompleteOrders = () => {
         setOrders(pageData);
       }
 
-      if (typeof countResult.count === 'number') {
-        setTotalIncompleteCount(countResult.count);
+      if (typeof count === 'number') {
+        setTotalIncompleteCount(count);
       }
 
       setCurrentPage(page);
@@ -98,23 +97,28 @@ const AdminIncompleteOrders = () => {
     }
   }, [toast]);
 
+  // Debounced server-side search refetch
   useEffect(() => {
-    fetchOrders(0, false);
+    const handle = setTimeout(() => {
+      fetchOrders(0, false, searchTerm);
+    }, searchTerm ? 300 : 0);
+    return () => clearTimeout(handle);
+  }, [searchTerm, fetchOrders]);
 
-    // Subscribe to realtime changes
+  useEffect(() => {
     const channel = supabase
       .channel('incomplete-orders-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'incomplete_orders' },
-        () => fetchOrders(0, false)
+        () => fetchOrders(0, false, searchTerm)
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, searchTerm]);
 
   const deleteOrder = async (id: string) => {
     try {
@@ -129,7 +133,7 @@ const AdminIncompleteOrders = () => {
         title: 'Success',
         description: 'Incomplete order deleted'
       });
-      fetchOrders(0, false);
+      fetchOrders(0, false, searchTerm);
     } catch (error: any) {
       console.error('Error deleting incomplete order:', error);
       toast({
@@ -142,7 +146,7 @@ const AdminIncompleteOrders = () => {
 
   const loadMoreOrders = async () => {
     if (loadingMore || !hasMore) return;
-    await fetchOrders(currentPage + 1, true);
+    await fetchOrders(currentPage + 1, true, searchTerm);
   };
 
   const [exporting, setExporting] = useState<null | 'xlsx' | 'csv'>(null);
@@ -202,10 +206,8 @@ const AdminIncompleteOrders = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Server-side search handled in fetchOrders; render all loaded orders.
+  const filteredOrders = orders;
 
   return (
     <AdminLayout>
@@ -397,7 +399,7 @@ const AdminIncompleteOrders = () => {
           order={selectedOrder}
           isOpen={!!selectedOrder}
           onClose={() => setSelectedOrder(null)}
-          onOrderCreated={() => fetchOrders(0, false)}
+          onOrderCreated={() => fetchOrders(0, false, searchTerm)}
         />
       </div>
     </AdminLayout>
