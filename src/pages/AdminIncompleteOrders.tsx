@@ -399,7 +399,7 @@ const AdminIncompleteOrders = () => {
           order={selectedOrder}
           isOpen={!!selectedOrder}
           onClose={() => setSelectedOrder(null)}
-          onOrderCreated={() => fetchOrders(0, false)}
+          onOrderCreated={() => fetchOrders(0, false, searchTerm)}
         />
       </div>
     </AdminLayout>
