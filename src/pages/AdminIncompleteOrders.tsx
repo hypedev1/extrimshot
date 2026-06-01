@@ -97,23 +97,28 @@ const AdminIncompleteOrders = () => {
     }
   }, [toast]);
 
+  // Debounced server-side search refetch
   useEffect(() => {
-    fetchOrders(0, false);
+    const handle = setTimeout(() => {
+      fetchOrders(0, false, searchTerm);
+    }, searchTerm ? 300 : 0);
+    return () => clearTimeout(handle);
+  }, [searchTerm, fetchOrders]);
 
-    // Subscribe to realtime changes
+  useEffect(() => {
     const channel = supabase
       .channel('incomplete-orders-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'incomplete_orders' },
-        () => fetchOrders(0, false)
+        () => fetchOrders(0, false, searchTerm)
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, searchTerm]);
 
   const deleteOrder = async (id: string) => {
     try {
