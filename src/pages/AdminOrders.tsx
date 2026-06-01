@@ -268,18 +268,13 @@ const AdminOrders = () => {
 
   const loadMoreOrders = async () => {
     if (loadingMore || !hasMore) return;
-    await fetchOrders(currentPage + 1, true);
+    await fetchOrders(currentPage + 1, true, searchTerm, filterStatus);
   };
 
   const pathaoOrderCount = orders.filter(o => o.pathao_consignment_id && o.status !== 'delivered' && o.status !== 'cancelled').length;
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.phone.includes(searchTerm);
-    const matchesFilter = filterStatus === 'all' || order.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  // Server-side search & status filter handled in fetchOrders; render all loaded orders.
+  const filteredOrders = orders;
 
   const getStatusStyle = (status: string) => {
     return statusOptions.find(s => s.value === status)?.color || 'bg-gray-500/20 text-gray-500';
