@@ -146,7 +146,7 @@ const AdminIncompleteOrders = () => {
 
   const loadMoreOrders = async () => {
     if (loadingMore || !hasMore) return;
-    await fetchOrders(currentPage + 1, true);
+    await fetchOrders(currentPage + 1, true, searchTerm);
   };
 
   const [exporting, setExporting] = useState<null | 'xlsx' | 'csv'>(null);
