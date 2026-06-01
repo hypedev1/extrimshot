@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="bn">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -18,48 +18,58 @@
     <meta name="twitter:site" content="@extrimshot" />
     <meta name="twitter:image" content="/og-image.png" />
 
-    <!-- Microsoft Clarity -->
-    <script type="text/javascript">
-      (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-      })(window, document, "clarity", "script", "uv90gt38wt");
-    </script>
-    <!-- End Microsoft Clarity -->
+    <!-- Google Fonts: preconnect first for faster DNS, then non-render-blocking stylesheet -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
 
-    <!-- Facebook Pixel Code -->
-    <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1418127093286432');
-      fbq('init', '1119431000005922');
-      fbq('init', '1694063674774794');
-      fbq('track', 'PageView');
-    </script>
-    <!-- End Facebook Pixel Code -->
+    <!-- YouTube thumbnail domain — preconnect so thumbnails load fast in LiteYouTube -->
+    <link rel="preconnect" href="https://i.ytimg.com" />
 
-    <!-- TikTok Pixel Code Start -->
+    <!-- All 3rd-party tracking deferred until after page load -->
+    <!-- This prevents pixel scripts from blocking the critical rendering path -->
     <script>
-      !function (w, d, t) {
-        w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
-        var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
-        ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-        ttq.load('D6EC8NRC77UDFNKRIQH0');
-        ttq.page();
-      }(window, document, 'ttq');
+      window.addEventListener('load', function() {
+        // Small additional delay so the main thread is fully free
+        setTimeout(function() {
+
+          // ── Microsoft Clarity ──────────────────────────────────────────
+          (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "uv90gt38wt");
+
+          // ── Facebook Pixel (3 pixels, single fbevents.js load) ─────────
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '1418127093286432');
+          fbq('init', '1119431000005922');
+          fbq('init', '1694063674774794');
+          fbq('track', 'PageView');
+
+          // ── TikTok Pixel ───────────────────────────────────────────────
+          !function (w, d, t) {
+            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
+            var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
+            ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+            ttq.load('D6EC8NRC77UDFNKRIQH0');
+            ttq.page();
+          }(window, document, 'ttq');
+
+        }, 500); // 500ms delay after load — app is fully interactive by then
+      });
     </script>
-    <!-- TikTok Pixel Code End -->
   </head>
 
   <body>
-    <!-- Facebook Pixel noscript fallback -->
+    <!-- Facebook Pixel noscript fallback (must be synchronous per Meta spec) -->
     <noscript>
       <img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id=1418127093286432&ev=PageView&noscript=1"/>

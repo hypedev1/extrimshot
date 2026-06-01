@@ -24,7 +24,7 @@ export const BenefitsSection = ({ content }: BenefitsSectionProps) => {
   const defaultContent: BenefitsContent = {
     title: 'Extrimshot থেকে আপনি কী কী উপকার পেতে পারেন?',
     subtitle: 'হাজারো সন্তুষ্ট কাস্টমারের বাস্তব অভিজ্ঞতা',
-    image: '/lovable-uploads/aeca2ff1-3195-4d8b-ac60-1bd8bd7f9078.png',
+    image: '/lovable-uploads/aeca2ff1-3195-4d8b-ac60-1bd8bd7f9078.webp',
     categories: [],
     ctaText: 'আজই ট্রাই করুন – স্টক শেষ হওয়ার আগেই'
   };
@@ -71,6 +71,7 @@ export const BenefitsSection = ({ content }: BenefitsSectionProps) => {
               <div className="relative w-40 h-40 rounded-full bg-gradient-to-br from-card to-background border-2 border-primary/20 flex items-center justify-center shadow-xl">
                 <img 
                   alt="Benefits" 
+                  loading="lazy"
                   className="w-32 h-32 object-contain drop-shadow-lg" 
                   src={data.image} 
                 />
@@ -123,6 +124,7 @@ export const BenefitsSection = ({ content }: BenefitsSectionProps) => {
               <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-card to-background border-2 border-primary/20 flex items-center justify-center shadow-lg">
                 <img 
                   alt="Benefits" 
+                  loading="lazy"
                   className="w-20 h-20 object-contain" 
                   src={data.image} 
                 />

@@ -84,7 +84,7 @@ export const productContents: Record<string, ProductContent> = {
     },
     about: {
       title: 'Extrimshot ন্যাচারাল পাওয়ার বুস্টার যেটি খেলে ন্যাচারালি সহবাসের সময় দীর্ঘায়িত হবে ইনশা আল্লাহ।দ্রুত বীর্যপাত রোধ করবে যা আপনার বিবাহিত জীবন কে করবে আরও বেশি আনন্দময় ইনশা আল্লাহ',
-      image: '/lovable-uploads/12a04d91-3d2a-4274-8e85-16c00eae429a.png',
+      image: '/lovable-uploads/12a04d91-3d2a-4274-8e85-16c00eae429a.webp',
       description: 'Extrimshot হলো একটি প্রাকৃতিক হার্বাল পাওয়ার বুস্টার শট, যা সিলেক্টেড হার্ব, ভিটামিন ও ন্যাচারাল এনার্জি কমপ্লেক্স দিয়ে তৈরি। এটি শরীরের ন্যাচারাল এনার্জি সিস্টেমকে সাপোর্ট করে।',
       tags: ['১০০% হার্বাল', 'স্টেরয়েড ফ্রি', 'নন-অ্যাডিক্টিভ'],
       additionalInfo: 'রিসার্চড ডোজে ব্যবহার করা উপাদানের জন্য এটি (Addiction) তৈরি না করে সেফভাবে কাজ করার জন্য তৈরি করা হয়েছে।'
@@ -92,7 +92,7 @@ export const productContents: Record<string, ProductContent> = {
     benefits: {
       title: 'Extrimshot থেকে আপনি কী কী উপকার পেতে পারেন?',
       subtitle: 'হাজারো সন্তুষ্ট কাস্টমারের বাস্তব অভিজ্ঞতা',
-      image: '/lovable-uploads/aeca2ff1-3195-4d8b-ac60-1bd8bd7f9078.png',
+      image: '/lovable-uploads/aeca2ff1-3195-4d8b-ac60-1bd8bd7f9078.webp',
       categories: [
         {
           title: 'শরীর ও এনার্জি',
@@ -161,7 +161,7 @@ export const productContents: Record<string, ProductContent> = {
     hero: {
       title: 'প্রাকৃতিক উপায়ে ডায়াবেটিস নিয়ন্ত্রণ করুন - কোন কেমিক্যাল নেই, শুধু প্রকৃতির শক্তি',
       subtitle: 'ডায়াবেটিক কেয়ার প্যাক - ১০০% ভেষজ ও প্রাকৃতিক উপাদানে তৈরি। রক্তে শর্করার মাত্রা স্বাভাবিক রাখতে সাহায্য করে। কোন সাইড ইফেক্ট নেই।',
-      image: '/lovable-uploads/diabetes-pack-product.png',
+      image: '/lovable-uploads/diabetes-pack-product.webp',
       badges: [
         { text: '১০০% প্রাকৃতিক ভেষজ' },
         { text: 'ক্যাশ অন ডেলিভারি' },
@@ -178,7 +178,7 @@ export const productContents: Record<string, ProductContent> = {
     },
     about: {
       title: 'ডায়াবেটিক কেয়ার প্যাক - আয়ুর্বেদিক পদ্ধতিতে ডায়াবেটিস নিয়ন্ত্রণের সেরা সমাধান',
-      image: '/lovable-uploads/7dcfcca6-53ab-4f9f-8e43-c791ff913947.jpg',
+      image: '/lovable-uploads/7dcfcca6-53ab-4f9f-8e43-c791ff913947.webp',
       description: 'ডায়াবেটিক কেয়ার প্যাক হলো একটি সম্পূর্ণ প্রাকৃতিক ভেষজ ফর্মুলা যা করলা, মেথি, জামের বীজ, নিম পাতা এবং অন্যান্য কার্যকরী ভেষজ উপাদান দিয়ে তৈরি। এটি প্যানক্রিয়াসকে সক্রিয় করে ইনসুলিন উৎপাদনে সাহায্য করে।',
       tags: ['কেমিক্যাল মুক্ত', 'ডাক্তার পরামর্শিত', 'দৈনিক ব্যবহারে নিরাপদ'],
       additionalInfo: 'আমাদের ভেষজ ফর্মুলা শত বছরের আয়ুর্বেদিক জ্ঞান ও আধুনিক গবেষণার সমন্বয়ে তৈরি। নিয়মিত সেবনে রক্তে শর্করার মাত্রা স্বাভাবিক থাকে।'
@@ -186,7 +186,7 @@ export const productContents: Record<string, ProductContent> = {
     benefits: {
       title: 'ডায়াবেটিক কেয়ার প্যাক থেকে আপনি যা পাবেন',
       subtitle: 'হাজারো ডায়াবেটিস রোগী ইতিমধ্যে উপকৃত হয়েছেন',
-      image: '/lovable-uploads/ab2d8092-bf7e-45d2-84d0-37f1ace163c4.jpg',
+      image: '/lovable-uploads/ab2d8092-bf7e-45d2-84d0-37f1ace163c4.webp',
       categories: [
         {
           title: 'সুগার নিয়ন্ত্রণ',

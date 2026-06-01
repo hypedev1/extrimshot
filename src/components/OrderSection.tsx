@@ -59,9 +59,13 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
   const incompleteOrderIdRef = useRef<string | null>(null);
   const phoneTrackedRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    getClientIP().then(setClientIP);
-  }, []);
+  // ⚡ Defer IP fetch — only needed when user submits, not on every page load
+  // Called lazily on first form interaction (phone blur)
+  const fetchClientIPOnce = async () => {
+    if (clientIP !== null) return; // Already fetched
+    const ip = await getClientIP();
+    setClientIP(ip);
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -84,6 +88,8 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
   }, []);
 
   const handlePhoneBlur = async () => {
+    // Start fetching IP in background as soon as user touches the phone field
+    fetchClientIPOnce();
     const phone = formData.phone.trim();
     if (phone.length >= 10 && phone !== phoneTrackedRef.current) {
       phoneTrackedRef.current = phone;

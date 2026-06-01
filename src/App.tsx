@@ -4,19 +4,31 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import Home from "./pages/Home";
+import { lazy, Suspense } from "react";
+
+// Eagerly loaded — these are on the critical path for all visitors
 import ProductPage from "./pages/ProductPage";
 import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
-import AdminAuth from "./pages/AdminAuth";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminOrders from "./pages/AdminOrders";
-import AdminIncompleteOrders from "./pages/AdminIncompleteOrders";
-import AdminFraudAttempts from "./pages/AdminFraudAttempts";
-import AdminBlockedAttempts from "./pages/AdminBlockedAttempts";
-import AdminAnalytics from "./pages/AdminAnalytics";
-import AdminSettings from "./pages/AdminSettings";
-import AdminHeadsUp from "./pages/AdminHeadsUp";
+
+// Lazily loaded — admin-only pages: not needed by public visitors at all
+const Home = lazy(() => import("./pages/Home"));
+const AdminAuth = lazy(() => import("./pages/AdminAuth"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminOrders = lazy(() => import("./pages/AdminOrders"));
+const AdminIncompleteOrders = lazy(() => import("./pages/AdminIncompleteOrders"));
+const AdminFraudAttempts = lazy(() => import("./pages/AdminFraudAttempts"));
+const AdminBlockedAttempts = lazy(() => import("./pages/AdminBlockedAttempts"));
+const AdminAnalytics = lazy(() => import("./pages/AdminAnalytics"));
+const AdminSettings = lazy(() => import("./pages/AdminSettings"));
+const AdminHeadsUp = lazy(() => import("./pages/AdminHeadsUp"));
+
+// Minimal fallback shown while lazy chunks load
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -27,22 +39,23 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<ProductPage />} />
-            <Route path="/:slug" element={<ProductPage />} />
-            <Route path="/thank-you" element={<ThankYou />} />
-            <Route path="/admin/auth" element={<AdminAuth />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/heads-up" element={<AdminHeadsUp />} />
-            <Route path="/admin/orders" element={<AdminOrders />} />
-            <Route path="/admin/incomplete-orders" element={<AdminIncompleteOrders />} />
-            <Route path="/admin/fraud-attempts" element={<AdminFraudAttempts />} />
-            <Route path="/admin/blocked-attempts" element={<AdminBlockedAttempts />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<ProductPage />} />
+              <Route path="/thank-you" element={<ThankYou />} />
+              <Route path="/admin/auth" element={<AdminAuth />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/heads-up" element={<AdminHeadsUp />} />
+              <Route path="/admin/orders" element={<AdminOrders />} />
+              <Route path="/admin/incomplete-orders" element={<AdminIncompleteOrders />} />
+              <Route path="/admin/fraud-attempts" element={<AdminFraudAttempts />} />
+              <Route path="/admin/blocked-attempts" element={<AdminBlockedAttempts />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>

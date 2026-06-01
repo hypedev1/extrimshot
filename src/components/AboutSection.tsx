@@ -15,7 +15,7 @@ interface AboutSectionProps {
 export const AboutSection = ({ content }: AboutSectionProps) => {
   const defaultContent: AboutContent = {
     title: 'Extrimshot ন্যাচারাল পাওয়ার বুস্টার',
-    image: '/lovable-uploads/12a04d91-3d2a-4274-8e85-16c00eae429a.png',
+    image: '/lovable-uploads/12a04d91-3d2a-4274-8e85-16c00eae429a.webp',
     description: 'Extrimshot হলো একটি প্রাকৃতিক হার্বাল পাওয়ার বুস্টার শট।',
     tags: ['১০০% হার্বাল', 'স্টেরয়েড ফ্রি', 'নন-অ্যাডিক্টিভ'],
     additionalInfo: 'রিসার্চড ডোজে ব্যবহার করা উপাদানের জন্য এটি সেফভাবে কাজ করার জন্য তৈরি করা হয়েছে।'
@@ -64,6 +64,7 @@ export const AboutSection = ({ content }: AboutSectionProps) => {
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent rounded-3xl" />
               <img 
                 alt="Product Image" 
+                loading="lazy"
                 className="relative z-10 w-full max-w-[280px] mx-auto drop-shadow-2xl group-hover:scale-105 transition-transform duration-500" 
                 src={data.image} 
               />
