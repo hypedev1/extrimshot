@@ -206,10 +206,8 @@ const AdminIncompleteOrders = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Server-side search handled in fetchOrders; render all loaded orders.
+  const filteredOrders = orders;
 
   return (
     <AdminLayout>
