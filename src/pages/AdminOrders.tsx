@@ -609,7 +609,7 @@ const AdminOrders = () => {
       <CreateOrderModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onOrderCreated={() => fetchOrders(0, false)}
+        onOrderCreated={() => fetchOrders(0, false, searchTerm, filterStatus)}
       />
     </AdminLayout>
   );
