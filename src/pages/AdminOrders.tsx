@@ -207,7 +207,7 @@ const AdminOrders = () => {
           title: 'Status Updated',
           description: `Pathao status: ${data.pathao_status}`,
         });
-        fetchOrders(0, false);
+        fetchOrders(0, false, searchTerm, filterStatus);
       } else {
         throw new Error(data.error || 'Unknown error');
       }
