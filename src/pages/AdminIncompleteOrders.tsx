@@ -133,7 +133,7 @@ const AdminIncompleteOrders = () => {
         title: 'Success',
         description: 'Incomplete order deleted'
       });
-      fetchOrders(0, false);
+      fetchOrders(0, false, searchTerm);
     } catch (error: any) {
       console.error('Error deleting incomplete order:', error);
       toast({
