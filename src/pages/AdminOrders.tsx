@@ -65,7 +65,7 @@ const AdminOrders = () => {
     toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
   };
 
-  const fetchOrders = useCallback(async (page = 0, append = false) => {
+  const fetchOrders = useCallback(async (page = 0, append = false, search = '', status = 'all') => {
     if (append) {
       setLoadingMore(true);
     } else {
@@ -76,20 +76,20 @@ const AdminOrders = () => {
       const from = page * ORDERS_PAGE_SIZE;
       const to = from + ORDERS_PAGE_SIZE - 1;
 
-      const ordersPromise = supabase
-        .from('orders')
-        .select('*')
+      const trimmed = search.trim();
+      let q = supabase.from('orders').select('*', { count: 'exact' });
+      if (status !== 'all') q = q.eq('status', status);
+      if (trimmed) {
+        const esc = trimmed.replace(/[%,()]/g, '\\$&');
+        const pattern = `%${esc}%`;
+        q = q.or(`customer_name.ilike.${pattern},phone.ilike.${pattern},address.ilike.${pattern}`);
+      }
+
+      const { data, error, count } = await q
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      const countPromise = !append && page === 0
-        ? supabase.from('orders').select('id', { count: 'exact', head: true })
-        : Promise.resolve({ count: null, error: null });
-
-      const [{ data, error }, countResult] = await Promise.all([ordersPromise, countPromise]);
-
       if (error) throw error;
-      if (countResult.error) throw countResult.error;
 
       const pageData = data ?? [];
 
@@ -103,8 +103,8 @@ const AdminOrders = () => {
         setOrders(pageData);
       }
 
-      if (typeof countResult.count === 'number') {
-        setTotalOrdersCount(countResult.count);
+      if (typeof count === 'number') {
+        setTotalOrdersCount(count);
       }
 
       setCurrentPage(page);
@@ -119,20 +119,26 @@ const AdminOrders = () => {
     }
   }, [toast]);
 
+  // Debounced server-side search + status refetch
   useEffect(() => {
-    fetchOrders(0, false);
+    const handle = setTimeout(() => {
+      fetchOrders(0, false, searchTerm, filterStatus);
+    }, searchTerm ? 300 : 0);
+    return () => clearTimeout(handle);
+  }, [searchTerm, filterStatus, fetchOrders]);
 
+  useEffect(() => {
     const channel = supabase
       .channel('orders-list')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchOrders(0, false);
+        fetchOrders(0, false, searchTerm, filterStatus);
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, searchTerm, filterStatus]);
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     const { error } = await supabase
