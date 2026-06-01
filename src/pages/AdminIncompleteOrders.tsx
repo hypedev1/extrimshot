@@ -40,7 +40,7 @@ const AdminIncompleteOrders = () => {
     toast({ title: 'Acknowledged', description: 'Order marked as last confirmed' });
   };
 
-  const fetchOrders = useCallback(async (page = 0, append = false) => {
+  const fetchOrders = useCallback(async (page = 0, append = false, search = '') => {
     if (append) {
       setLoadingMore(true);
     } else {
@@ -51,20 +51,19 @@ const AdminIncompleteOrders = () => {
       const from = page * INCOMPLETE_PAGE_SIZE;
       const to = from + INCOMPLETE_PAGE_SIZE - 1;
 
-      const ordersPromise = supabase
-        .from('incomplete_orders')
-        .select('*')
+      const trimmed = search.trim();
+      let q = supabase.from('incomplete_orders').select('*', { count: 'exact' });
+      if (trimmed) {
+        const esc = trimmed.replace(/[%,()]/g, '\\$&');
+        const pattern = `%${esc}%`;
+        q = q.or(`customer_name.ilike.${pattern},phone.ilike.${pattern},address.ilike.${pattern}`);
+      }
+
+      const { data, error, count } = await q
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      const countPromise = !append && page === 0
-        ? supabase.from('incomplete_orders').select('id', { count: 'exact', head: true })
-        : Promise.resolve({ count: null, error: null });
-
-      const [{ data, error }, countResult] = await Promise.all([ordersPromise, countPromise]);
-
       if (error) throw error;
-      if (countResult.error) throw countResult.error;
 
       const pageData = data ?? [];
 
@@ -78,8 +77,8 @@ const AdminIncompleteOrders = () => {
         setOrders(pageData);
       }
 
-      if (typeof countResult.count === 'number') {
-        setTotalIncompleteCount(countResult.count);
+      if (typeof count === 'number') {
+        setTotalIncompleteCount(count);
       }
 
       setCurrentPage(page);
