@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { lazy, Suspense } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 // Eagerly loaded — these are on the critical path for all visitors
 import ProductPage from "./pages/ProductPage";
@@ -59,6 +60,7 @@ const App = () => (
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
+    <Analytics />
   </QueryClientProvider>
 );
 
