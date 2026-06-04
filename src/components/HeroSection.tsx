@@ -40,47 +40,37 @@ interface HeroSectionProps {
   content?: HeroContent;
 }
 
-// Lite YouTube embed — loads the actual player only on click
-const LiteYouTube = ({ videoId }: { videoId: string }) => {
-  const [activated, setActivated] = useState(false);
+// Auto-play YouTube embed — plays muted immediately on page load (browser policy requires muted for autoplay)
+// Thumbnail covers the iframe until it's fully loaded to prevent the blurry flash
+const AutoPlayYouTube = ({ videoId }: { videoId: string }) => {
+  const [loaded, setLoaded] = useState(false);
 
-  if (activated) {
-    return (
+  return (
+    <div className="relative w-full h-full bg-black">
+      {/* Actual autoplay iframe — hidden until fully loaded */}
       <iframe
-        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&modestbranding=1&rel=0&showinfo=0&playsinline=1`}
+        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${videoId}&playsinline=1`}
         className="w-full h-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         title="Product Video"
+        onLoad={() => setLoaded(true)}
       />
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setActivated(true)}
-      className="relative w-full h-full group cursor-pointer bg-black"
-      aria-label="ভিডিওটি চালু করুন"
-    >
-      {/* YouTube thumbnail — loads as a static image, zero player JS */}
-      <img
-        src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
-        alt="Video thumbnail"
-        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-        loading="lazy"
-      />
-      {/* Play button overlay */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-200">
-          <svg className="w-6 h-6 text-white ml-1" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z" />
-          </svg>
+      {/* Poster thumbnail — shown while iframe loads, fades out once ready */}
+      {!loaded && (
+        <div className="absolute inset-0 z-10 bg-black">
+          <img
+            src={`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`}
+            alt="Video thumbnail"
+            className="w-full h-full object-cover"
+          />
+          {/* Subtle loading indicator */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+          </div>
         </div>
-      </div>
-      <div className="absolute bottom-3 left-0 right-0 text-center">
-        <span className="text-white text-xs bg-black/60 px-3 py-1 rounded-full">▶ ভিডিওটি দেখুন</span>
-      </div>
-    </button>
+      )}
+    </div>
   );
 };
 
@@ -159,7 +149,7 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
             return videoId ? (
               <div className="flex justify-center mb-8">
                 <div className="w-[280px] h-[498px] md:w-[340px] md:h-[604px] rounded-2xl overflow-hidden shadow-xl border-4 border-primary/20">
-                  <LiteYouTube videoId={videoId} />
+                  <AutoPlayYouTube videoId={videoId} />
                 </div>
               </div>
             ) : null;
