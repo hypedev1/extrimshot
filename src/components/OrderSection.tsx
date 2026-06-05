@@ -7,6 +7,7 @@ import { trackInitiateCheckout, trackPurchase, trackPixelEvent, trackIncompleteP
 import { trackTtInitiateCheckout, trackTtCompletePayment, trackTtIncompletePurchase } from '@/lib/tiktokPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
+import { isPhoneBlocked, BLOCKED_PHONE_MESSAGE } from '@/lib/phoneBlocklist';
 
 interface OrderPackage {
   id: string;
@@ -93,6 +94,14 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
     const phone = formData.phone.trim();
     if (phone.length >= 10 && phone !== phoneTrackedRef.current) {
       phoneTrackedRef.current = phone;
+
+      // Global blocklist check — block immediately if number is on admin blocklist
+      if (await isPhoneBlocked(phone)) {
+        setFraudBlock({ blocked: true, reason: BLOCKED_PHONE_MESSAGE });
+        toast({ variant: 'destructive', title: 'Blocked', description: BLOCKED_PHONE_MESSAGE });
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('incomplete_orders')
@@ -155,6 +164,14 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         title: 'ত্রুটি হয়েছে',
         description: 'ডিভাইস যাচাই করা যায়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।'
       });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Global blocklist check
+    if (await isPhoneBlocked(formData.phone.trim())) {
+      setFraudBlock({ blocked: true, reason: BLOCKED_PHONE_MESSAGE });
+      toast({ variant: 'destructive', title: 'Blocked', description: BLOCKED_PHONE_MESSAGE });
       setIsSubmitting(false);
       return;
     }
