@@ -20,6 +20,7 @@ const AdminOrders = lazy(() => import("./pages/AdminOrders"));
 const AdminIncompleteOrders = lazy(() => import("./pages/AdminIncompleteOrders"));
 const AdminFraudAttempts = lazy(() => import("./pages/AdminFraudAttempts"));
 const AdminBlockedAttempts = lazy(() => import("./pages/AdminBlockedAttempts"));
+const AdminBlockedNumbers = lazy(() => import("./pages/AdminBlockedNumbers"));
 const AdminAnalytics = lazy(() => import("./pages/AdminAnalytics"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const AdminHeadsUp = lazy(() => import("./pages/AdminHeadsUp"));
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/admin/incomplete-orders" element={<AdminIncompleteOrders />} />
               <Route path="/admin/fraud-attempts" element={<AdminFraudAttempts />} />
               <Route path="/admin/blocked-attempts" element={<AdminBlockedAttempts />} />
+              <Route path="/admin/blocked-numbers" element={<AdminBlockedNumbers />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

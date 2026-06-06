@@ -47,6 +47,69 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_phone_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          performed_by: string | null
+          performed_by_email: string | null
+          phone: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_email?: string | null
+          phone: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_email?: string | null
+          phone?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      blocked_phone_numbers: {
+        Row: {
+          blocked_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          phone: string
+          reason: string | null
+          unblocked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          phone: string
+          reason?: string | null
+          unblocked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          phone?: string
+          reason?: string | null
+          unblocked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       incomplete_orders: {
         Row: {
           address: string | null
@@ -218,6 +281,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_phone_blocked: { Args: { _phone: string }; Returns: boolean }
       make_admin: { Args: { user_email: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
