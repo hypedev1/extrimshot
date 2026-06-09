@@ -297,14 +297,8 @@ const AdminOrders = () => {
       Status: o.status,
       Date: new Date(o.created_at).toLocaleString('en-US'),
     }),
-    toTextBlock: (o, i) =>
-      `#${i + 1} | SL #${o.serial_number}\n` +
-      `Name: ${o.customer_name}\n` +
-      `Phone: ${o.phone}\n` +
-      `Address: ${o.address}\n` +
-      `Package: ${packageLabels[o.package_type] || o.package_type}\n` +
-      `Amount: ৳${o.total_amount}\n` +
-      `Status: ${o.status}`,
+    toTextBlock: (o) =>
+      `${o.customer_name}\t${o.phone}\t${o.address}`,
   });
 
   const copyOrderToClipboard = async (order: Order) => {
