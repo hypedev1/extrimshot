@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
 import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -300,6 +301,8 @@ const AdminIncompleteOrders = () => {
         <p className="text-sm text-muted-foreground">
           Showing {orders.length} incomplete order{orders.length !== 1 ? 's' : ''}{totalIncompleteCount > 0 ? ` of ${totalIncompleteCount}` : ''}
         </p>
+
+        <DateRangeBulkSelector table="incomplete_orders" label="Date/Time Range" fileBaseName="incomplete-orders-range" />
 
         <BulkActionsToolbar
           count={bulk.selectedCount}

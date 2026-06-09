@@ -5,6 +5,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { CreateOrderModal } from '@/components/admin/CreateOrderModal';
 import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -464,6 +465,8 @@ const AdminOrders = () => {
         <p className="text-sm text-muted-foreground">
           Showing {orders.length} order{orders.length !== 1 ? 's' : ''}{totalOrdersCount > 0 ? ` of ${totalOrdersCount}` : ''}
         </p>
+
+        <DateRangeBulkSelector table="orders" label="Date/Time Range" fileBaseName="orders-range" />
 
         <BulkActionsToolbar
           count={bulk.selectedCount}
