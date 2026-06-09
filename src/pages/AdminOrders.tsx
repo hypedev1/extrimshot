@@ -283,6 +283,30 @@ const AdminOrders = () => {
     return statusOptions.find(s => s.value === status)?.color || 'bg-gray-500/20 text-gray-500';
   };
 
+  const bulk = useBulkSelection<Order>({
+    items: filteredOrders,
+    getId: (o) => o.id,
+    fileBaseName: 'orders-selected',
+    toRow: (o) => ({
+      SL: o.serial_number,
+      Name: o.customer_name,
+      Phone: o.phone,
+      Address: o.address,
+      Package: packageLabels[o.package_type] || o.package_type,
+      Amount: o.total_amount,
+      Status: o.status,
+      Date: new Date(o.created_at).toLocaleString('en-US'),
+    }),
+    toTextBlock: (o, i) =>
+      `#${i + 1} | SL #${o.serial_number}\n` +
+      `Name: ${o.customer_name}\n` +
+      `Phone: ${o.phone}\n` +
+      `Address: ${o.address}\n` +
+      `Package: ${packageLabels[o.package_type] || o.package_type}\n` +
+      `Amount: ৳${o.total_amount}\n` +
+      `Status: ${o.status}`,
+  });
+
   const copyOrderToClipboard = async (order: Order) => {
     // Tab-separated format for Google Sheets (Name, Phone, Address, Package)
     const packageName = packageLabels[order.package_type] || order.package_type;
