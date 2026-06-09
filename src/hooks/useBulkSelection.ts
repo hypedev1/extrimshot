@@ -48,7 +48,15 @@ export function useBulkSelection<T>({
   }, [allSelected, clear, selectAll]);
 
   const selectedItems = useMemo(
-    () => items.filter((i) => selectedIds.has(getId(i))),
+    () =>
+      items
+        .filter((i) => selectedIds.has(getId(i)))
+        .slice()
+        .sort((a, b) => {
+          const ax = (a as any)?.created_at ? new Date((a as any).created_at).getTime() : 0;
+          const bx = (b as any)?.created_at ? new Date((b as any).created_at).getTime() : 0;
+          return ax - bx;
+        }),
     [items, selectedIds, getId]
   );
 
