@@ -304,6 +304,16 @@ const AdminIncompleteOrders = () => {
           Showing {orders.length} incomplete order{orders.length !== 1 ? 's' : ''}{totalIncompleteCount > 0 ? ` of ${totalIncompleteCount}` : ''}
         </p>
 
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         {/* Orders List */}
         {loading ? (
           <div className="text-center py-12">
@@ -321,11 +331,18 @@ const AdminIncompleteOrders = () => {
                 <div 
                   key={order.id} 
                   className={`card-glass p-4 transition-colors ${
-                    acknowledgedOrderId === order.id ? 'bg-green-500/20 border-green-500/30' : ''
+                    bulk.isSelected(order.id) ? 'bg-primary/10 border-primary/40' : acknowledgedOrderId === order.id ? 'bg-green-500/20 border-green-500/30' : ''
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-2">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Checkbox
+                        checked={bulk.isSelected(order.id)}
+                        onCheckedChange={() => bulk.toggleOne(order.id)}
+                        aria-label={`Select order ${order.serial_number}`}
+                        className="mt-1"
+                      />
+                      <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">#{order.serial_number}</span>
                         <Phone className="w-4 h-4 text-primary" />
