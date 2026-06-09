@@ -365,6 +365,7 @@ const AdminIncompleteOrders = () => {
                         <span>{format(new Date(order.created_at), 'dd/MM/yyyy hh:mm a')}</span>
                       </div>
                     </div>
+                    </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => acknowledgeOrder(order.id)}
