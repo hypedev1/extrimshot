@@ -471,6 +471,16 @@ const AdminOrders = () => {
           Showing {orders.length} order{orders.length !== 1 ? 's' : ''}{totalOrdersCount > 0 ? ` of ${totalOrdersCount}` : ''}
         </p>
 
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -485,6 +495,13 @@ const AdminOrders = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-secondary/50">
+                    <th className="py-4 px-3 w-10">
+                      <Checkbox
+                        checked={bulk.allSelected ? true : bulk.someSelected ? 'indeterminate' : false}
+                        onCheckedChange={() => bulk.toggleAll()}
+                        aria-label="Select all"
+                      />
+                    </th>
                     <th className="text-left py-4 px-4 font-medium">SL</th>
                     <th className="text-left py-4 px-4 font-medium">Name</th>
                     <th className="text-left py-4 px-4 font-medium">Phone</th>
@@ -501,10 +518,18 @@ const AdminOrders = () => {
                     <tr 
                       key={order.id} 
                       className={`border-t border-border hover:bg-secondary/30 transition-colors ${
-                        acknowledgedOrderId === order.id ? 'bg-green-500/20' : ''
+                        bulk.isSelected(order.id) ? 'bg-primary/10' : acknowledgedOrderId === order.id ? 'bg-green-500/20' : ''
                       }`}
                     >
+                      <td className="py-4 px-3">
+                        <Checkbox
+                          checked={bulk.isSelected(order.id)}
+                          onCheckedChange={() => bulk.toggleOne(order.id)}
+                          aria-label={`Select order ${order.serial_number}`}
+                        />
+                      </td>
                       <td className="py-4 px-4 font-mono text-sm text-muted-foreground">#{order.serial_number}</td>
+
                       <td className="py-4 px-4 font-medium">{order.customer_name}</td>
                       <td className="py-4 px-4">
                         <a href={`tel:${order.phone}`} className="flex items-center gap-1 text-primary hover:underline">
