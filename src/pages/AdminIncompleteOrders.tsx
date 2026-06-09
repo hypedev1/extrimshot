@@ -223,11 +223,8 @@ const AdminIncompleteOrders = () => {
       Address: o.address || '',
       Date: format(new Date(o.created_at), 'yyyy-MM-dd HH:mm'),
     }),
-    toTextBlock: (o, i) =>
-      `#${i + 1} | SL #${o.serial_number}\n` +
-      `Name: ${o.customer_name || '-'}\n` +
-      `Phone: ${o.phone}\n` +
-      `Address: ${o.address || '-'}`,
+    toTextBlock: (o) =>
+      `${o.customer_name || ''}\t${o.phone}\t${o.address || ''}`,
   });
 
   return (
