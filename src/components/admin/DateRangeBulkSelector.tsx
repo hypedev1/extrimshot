@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Copy, Loader2, X, FileSpreadsheet } from 'lucide-react';
+import { Calendar, Copy, Loader2, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -19,16 +19,16 @@ interface Props {
 }
 
 /**
- * Date/time range bulk selector that queries the ENTIRE database table
- * (bypassing pagination), sorts ascending by created_at, and copies/exports
- * a TSV with Customer Name, Phone, Address — ready to paste into Excel/Sheets.
+ * Date/time range bulk tool.
+ * One click fetches all matching orders (bypassing pagination),
+ * sorts ascending by created_at, and copies/exports
+ * Name [TAB] Phone [TAB] Address — ready for Excel/Sheets.
  */
 export const DateRangeBulkSelector = ({ table, label = 'Range select', fileBaseName = 'orders-range' }: Props) => {
   const { toast } = useToast();
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState<RowLite[]>([]);
 
   const fetchRange = async (): Promise<RowLite[]> => {
     const startISO = start ? new Date(start).toISOString() : null;
@@ -58,61 +58,53 @@ export const DateRangeBulkSelector = ({ table, label = 'Range select', fileBaseN
     return all;
   };
 
-  const selectAllFiltered = async () => {
+  const copyOrdersInRange = async () => {
     setLoading(true);
     try {
       const rows = await fetchRange();
-      setSelected(rows);
-      if (rows.length > 0) {
-        toast({ title: 'Selected', description: `${rows.length} order(s) selected in range` });
-      } else {
-        toast({ title: 'No matches', description: 'No orders in the chosen range' });
+      if (rows.length === 0) {
+        toast({ title: 'No orders found', description: 'No orders match the selected date range' });
+        return;
       }
+      const tsv = rows
+        .map((o) => `${o.customer_name ?? ''}\t${o.phone}\t${o.address ?? ''}`)
+        .join('\n');
+      await navigator.clipboard.writeText(tsv);
+      toast({ title: 'Copied to clipboard', description: `${rows.length} order(s) copied (oldest first)` });
     } catch (err: any) {
       console.error(err);
-      toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to fetch range' });
+      toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to copy orders' });
     } finally {
       setLoading(false);
     }
   };
 
-  const sortedAsc = () => [...selected].sort((a, b) => a.created_at.localeCompare(b.created_at));
-
-  const copySelected = async () => {
-    if (selected.length === 0) {
-      toast({ variant: 'destructive', title: 'Nothing selected', description: 'Run "Select All in Range" first' });
-      return;
-    }
-    const tsv = sortedAsc()
-      .map((o) => `${o.customer_name ?? ''}\t${o.phone}\t${o.address ?? ''}`)
-      .join('\n');
+  const exportOrdersInRange = async () => {
+    setLoading(true);
     try {
-      await navigator.clipboard.writeText(tsv);
-      toast({ title: 'Copied for Excel', description: `${selected.length} order(s) copied (oldest first)` });
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Clipboard blocked' });
+      const rows = await fetchRange();
+      if (rows.length === 0) {
+        toast({ title: 'No orders found', description: 'No orders match the selected date range' });
+        return;
+      }
+      const sheetRows = rows.map((o) => ({
+        'Customer Name': o.customer_name ?? '',
+        'Phone Number': o.phone,
+        'Address': o.address ?? '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(sheetRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+      const dateStr = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `${fileBaseName}-${dateStr}.xlsx`);
+      toast({ title: 'Exported', description: `${rows.length} order(s) downloaded (oldest first)` });
+    } catch (err: any) {
+      console.error(err);
+      toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to export orders' });
+    } finally {
+      setLoading(false);
     }
   };
-
-  const exportXlsx = () => {
-    if (selected.length === 0) {
-      toast({ variant: 'destructive', title: 'Nothing selected', description: 'Run "Select All in Range" first' });
-      return;
-    }
-    const rows = sortedAsc().map((o) => ({
-      'Customer Name': o.customer_name ?? '',
-      'Phone Number': o.phone,
-      'Address': o.address ?? '',
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Selected');
-    const dateStr = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(wb, `${fileBaseName}-${dateStr}.xlsx`);
-    toast({ title: 'Exported', description: `${rows.length} order(s) downloaded` });
-  };
-
-  const clear = () => setSelected([]);
 
   return (
     <div className="card-glass p-3 space-y-2 border border-primary/30">
@@ -136,42 +128,25 @@ export const DateRangeBulkSelector = ({ table, label = 'Range select', fileBaseN
           title="End date/time"
         />
         <button
-          onClick={selectAllFiltered}
+          onClick={copyOrdersInRange}
           disabled={loading}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-50"
         >
-          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-          Select All Filtered
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+          Copy Orders in Range
         </button>
-        {selected.length > 0 && (
-          <>
-            <button
-              onClick={copySelected}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
-            >
-              <Copy className="w-3.5 h-3.5" /> Copy Selected for Excel
-            </button>
-            <button
-              onClick={exportXlsx}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" /> Export Excel
-            </button>
-            <button
-              onClick={clear}
-              className="ml-auto p-1.5 rounded-lg hover:bg-secondary text-muted-foreground"
-              title="Clear selection"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </>
-        )}
+        <button
+          onClick={exportOrdersInRange}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
+          Export Excel
+        </button>
       </div>
-      {selected.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          {selected.length} order(s) selected · sorted oldest → newest · format: Name [TAB] Phone [TAB] Address
-        </p>
-      )}
+      <p className="text-xs text-muted-foreground">
+        Sorts oldest → newest · format: Name [TAB] Phone [TAB] Address
+      </p>
     </div>
   );
 };
