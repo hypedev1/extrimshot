@@ -4,6 +4,10 @@ import * as XLSX from 'xlsx';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { CreateOrderModal } from '@/components/admin/CreateOrderModal';
+import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -280,6 +284,24 @@ const AdminOrders = () => {
     return statusOptions.find(s => s.value === status)?.color || 'bg-gray-500/20 text-gray-500';
   };
 
+  const bulk = useBulkSelection<Order>({
+    items: filteredOrders,
+    getId: (o) => o.id,
+    fileBaseName: 'orders-selected',
+    toRow: (o) => ({
+      SL: o.serial_number,
+      Name: o.customer_name,
+      Phone: o.phone,
+      Address: o.address,
+      Package: packageLabels[o.package_type] || o.package_type,
+      Amount: o.total_amount,
+      Status: o.status,
+      Date: new Date(o.created_at).toLocaleString('en-US'),
+    }),
+    toTextBlock: (o) =>
+      `${o.customer_name}\t${o.phone}\t${o.address}`,
+  });
+
   const copyOrderToClipboard = async (order: Order) => {
     // Tab-separated format for Google Sheets (Name, Phone, Address, Package)
     const packageName = packageLabels[order.package_type] || order.package_type;
@@ -444,6 +466,18 @@ const AdminOrders = () => {
           Showing {orders.length} order{orders.length !== 1 ? 's' : ''}{totalOrdersCount > 0 ? ` of ${totalOrdersCount}` : ''}
         </p>
 
+        <DateRangeBulkSelector table="orders" label="Date/Time Range" fileBaseName="orders-range" />
+
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -458,6 +492,13 @@ const AdminOrders = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-secondary/50">
+                    <th className="py-4 px-3 w-10">
+                      <Checkbox
+                        checked={bulk.allSelected ? true : bulk.someSelected ? 'indeterminate' : false}
+                        onCheckedChange={() => bulk.toggleAll()}
+                        aria-label="Select all"
+                      />
+                    </th>
                     <th className="text-left py-4 px-4 font-medium">SL</th>
                     <th className="text-left py-4 px-4 font-medium">Name</th>
                     <th className="text-left py-4 px-4 font-medium">Phone</th>
@@ -474,10 +515,18 @@ const AdminOrders = () => {
                     <tr 
                       key={order.id} 
                       className={`border-t border-border hover:bg-secondary/30 transition-colors ${
-                        acknowledgedOrderId === order.id ? 'bg-green-500/20' : ''
+                        bulk.isSelected(order.id) ? 'bg-primary/10' : acknowledgedOrderId === order.id ? 'bg-green-500/20' : ''
                       }`}
                     >
+                      <td className="py-4 px-3">
+                        <Checkbox
+                          checked={bulk.isSelected(order.id)}
+                          onCheckedChange={() => bulk.toggleOne(order.id)}
+                          aria-label={`Select order ${order.serial_number}`}
+                        />
+                      </td>
                       <td className="py-4 px-4 font-mono text-sm text-muted-foreground">#{order.serial_number}</td>
+
                       <td className="py-4 px-4 font-medium">{order.customer_name}</td>
                       <td className="py-4 px-4">
                         <a href={`tel:${order.phone}`} className="flex items-center gap-1 text-primary hover:underline">

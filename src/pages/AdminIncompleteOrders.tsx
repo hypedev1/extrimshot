@@ -6,6 +6,10 @@ import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
+import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const ACKNOWLEDGED_INCOMPLETE_ORDER_KEY = 'admin_acknowledged_incomplete_order_id';
 const INCOMPLETE_PAGE_SIZE = 250;
@@ -209,6 +213,21 @@ const AdminIncompleteOrders = () => {
   // Server-side search handled in fetchOrders; render all loaded orders.
   const filteredOrders = orders;
 
+  const bulk = useBulkSelection<IncompleteOrder>({
+    items: filteredOrders,
+    getId: (o) => o.id,
+    fileBaseName: 'incomplete-orders-selected',
+    toRow: (o) => ({
+      SL: o.serial_number,
+      Name: o.customer_name || '',
+      Phone: o.phone,
+      Address: o.address || '',
+      Date: format(new Date(o.created_at), 'yyyy-MM-dd HH:mm'),
+    }),
+    toTextBlock: (o) =>
+      `${o.customer_name || ''}\t${o.phone}\t${o.address || ''}`,
+  });
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -283,6 +302,18 @@ const AdminIncompleteOrders = () => {
           Showing {orders.length} incomplete order{orders.length !== 1 ? 's' : ''}{totalIncompleteCount > 0 ? ` of ${totalIncompleteCount}` : ''}
         </p>
 
+        <DateRangeBulkSelector table="incomplete_orders" label="Date/Time Range" fileBaseName="incomplete-orders-range" />
+
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         {/* Orders List */}
         {loading ? (
           <div className="text-center py-12">
@@ -300,11 +331,18 @@ const AdminIncompleteOrders = () => {
                 <div 
                   key={order.id} 
                   className={`card-glass p-4 transition-colors ${
-                    acknowledgedOrderId === order.id ? 'bg-green-500/20 border-green-500/30' : ''
+                    bulk.isSelected(order.id) ? 'bg-primary/10 border-primary/40' : acknowledgedOrderId === order.id ? 'bg-green-500/20 border-green-500/30' : ''
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-2">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Checkbox
+                        checked={bulk.isSelected(order.id)}
+                        onCheckedChange={() => bulk.toggleOne(order.id)}
+                        aria-label={`Select order ${order.serial_number}`}
+                        className="mt-1"
+                      />
+                      <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">#{order.serial_number}</span>
                         <Phone className="w-4 h-4 text-primary" />
@@ -326,6 +364,7 @@ const AdminIncompleteOrders = () => {
                         <Clock className="w-3 h-3" />
                         <span>{format(new Date(order.created_at), 'dd/MM/yyyy hh:mm a')}</span>
                       </div>
+                    </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
