@@ -212,6 +212,24 @@ const AdminIncompleteOrders = () => {
   // Server-side search handled in fetchOrders; render all loaded orders.
   const filteredOrders = orders;
 
+  const bulk = useBulkSelection<IncompleteOrder>({
+    items: filteredOrders,
+    getId: (o) => o.id,
+    fileBaseName: 'incomplete-orders-selected',
+    toRow: (o) => ({
+      SL: o.serial_number,
+      Name: o.customer_name || '',
+      Phone: o.phone,
+      Address: o.address || '',
+      Date: format(new Date(o.created_at), 'yyyy-MM-dd HH:mm'),
+    }),
+    toTextBlock: (o, i) =>
+      `#${i + 1} | SL #${o.serial_number}\n` +
+      `Name: ${o.customer_name || '-'}\n` +
+      `Phone: ${o.phone}\n` +
+      `Address: ${o.address || '-'}`,
+  });
+
   return (
     <AdminLayout>
       <div className="space-y-6">
