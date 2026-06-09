@@ -130,7 +130,8 @@ export const DateRangeBulkSelector = ({ table, label = 'Range select', fileBaseN
         <button
           onClick={copyOrdersInRange}
           disabled={loading}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-50"
+          style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 font-semibold shadow-sm"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
           Copy Orders in Range
