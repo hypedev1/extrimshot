@@ -57,19 +57,18 @@ export function useBulkSelection<T>({
       toast({ variant: 'destructive', title: 'Nothing selected', description: 'Select at least one row' });
       return;
     }
-    // Build TSV (Excel/Sheets) + structured text (WhatsApp). We copy TSV so paste
-    // into Sheets/Excel preserves columns. Each row also kept human-readable.
-    const rows = selectedItems.map(toRow);
-    const headers = Object.keys(rows[0] ?? {});
-    const tsv = [headers.join('\t'), ...rows.map((r) => headers.map((h) => String(r[h] ?? '')).join('\t'))].join('\n');
-
+    // If a text-block formatter is provided, use it directly (expected to be tab-separated);
+    // otherwise fall back to a simple TSV derived from toRow.
     const textBlock = toTextBlock
-      ? selectedItems.map(toTextBlock).join('\n\n')
-      : tsv;
+      ? selectedItems.map((item, i) => toTextBlock(item, i)).join('\n')
+      : (() => {
+          const rows = selectedItems.map(toRow);
+          const headers = Object.keys(rows[0] ?? {});
+          return [headers.join('\t'), ...rows.map((r) => headers.map((h) => String(r[h] ?? '')).join('\t'))].join('\n');
+        })();
 
     try {
-      // Try rich clipboard (text/plain for WhatsApp readability; secondary as TSV-ish)
-      await navigator.clipboard.writeText(textBlock + '\n\n---\n' + tsv);
+      await navigator.clipboard.writeText(textBlock);
       toast({ title: 'Copied', description: `${selectedItems.length} order(s) copied` });
     } catch {
       toast({ variant: 'destructive', title: 'Error', description: 'Clipboard blocked' });
