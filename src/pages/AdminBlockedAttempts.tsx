@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
