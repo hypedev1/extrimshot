@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -145,6 +146,12 @@ const AdminBlockedAttempts = () => {
             )}
           </div>
         </div>
+
+        <DateRangeBulkSelector
+          table="blocked_order_attempts"
+          label="Bulk select blocked attempts by date range"
+          fileBaseName="blocked-attempts"
+        />
 
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {isLoading ? (
