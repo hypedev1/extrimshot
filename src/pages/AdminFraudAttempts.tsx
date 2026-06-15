@@ -267,6 +267,16 @@ const AdminFraudAttempts = () => {
           ]}
         />
 
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         {/* Table */}
         <div className="card-glass overflow-hidden">
           {isLoading ? (
@@ -282,6 +292,14 @@ const AdminFraudAttempts = () => {
               <table className="w-full">
                 <thead className="bg-secondary/50">
                   <tr>
+                    <th className="px-3 py-3 w-10">
+                      <Checkbox
+                        checked={bulk.allSelected ? true : bulk.someSelected ? 'indeterminate' : false}
+                        onCheckedChange={() => bulk.toggleAll()}
+                        aria-label="Select all"
+                      />
+                    </th>
+                    <th className="text-left px-4 py-3 text-sm font-medium w-12">SL</th>
                     <th className="text-left px-4 py-3 text-sm font-medium">Phone</th>
                     <th className="text-left px-4 py-3 text-sm font-medium hidden md:table-cell">IP</th>
                     <th className="text-left px-4 py-3 text-sm font-medium hidden lg:table-cell">Device</th>
@@ -291,16 +309,25 @@ const AdminFraudAttempts = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredAttempts.map((attempt) => {
+                  {filteredAttempts.map((attempt, idx) => {
                     const isRepeatDevice = fingerprintCounts[attempt.fingerprint] > 1;
                     const isRepeatIP = attempt.ip_address && ipCounts[attempt.ip_address] > 1;
-                    
+                    const selected = bulk.isSelected(attempt.id);
+
                     return (
-                      <tr 
-                        key={attempt.id} 
-                        className="hover:bg-secondary/30 cursor-pointer"
+                      <tr
+                        key={attempt.id}
+                        className={`hover:bg-secondary/30 cursor-pointer ${selected ? 'bg-primary/10' : ''}`}
                         onClick={() => setSelectedAttempt(attempt)}
                       >
+                        <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selected}
+                            onCheckedChange={() => bulk.toggleOne(attempt.id)}
+                            aria-label={`Select row ${idx + 1}`}
+                          />
+                        </td>
+                        <td className="px-4 py-3 font-mono text-sm text-muted-foreground">#{idx + 1}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 text-muted-foreground" />
