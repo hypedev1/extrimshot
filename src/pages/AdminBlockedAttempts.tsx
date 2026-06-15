@@ -110,6 +110,21 @@ const AdminBlockedAttempts = () => {
     }
   };
 
+  const bulk = useBulkSelection<BlockedAttempt>({
+    items: attempts,
+    getId: (a) => a.id,
+    fileBaseName: 'blocked-attempts-selected',
+    toRow: (a) => ({
+      Name: a.customer_name || '',
+      Phone: a.phone,
+      Address: a.address || '',
+      'Block Reason': a.block_reason,
+      IP: a.ip_address || '',
+      Date: new Date(a.created_at).toLocaleString('en-US'),
+    }),
+    toTextBlock: (a) => `${a.customer_name || ''}\t${a.phone}\t${a.address || ''}`,
+  });
+
   return (
     <AdminLayout>
       <div className="space-y-6">
