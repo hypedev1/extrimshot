@@ -171,6 +171,16 @@ const AdminBlockedAttempts = () => {
           fileBaseName="blocked-attempts"
         />
 
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
@@ -184,6 +194,14 @@ const AdminBlockedAttempts = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={bulk.allSelected ? true : bulk.someSelected ? 'indeterminate' : false}
+                        onCheckedChange={() => bulk.toggleAll()}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead className="w-12">SL</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Phone</TableHead>
@@ -194,8 +212,16 @@ const AdminBlockedAttempts = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {attempts.map((attempt) => (
-                    <TableRow key={attempt.id}>
+                  {attempts.map((attempt, idx) => (
+                    <TableRow key={attempt.id} data-state={bulk.isSelected(attempt.id) ? 'selected' : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={bulk.isSelected(attempt.id)}
+                          onCheckedChange={() => bulk.toggleOne(attempt.id)}
+                          aria-label={`Select row ${idx + 1}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">#{idx + 1}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground" />
