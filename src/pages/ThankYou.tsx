@@ -25,7 +25,7 @@ const ThankYou = () => {
           <div className="bg-secondary/50 rounded-xl p-4 mb-8">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Phone className="w-4 h-4" />
-              <span>কোনো প্রশ্ন থাকলে কল করুন: <strong className="text-foreground">01335167190</strong></span>
+              <span>কোনো প্রশ্ন থাকলে কল করুন: <strong className="text-foreground">01335167183</strong></span>
             </div>
           </div>
           
