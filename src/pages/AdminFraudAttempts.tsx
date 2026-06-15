@@ -126,6 +126,19 @@ const AdminFraudAttempts = () => {
     (attempt.ip_address && attempt.ip_address.includes(searchQuery))
   );
 
+  const bulk = useBulkSelection<FraudAttempt>({
+    items: filteredAttempts,
+    getId: (a) => a.id,
+    fileBaseName: 'fraud-attempts-selected',
+    toRow: (a) => ({
+      Phone: a.phone,
+      IP: a.ip_address || '',
+      Fingerprint: a.fingerprint,
+      Date: new Date(a.created_at).toLocaleString('en-US'),
+    }),
+    toTextBlock: (a) => `${a.phone}\t${a.ip_address || ''}\t${a.fingerprint}`,
+  });
+
   // Group by fingerprint to identify repeat attempts
   const fingerprintCounts = attempts.reduce((acc, a) => {
     acc[a.fingerprint] = (acc[a.fingerprint] || 0) + 1;
