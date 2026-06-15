@@ -240,6 +240,17 @@ const AdminFraudAttempts = () => {
           </div>
         </div>
 
+        <DateRangeBulkSelector
+          table="order_fingerprints"
+          label="Bulk select fraud attempts by date range"
+          fileBaseName="fraud-attempts"
+          columns={[
+            { field: 'phone', header: 'Phone Number' },
+            { field: 'ip_address', header: 'IP Address' },
+            { field: 'fingerprint', header: 'Fingerprint' },
+          ]}
+        />
+
         {/* Table */}
         <div className="card-glass overflow-hidden">
           {isLoading ? (
