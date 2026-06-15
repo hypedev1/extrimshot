@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ShieldAlert, Trash2, Search, RefreshCw, Phone, Monitor, Globe, Clock } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
