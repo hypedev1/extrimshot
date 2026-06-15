@@ -147,6 +147,12 @@ const AdminBlockedAttempts = () => {
           </div>
         </div>
 
+        <DateRangeBulkSelector
+          table="blocked_order_attempts"
+          label="Bulk select blocked attempts by date range"
+          fileBaseName="blocked-attempts"
+        />
+
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
