@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { ShieldAlert, Trash2, Search, RefreshCw, Phone, Monitor, Globe, Clock, Copy } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
+import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -122,6 +125,19 @@ const AdminFraudAttempts = () => {
     attempt.fingerprint.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (attempt.ip_address && attempt.ip_address.includes(searchQuery))
   );
+
+  const bulk = useBulkSelection<FraudAttempt>({
+    items: filteredAttempts,
+    getId: (a) => a.id,
+    fileBaseName: 'fraud-attempts-selected',
+    toRow: (a) => ({
+      Phone: a.phone,
+      IP: a.ip_address || '',
+      Fingerprint: a.fingerprint,
+      Date: new Date(a.created_at).toLocaleString('en-US'),
+    }),
+    toTextBlock: (a) => `${a.phone}\t${a.ip_address || ''}\t${a.fingerprint}`,
+  });
 
   // Group by fingerprint to identify repeat attempts
   const fingerprintCounts = attempts.reduce((acc, a) => {
@@ -251,6 +267,16 @@ const AdminFraudAttempts = () => {
           ]}
         />
 
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         {/* Table */}
         <div className="card-glass overflow-hidden">
           {isLoading ? (
@@ -266,6 +292,14 @@ const AdminFraudAttempts = () => {
               <table className="w-full">
                 <thead className="bg-secondary/50">
                   <tr>
+                    <th className="px-3 py-3 w-10">
+                      <Checkbox
+                        checked={bulk.allSelected ? true : bulk.someSelected ? 'indeterminate' : false}
+                        onCheckedChange={() => bulk.toggleAll()}
+                        aria-label="Select all"
+                      />
+                    </th>
+                    <th className="text-left px-4 py-3 text-sm font-medium w-12">SL</th>
                     <th className="text-left px-4 py-3 text-sm font-medium">Phone</th>
                     <th className="text-left px-4 py-3 text-sm font-medium hidden md:table-cell">IP</th>
                     <th className="text-left px-4 py-3 text-sm font-medium hidden lg:table-cell">Device</th>
@@ -275,16 +309,25 @@ const AdminFraudAttempts = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredAttempts.map((attempt) => {
+                  {filteredAttempts.map((attempt, idx) => {
                     const isRepeatDevice = fingerprintCounts[attempt.fingerprint] > 1;
                     const isRepeatIP = attempt.ip_address && ipCounts[attempt.ip_address] > 1;
-                    
+                    const selected = bulk.isSelected(attempt.id);
+
                     return (
-                      <tr 
-                        key={attempt.id} 
-                        className="hover:bg-secondary/30 cursor-pointer"
+                      <tr
+                        key={attempt.id}
+                        className={`hover:bg-secondary/30 cursor-pointer ${selected ? 'bg-primary/10' : ''}`}
                         onClick={() => setSelectedAttempt(attempt)}
                       >
+                        <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selected}
+                            onCheckedChange={() => bulk.toggleOne(attempt.id)}
+                            aria-label={`Select row ${idx + 1}`}
+                          />
+                        </td>
+                        <td className="px-4 py-3 font-mono text-sm text-muted-foreground">#{idx + 1}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 text-muted-foreground" />
