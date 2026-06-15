@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw } from 'lucide-react';
+import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw, Copy } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { supabase } from '@/integrations/supabase/client';
@@ -213,12 +213,26 @@ const AdminBlockedAttempts = () => {
                         {attempt.ip_address || 'N/A'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-primary hover:text-primary"
+                            title="Copy (Name, Phone, Address)"
+                            onClick={() => {
+                              const tsv = `${attempt.customer_name || ''}\t${attempt.phone}\t${attempt.address || ''}`;
+                              navigator.clipboard.writeText(tsv);
+                              toast({ title: 'Copied', description: 'Info copied to clipboard' });
+                            }}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete?</AlertDialogTitle>
@@ -234,6 +248,7 @@ const AdminBlockedAttempts = () => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
