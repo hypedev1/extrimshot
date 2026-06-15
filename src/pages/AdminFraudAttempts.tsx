@@ -318,16 +318,30 @@ const AdminFraudAttempts = () => {
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(attempt.id);
-                            }}
-                            className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const tsv = `${attempt.phone}\t${attempt.ip_address || ''}\t${attempt.fingerprint}`;
+                                navigator.clipboard.writeText(tsv);
+                                toast({ title: 'Copied', description: 'Info copied to clipboard' });
+                              }}
+                              className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors"
+                              title="Copy (Phone, IP, Fingerprint)"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(attempt.id);
+                              }}
+                              className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
