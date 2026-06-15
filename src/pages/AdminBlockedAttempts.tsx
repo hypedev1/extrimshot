@@ -213,12 +213,26 @@ const AdminBlockedAttempts = () => {
                         {attempt.ip_address || 'N/A'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-primary hover:text-primary"
+                            title="Copy (Name, Phone, Address)"
+                            onClick={() => {
+                              const tsv = `${attempt.customer_name || ''}\t${attempt.phone}\t${attempt.address || ''}`;
+                              navigator.clipboard.writeText(tsv);
+                              toast({ title: 'Copied', description: 'Info copied to clipboard' });
+                            }}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete?</AlertDialogTitle>
