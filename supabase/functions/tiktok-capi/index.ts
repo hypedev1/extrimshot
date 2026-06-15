@@ -48,8 +48,24 @@ serve(async (req) => {
       throw new Error('TIKTOK_CAPI_ACCESS_TOKEN not configured');
     }
 
-    const body: RequestBody = await req.json();
+    const rawText = await req.text();
+    let body: RequestBody;
+    try {
+      body = rawText ? JSON.parse(rawText) : ({} as RequestBody);
+    } catch (parseErr) {
+      console.error('Invalid JSON body received:', rawText?.slice(0, 200));
+      return new Response(JSON.stringify({ success: false, error: 'Invalid JSON body' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const { event, event_id, event_source_url, user_data, properties } = body;
+    if (!event) {
+      return new Response(JSON.stringify({ success: false, error: 'Missing event' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] ||
                      req.headers.get('x-real-ip') ||
