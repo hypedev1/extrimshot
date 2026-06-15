@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw } from 'lucide-react';
+import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw, Copy } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
+import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -106,6 +110,21 @@ const AdminBlockedAttempts = () => {
     }
   };
 
+  const bulk = useBulkSelection<BlockedAttempt>({
+    items: attempts,
+    getId: (a) => a.id,
+    fileBaseName: 'blocked-attempts-selected',
+    toRow: (a) => ({
+      Name: a.customer_name || '',
+      Phone: a.phone,
+      Address: a.address || '',
+      'Block Reason': a.block_reason,
+      IP: a.ip_address || '',
+      Date: new Date(a.created_at).toLocaleString('en-US'),
+    }),
+    toTextBlock: (a) => `${a.customer_name || ''}\t${a.phone}\t${a.address || ''}`,
+  });
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -146,6 +165,22 @@ const AdminBlockedAttempts = () => {
           </div>
         </div>
 
+        <DateRangeBulkSelector
+          table="blocked_order_attempts"
+          label="Bulk select blocked attempts by date range"
+          fileBaseName="blocked-attempts"
+        />
+
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">Loading...</div>
@@ -159,6 +194,14 @@ const AdminBlockedAttempts = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={bulk.allSelected ? true : bulk.someSelected ? 'indeterminate' : false}
+                        onCheckedChange={() => bulk.toggleAll()}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead className="w-12">SL</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Phone</TableHead>
@@ -169,8 +212,16 @@ const AdminBlockedAttempts = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {attempts.map((attempt) => (
-                    <TableRow key={attempt.id}>
+                  {attempts.map((attempt, idx) => (
+                    <TableRow key={attempt.id} data-state={bulk.isSelected(attempt.id) ? 'selected' : undefined}>
+                      <TableCell>
+                        <Checkbox
+                          checked={bulk.isSelected(attempt.id)}
+                          onCheckedChange={() => bulk.toggleOne(attempt.id)}
+                          aria-label={`Select row ${idx + 1}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">#{idx + 1}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground" />
@@ -206,12 +257,26 @@ const AdminBlockedAttempts = () => {
                         {attempt.ip_address || 'N/A'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-primary hover:text-primary"
+                            title="Copy (Name, Phone, Address)"
+                            onClick={() => {
+                              const tsv = `${attempt.customer_name || ''}\t${attempt.phone}\t${attempt.address || ''}`;
+                              navigator.clipboard.writeText(tsv);
+                              toast({ title: 'Copied', description: 'Info copied to clipboard' });
+                            }}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete?</AlertDialogTitle>
@@ -227,6 +292,7 @@ const AdminBlockedAttempts = () => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
