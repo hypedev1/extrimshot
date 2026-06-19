@@ -306,6 +306,12 @@ const AdminIncompleteOrders = () => {
 
         <DateRangeBulkSelector table="incomplete_orders" label="Date/Time Range" fileBaseName="incomplete-orders-range" />
 
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
+
         <BulkActionsToolbar
           count={bulk.selectedCount}
           allSelected={bulk.allSelected}
