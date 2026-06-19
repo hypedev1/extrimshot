@@ -3,6 +3,7 @@ import { ShieldAlert, Trash2, Search, RefreshCw, Phone, Monitor, Globe, Clock, C
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { SerialRangeSelector } from '@/components/admin/SerialRangeSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -267,6 +268,12 @@ const AdminFraudAttempts = () => {
           ]}
         />
 
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
+
         <BulkActionsToolbar
           count={bulk.selectedCount}
           allSelected={bulk.allSelected}
@@ -327,7 +334,7 @@ const AdminFraudAttempts = () => {
                             aria-label={`Select row ${idx + 1}`}
                           />
                         </td>
-                        <td className="px-4 py-3 font-mono text-sm text-muted-foreground">#{idx + 1}</td>
+                        <td className="px-4 py-3 font-mono text-sm text-muted-foreground">#{bulk.serialOf(attempt.id)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 text-muted-foreground" />

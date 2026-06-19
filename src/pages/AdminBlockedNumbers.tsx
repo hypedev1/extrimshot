@@ -18,6 +18,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { SerialRangeSelector } from '@/components/admin/SerialRangeSelector';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { UserX, Plus, Upload, Search, Edit, Trash2, ShieldOff, ShieldCheck } from 'lucide-react';
 
 interface BlockedNumber {
@@ -239,6 +243,20 @@ const AdminBlockedNumbers = () => {
     return r.phone.toLowerCase().includes(q) || (r.reason ?? '').toLowerCase().includes(q);
   });
 
+  const bulk = useBulkSelection<BlockedNumber>({
+    items: filtered,
+    getId: (r) => r.id,
+    getOrderKey: (r) => r.blocked_at,
+    fileBaseName: 'blocked-numbers-selected',
+    toRow: (r) => ({
+      Phone: r.phone,
+      Reason: r.reason || '',
+      Status: r.is_active ? 'Active' : 'Unblocked',
+      'Blocked At': new Date(r.blocked_at).toLocaleString(),
+    }),
+    toTextBlock: (r) => `${r.phone}\t${r.reason || ''}\t${r.is_active ? 'Active' : 'Unblocked'}`,
+  });
+
   if (loading) return null;
 
   return (
@@ -280,10 +298,34 @@ const AdminBlockedNumbers = () => {
           />
         </div>
 
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
+
+        <BulkActionsToolbar
+          count={bulk.selectedCount}
+          allSelected={bulk.allSelected}
+          onCopy={bulk.copySelected}
+          onExportXlsx={() => bulk.exportSelected('xlsx')}
+          onExportCsv={() => bulk.exportSelected('csv')}
+          onClear={bulk.clear}
+          onSelectAll={bulk.allSelected ? bulk.clear : bulk.selectAll}
+        />
+
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={bulk.allSelected ? true : bulk.someSelected ? 'indeterminate' : false}
+                    onCheckedChange={() => bulk.toggleAll()}
+                    aria-label="Select all"
+                  />
+                </TableHead>
+                <TableHead className="w-12">SL</TableHead>
                 <TableHead>Phone Number</TableHead>
                 <TableHead>Block Date</TableHead>
                 <TableHead>Reason</TableHead>
@@ -294,13 +336,21 @@ const AdminBlockedNumbers = () => {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No blocked numbers found.
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map(row => (
-                  <TableRow key={row.id}>
+                filtered.map((row, idx) => (
+                  <TableRow key={row.id} data-state={bulk.isSelected(row.id) ? 'selected' : undefined}>
+                    <TableCell>
+                      <Checkbox
+                        checked={bulk.isSelected(row.id)}
+                        onCheckedChange={() => bulk.toggleOne(row.id)}
+                        aria-label={`Select row ${idx + 1}`}
+                      />
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-muted-foreground">#{bulk.serialOf(row.id)}</TableCell>
                     <TableCell className="font-medium">{row.phone}</TableCell>
                     <TableCell>{new Date(row.blocked_at).toLocaleString()}</TableCell>
                     <TableCell className="max-w-xs truncate">{row.reason || '—'}</TableCell>

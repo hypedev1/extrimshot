@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { IncompleteOrderModal } from '@/components/admin/IncompleteOrderModal';
 import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { SerialRangeSelector } from '@/components/admin/SerialRangeSelector';
 import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -216,6 +217,7 @@ const AdminIncompleteOrders = () => {
   const bulk = useBulkSelection<IncompleteOrder>({
     items: filteredOrders,
     getId: (o) => o.id,
+    getSerial: (o) => o.serial_number,
     fileBaseName: 'incomplete-orders-selected',
     toRow: (o) => ({
       SL: o.serial_number,
@@ -303,6 +305,12 @@ const AdminIncompleteOrders = () => {
         </p>
 
         <DateRangeBulkSelector table="incomplete_orders" label="Date/Time Range" fileBaseName="incomplete-orders-range" />
+
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
 
         <BulkActionsToolbar
           count={bulk.selectedCount}
