@@ -228,7 +228,7 @@ const AdminBlockedAttempts = () => {
                           aria-label={`Select row ${idx + 1}`}
                         />
                       </TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">#{idx + 1}</TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">#{bulk.serialOf(attempt.id)}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground" />
