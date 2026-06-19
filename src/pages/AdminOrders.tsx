@@ -5,6 +5,7 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { OrderDetailModal } from '@/components/admin/OrderDetailModal';
 import { CreateOrderModal } from '@/components/admin/CreateOrderModal';
 import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { SerialRangeSelector } from '@/components/admin/SerialRangeSelector';
 import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -287,6 +288,7 @@ const AdminOrders = () => {
   const bulk = useBulkSelection<Order>({
     items: filteredOrders,
     getId: (o) => o.id,
+    getSerial: (o) => o.serial_number,
     fileBaseName: 'orders-selected',
     toRow: (o) => ({
       SL: o.serial_number,
@@ -467,6 +469,12 @@ const AdminOrders = () => {
         </p>
 
         <DateRangeBulkSelector table="orders" label="Date/Time Range" fileBaseName="orders-range" />
+
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
 
         <BulkActionsToolbar
           count={bulk.selectedCount}

@@ -284,6 +284,7 @@ const AdminBlockedNumbers = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">SL</TableHead>
                 <TableHead>Phone Number</TableHead>
                 <TableHead>Block Date</TableHead>
                 <TableHead>Reason</TableHead>
@@ -294,13 +295,14 @@ const AdminBlockedNumbers = () => {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No blocked numbers found.
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map(row => (
+                filtered.map((row, idx) => (
                   <TableRow key={row.id}>
+                    <TableCell className="font-mono text-sm text-muted-foreground">#{filtered.length - idx}</TableCell>
                     <TableCell className="font-medium">{row.phone}</TableCell>
                     <TableCell>{new Date(row.blocked_at).toLocaleString()}</TableCell>
                     <TableCell className="max-w-xs truncate">{row.reason || '—'}</TableCell>

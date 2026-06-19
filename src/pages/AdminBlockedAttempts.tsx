@@ -4,6 +4,7 @@ import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw, Copy } from 'luc
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { SerialRangeSelector } from '@/components/admin/SerialRangeSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -171,6 +172,12 @@ const AdminBlockedAttempts = () => {
           fileBaseName="blocked-attempts"
         />
 
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
+
         <BulkActionsToolbar
           count={bulk.selectedCount}
           allSelected={bulk.allSelected}
@@ -221,7 +228,7 @@ const AdminBlockedAttempts = () => {
                           aria-label={`Select row ${idx + 1}`}
                         />
                       </TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">#{idx + 1}</TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">#{bulk.serialOf(attempt.id)}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground" />
