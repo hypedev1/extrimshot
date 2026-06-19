@@ -18,6 +18,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { SerialRangeSelector } from '@/components/admin/SerialRangeSelector';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { UserX, Plus, Upload, Search, Edit, Trash2, ShieldOff, ShieldCheck } from 'lucide-react';
 
 interface BlockedNumber {
