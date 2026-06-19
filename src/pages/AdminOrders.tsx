@@ -470,6 +470,12 @@ const AdminOrders = () => {
 
         <DateRangeBulkSelector table="orders" label="Date/Time Range" fileBaseName="orders-range" />
 
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
+
         <BulkActionsToolbar
           count={bulk.selectedCount}
           allSelected={bulk.allSelected}
