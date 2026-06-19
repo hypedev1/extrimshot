@@ -172,6 +172,12 @@ const AdminBlockedAttempts = () => {
           fileBaseName="blocked-attempts"
         />
 
+        <SerialRangeSelector
+          totalLoaded={bulk.totalLoaded}
+          onSelectRange={bulk.selectSerialRange}
+          onSelectAndCopy={bulk.selectSerialRangeAndCopy}
+        />
+
         <BulkActionsToolbar
           count={bulk.selectedCount}
           allSelected={bulk.allSelected}
