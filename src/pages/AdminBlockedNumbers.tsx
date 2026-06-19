@@ -243,6 +243,20 @@ const AdminBlockedNumbers = () => {
     return r.phone.toLowerCase().includes(q) || (r.reason ?? '').toLowerCase().includes(q);
   });
 
+  const bulk = useBulkSelection<BlockedNumber>({
+    items: filtered,
+    getId: (r) => r.id,
+    getOrderKey: (r) => r.blocked_at,
+    fileBaseName: 'blocked-numbers-selected',
+    toRow: (r) => ({
+      Phone: r.phone,
+      Reason: r.reason || '',
+      Status: r.is_active ? 'Active' : 'Unblocked',
+      'Blocked At': new Date(r.blocked_at).toLocaleString(),
+    }),
+    toTextBlock: (r) => `${r.phone}\t${r.reason || ''}\t${r.is_active ? 'Active' : 'Unblocked'}`,
+  });
+
   if (loading) return null;
 
   return (
