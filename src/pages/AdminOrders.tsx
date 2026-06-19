@@ -288,6 +288,7 @@ const AdminOrders = () => {
   const bulk = useBulkSelection<Order>({
     items: filteredOrders,
     getId: (o) => o.id,
+    getSerial: (o) => o.serial_number,
     fileBaseName: 'orders-selected',
     toRow: (o) => ({
       SL: o.serial_number,
