@@ -334,7 +334,7 @@ const AdminFraudAttempts = () => {
                             aria-label={`Select row ${idx + 1}`}
                           />
                         </td>
-                        <td className="px-4 py-3 font-mono text-sm text-muted-foreground">#{idx + 1}</td>
+                        <td className="px-4 py-3 font-mono text-sm text-muted-foreground">#{bulk.serialOf(attempt.id)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Phone className="w-4 h-4 text-muted-foreground" />
