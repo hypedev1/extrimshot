@@ -217,6 +217,7 @@ const AdminIncompleteOrders = () => {
   const bulk = useBulkSelection<IncompleteOrder>({
     items: filteredOrders,
     getId: (o) => o.id,
+    getSerial: (o) => o.serial_number,
     fileBaseName: 'incomplete-orders-selected',
     toRow: (o) => ({
       SL: o.serial_number,
