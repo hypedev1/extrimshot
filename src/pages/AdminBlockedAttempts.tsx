@@ -4,6 +4,7 @@ import { Phone, MapPin, User, Clock, Shield, Trash2, RefreshCw, Copy } from 'luc
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { DateRangeBulkSelector } from '@/components/admin/DateRangeBulkSelector';
 import { BulkActionsToolbar } from '@/components/admin/BulkActionsToolbar';
+import { SerialRangeSelector } from '@/components/admin/SerialRangeSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
