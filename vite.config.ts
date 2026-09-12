@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  envPrefix: ['VITE_', 'META_'],
   build: {
     // Raise the chunk warning threshold since we're now splitting properly
     chunkSizeWarningLimit: 600,

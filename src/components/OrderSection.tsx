@@ -235,19 +235,23 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
 
       if (error) throw error;
 
-      // Fire-and-forget: don't block order completion on tracking calls
-      if (!incompleteOrderIdRef.current) {
-        trackPurchase(
-          { phone: formData.phone, name: formData.name },
-          selectedPackage.price,
-          orderResult.id
-        ).catch(e => console.error('FB tracking error:', e));
+      // Always track confirmed purchase to Meta CAPI and TikTok
+      try {
+        await Promise.allSettled([
+          trackPurchase(
+            { phone: formData.phone, name: formData.name },
+            selectedPackage.price,
+            orderResult.id
+          ),
+          trackTtCompletePayment(
+            { phone: formData.phone, name: formData.name },
+            selectedPackage.price,
+            orderResult.id
+          )
+        ]);
+      } catch (trackErr) {
+        console.error('Purchase tracking error:', trackErr);
       }
-      trackTtCompletePayment(
-        { phone: formData.phone, name: formData.name },
-        selectedPackage.price,
-        orderResult.id
-      ).catch(e => console.error('TikTok tracking error:', e));
 
       // Clean up incomplete orders (fire-and-forget)
       if (incompleteOrderIdRef.current) {

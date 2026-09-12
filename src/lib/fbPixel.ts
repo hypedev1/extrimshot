@@ -6,6 +6,17 @@ declare global {
   }
 }
 
+// Meta Pixel ID from .env (supports VITE_META_PIXEL_ID or META_PIXEL_ID with fallback)
+export const FB_PIXEL_ID = 
+  import.meta.env.VITE_META_PIXEL_ID || 
+  import.meta.env.META_PIXEL_ID || 
+  '1119431000005922';
+
+export const META_ACCESS_TOKEN = 
+  import.meta.env.VITE_META_ACCESS_TOKEN || 
+  import.meta.env.META_ACCESS_TOKEN || 
+  '';
+
 // Generate unique event ID for deduplication
 const generateEventId = () => {
   return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
@@ -13,9 +24,10 @@ const generateEventId = () => {
 
 // Get Facebook cookies for deduplication
 const getFbCookies = () => {
+  if (typeof document === 'undefined') return { fbc: null, fbp: null };
   const cookies = document.cookie.split(';').reduce((acc, cookie) => {
     const [key, value] = cookie.trim().split('=');
-    acc[key] = value;
+    if (key) acc[key] = value;
     return acc;
   }, {} as Record<string, string>);
   
@@ -25,9 +37,17 @@ const getFbCookies = () => {
   };
 };
 
+// Ensure Pixel is initialized with the current FB_PIXEL_ID
+export const ensurePixelInit = () => {
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('init', FB_PIXEL_ID);
+  }
+};
+
 // Track event on frontend (browser pixel) with eventID for deduplication
 export const trackPixelEvent = (eventName: string, params?: Record<string, any>, eventId?: string) => {
   if (typeof window !== 'undefined' && window.fbq) {
+    ensurePixelInit();
     if (eventId) {
       window.fbq('track', eventName, params, { eventID: eventId });
     } else {
@@ -54,20 +74,28 @@ export const trackCAPIEvent = async (
   try {
     const { fbc, fbp } = getFbCookies();
     
-    await supabase.functions.invoke('fb-capi', {
+    const { data, error } = await supabase.functions.invoke('fb-capi', {
       body: {
+        pixel_id: FB_PIXEL_ID,
+        access_token: META_ACCESS_TOKEN || undefined,
         event_name: eventName,
         event_id: eventId,
-        event_source_url: window.location.href,
+        event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://extrimshot.com',
         user_data: {
           ...userData,
-          client_user_agent: navigator.userAgent,
+          client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
           fbc,
           fbp,
         },
         custom_data: customData,
       },
     });
+
+    if (error) {
+      console.warn('Meta CAPI invoke error:', error);
+    } else {
+      console.log('Meta CAPI response:', eventName, data);
+    }
   } catch (error) {
     console.error('CAPI tracking error:', error);
   }

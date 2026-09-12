@@ -1,3 +1,10 @@
+// @ts-nocheck
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -40,6 +47,9 @@ interface EventData {
 }
 
 interface RequestBody {
+  pixel_id?: string;
+  access_token?: string;
+  test_event_code?: string;
   event_name: string;
   event_id?: string;
   event_source_url?: string;
@@ -77,16 +87,20 @@ serve(async (req) => {
     const body: RequestBody = await req.json();
     const { event_name, event_id, event_source_url, user_data, custom_data } = body;
 
-    // Get client IP from headers
-    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 
-                     req.headers.get('x-real-ip') || 
-                     'unknown';
+    // Get client IP from headers (Cloudflare or standard proxy)
+    const clientIp = req.headers.get('cf-connecting-ip') ||
+                     req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 
+                     req.headers.get('x-real-ip');
 
     // Prepare user data with hashing
     const hashedUserData: EventData['user_data'] = {
-      client_ip_address: clientIp,
       client_user_agent: user_data?.client_user_agent || req.headers.get('user-agent') || '',
     };
+
+    // Only set client_ip_address if valid — never send 'unknown' to Meta
+    if (clientIp && clientIp !== 'unknown') {
+      hashedUserData.client_ip_address = clientIp;
+    }
 
     if (user_data?.phone) {
       // Format phone for Bangladesh (remove leading 0, add country code)
@@ -136,16 +150,45 @@ serve(async (req) => {
 
     console.log('Sending event to Facebook CAPI:', event_name, 'with event_id:', generatedEventId);
 
-    // Send to all configured pixels
+    // Determine which pixels to send to:
+    // If request explicitly specifies pixel_id or META_PIXEL_ID is in env, target that pixel;
+    // otherwise send to all configured FB_PIXEL_IDS
+    const targetPixelId = body.pixel_id || Deno.env.get('META_PIXEL_ID');
+    const pixelsToSend = targetPixelId
+      ? [{ id: targetPixelId, tokenEnv: 'FB_CAPI_ACCESS_TOKEN_2' }]
+      : FB_PIXEL_IDS;
+
+    const testEventCode = body.test_event_code || Deno.env.get('META_TEST_EVENT_CODE');
+
+    // Send to pixels
     const results = await Promise.all(
-      FB_PIXEL_IDS.map(async ({ id, tokenEnv }) => {
-        const accessToken = Deno.env.get(tokenEnv);
+      pixelsToSend.map(async ({ id, tokenEnv }) => {
+        // Resolve access token with cascading fallbacks:
+        // 1. Explicit body access_token
+        // 2. META_ACCESS_TOKEN from env
+        // 3. Pixel-specific token env (FB_CAPI_ACCESS_TOKEN_2, etc.)
+        // 4. Global FB_CAPI_ACCESS_TOKEN
+        const accessToken = 
+          body.access_token ||
+          Deno.env.get('META_ACCESS_TOKEN') ||
+          Deno.env.get(tokenEnv) ||
+          Deno.env.get('FB_CAPI_ACCESS_TOKEN');
+
         if (!accessToken) {
-          console.warn(`${tokenEnv} not configured, skipping pixel ${id}`);
+          console.warn(`No access token available for pixel ${id}, skipping`);
           return { pixelId: id, success: false, error: 'Token not configured' };
         }
 
         try {
+          const payload: Record<string, any> = {
+            data: [eventData],
+            access_token: accessToken,
+          };
+
+          if (testEventCode) {
+            payload.test_event_code = testEventCode;
+          }
+
           const fbResponse = await fetch(
             `https://graph.facebook.com/${FB_API_VERSION}/${id}/events`,
             {
@@ -153,10 +196,7 @@ serve(async (req) => {
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                data: [eventData],
-                access_token: accessToken,
-              }),
+              body: JSON.stringify(payload),
             }
           );
 
@@ -186,3 +226,4 @@ serve(async (req) => {
     });
   }
 });
+
