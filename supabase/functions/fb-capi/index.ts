@@ -12,11 +12,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FB_PIXEL_IDS = [
-  { id: '1119431000005922', tokenEnv: 'FB_CAPI_ACCESS_TOKEN_2' },
-];
+// The one and only pixel this site reports to. Ignore any pixel_id sent by the
+// client so a stale or tampered request can never fan events out to other pixels.
+const FB_PIXEL_ID = '1119431000005922';
 const FB_API_VERSION = 'v18.0';
-const DEFAULT_ACCESS_TOKEN = 'EAATkTKQD3NkBSfPAItB4ivqd32nfbQnU8m3jaqsjsjwiwmxs6oZBaWTGTo6KhZBb4q67cNx9lffSNgKkZCDVvFQyfBkIzTik3lahCipy4ZCgM0z1wTx7GsggBsv0UwhutBiqiyc2mndTqxOr9xMelEpFyOQZBcUXB4zy83MlOdaWZCqGk95hIKc6EHe3TY1QZDZD';
 
 interface EventData {
   event_name: string;
@@ -46,8 +45,6 @@ interface EventData {
 }
 
 interface RequestBody {
-  pixel_id?: string;
-  access_token?: string;
   test_event_code?: string;
   event_name: string;
   event_id?: string;
@@ -149,33 +146,22 @@ serve(async (req) => {
 
     console.log('Sending event to Facebook CAPI:', event_name, 'with event_id:', generatedEventId);
 
-    // Determine which pixels to send to:
-    // If request explicitly specifies pixel_id or META_PIXEL_ID is in env, target that pixel;
-    // otherwise send to all configured FB_PIXEL_IDS
-    const targetPixelId = body.pixel_id || Deno.env.get('META_PIXEL_ID');
-    const pixelsToSend = targetPixelId
-      ? [{ id: targetPixelId, tokenEnv: 'FB_CAPI_ACCESS_TOKEN_2' }]
-      : FB_PIXEL_IDS;
-
     const testEventCode = body.test_event_code || Deno.env.get('META_TEST_EVENT_CODE');
+
+    // Always report to the single configured pixel.
+    const pixelsToSend = [{ id: FB_PIXEL_ID }];
 
     // Send to pixels
     const results = await Promise.all(
-      pixelsToSend.map(async ({ id, tokenEnv }) => {
-        // Resolve access token with cascading fallbacks:
-        // 1. Explicit body access_token
-        // 2. META_ACCESS_TOKEN from env
-        // 3. Pixel-specific token env (FB_CAPI_ACCESS_TOKEN_2, etc.)
-        // 4. Global FB_CAPI_ACCESS_TOKEN
-        const accessToken = 
-          body.access_token ||
+      pixelsToSend.map(async ({ id }) => {
+        // The token lives only in Supabase secrets. It is never accepted from the
+        // request body and is never committed to the repository.
+        const accessToken =
           Deno.env.get('META_ACCESS_TOKEN') ||
-          Deno.env.get(tokenEnv) ||
-          Deno.env.get('FB_CAPI_ACCESS_TOKEN') ||
-          DEFAULT_ACCESS_TOKEN;
+          Deno.env.get('FB_CAPI_ACCESS_TOKEN');
 
         if (!accessToken) {
-          console.warn(`No access token available for pixel ${id}, skipping`);
+          console.error(`No access token available for pixel ${id}. Set META_ACCESS_TOKEN in Supabase secrets.`);
           return { pixelId: id, success: false, error: 'Token not configured' };
         }
 

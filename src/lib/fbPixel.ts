@@ -68,7 +68,7 @@ export const trackCAPIEvent = async (
     
     const { data, error } = await supabase.functions.invoke('fb-capi', {
       body: {
-        pixel_id: FB_PIXEL_ID,
+        // The pixel is fixed server-side; the client never chooses it.
         event_name: eventName,
         event_id: eventId,
         event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://extrimshot.com',
