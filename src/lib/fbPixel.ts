@@ -6,16 +6,8 @@ declare global {
   }
 }
 
-// Meta Pixel ID from .env (supports VITE_META_PIXEL_ID or META_PIXEL_ID with fallback)
-export const FB_PIXEL_ID = 
-  import.meta.env.VITE_META_PIXEL_ID || 
-  import.meta.env.META_PIXEL_ID || 
-  '1119431000005922';
-
-export const META_ACCESS_TOKEN = 
-  import.meta.env.VITE_META_ACCESS_TOKEN || 
-  import.meta.env.META_ACCESS_TOKEN || 
-  '';
+// Meta Pixel ID (hardcoded to match the single pixel we use)
+export const FB_PIXEL_ID = '1119431000005922';
 
 // Generate unique event ID for deduplication
 const generateEventId = () => {
@@ -77,7 +69,6 @@ export const trackCAPIEvent = async (
     const { data, error } = await supabase.functions.invoke('fb-capi', {
       body: {
         pixel_id: FB_PIXEL_ID,
-        access_token: META_ACCESS_TOKEN || undefined,
         event_name: eventName,
         event_id: eventId,
         event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://extrimshot.com',

@@ -43,7 +43,7 @@
             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
           })(window, document, "clarity", "script", "uv90gt38wt");
 
-          // ── Facebook Pixel (3 pixels, single fbevents.js load) ─────────
+          // ── Facebook Pixel (single pixel) ─────────────────────────────
           !function(f,b,e,v,n,t,s)
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
           n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -52,7 +52,7 @@
           t.src=v;s=b.getElementsByTagName(e)[0];
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '%VITE_META_PIXEL_ID%');
+          fbq('init', '1119431000005922');
           fbq('track', 'PageView');
 
           // ── TikTok Pixel ───────────────────────────────────────────────
@@ -73,7 +73,7 @@
     <!-- Facebook Pixel noscript fallback (must be synchronous per Meta spec) -->
     <noscript>
       <img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=%VITE_META_PIXEL_ID%&ev=PageView&noscript=1"/>
+        src="https://www.facebook.com/tr?id=1119431000005922&ev=PageView&noscript=1"/>
     </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
