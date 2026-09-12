@@ -13,11 +13,10 @@ const corsHeaders = {
 };
 
 const FB_PIXEL_IDS = [
-  { id: '1418127093286432', tokenEnv: 'FB_CAPI_ACCESS_TOKEN' },
   { id: '1119431000005922', tokenEnv: 'FB_CAPI_ACCESS_TOKEN_2' },
-  { id: '1694063674774794', tokenEnv: 'FB_CAPI_ACCESS_TOKEN_3' },
 ];
 const FB_API_VERSION = 'v18.0';
+const DEFAULT_ACCESS_TOKEN = 'EAATkTKQD3NkBSfPAItB4ivqd32nfbQnU8m3jaqsjsjwiwmxs6oZBaWTGTo6KhZBb4q67cNx9lffSNgKkZCDVvFQyfBkIzTik3lahCipy4ZCgM0z1wTx7GsggBsv0UwhutBiqiyc2mndTqxOr9xMelEpFyOQZBcUXB4zy83MlOdaWZCqGk95hIKc6EHe3TY1QZDZD';
 
 interface EventData {
   event_name: string;
@@ -172,7 +171,8 @@ serve(async (req) => {
           body.access_token ||
           Deno.env.get('META_ACCESS_TOKEN') ||
           Deno.env.get(tokenEnv) ||
-          Deno.env.get('FB_CAPI_ACCESS_TOKEN');
+          Deno.env.get('FB_CAPI_ACCESS_TOKEN') ||
+          DEFAULT_ACCESS_TOKEN;
 
         if (!accessToken) {
           console.warn(`No access token available for pixel ${id}, skipping`);
