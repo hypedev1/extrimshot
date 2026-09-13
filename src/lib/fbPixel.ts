@@ -29,8 +29,27 @@ const getFbCookies = () => {
   };
 };
 
+// Helper to check if tracking should be allowed (ignore local dev & preview environments)
+export const isTrackingAllowed = () => {
+  if (typeof window === 'undefined') return true;
+  const host = window.location.hostname.toLowerCase();
+  if (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host.endsWith('.local') ||
+    host.includes('lovable.app') ||
+    host.includes('lovableproject.com') ||
+    host.includes('lovable.dev') ||
+    host.includes('webcontainer.io')
+  ) {
+    return false;
+  }
+  return true;
+};
+
 // Ensure Pixel is initialized with the current FB_PIXEL_ID
 export const ensurePixelInit = () => {
+  if (!isTrackingAllowed()) return;
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('init', FB_PIXEL_ID);
   }
@@ -38,6 +57,7 @@ export const ensurePixelInit = () => {
 
 // Track event on frontend (browser pixel) with eventID for deduplication
 export const trackPixelEvent = (eventName: string, params?: Record<string, any>, eventId?: string) => {
+  if (!isTrackingAllowed()) return;
   if (typeof window !== 'undefined' && window.fbq) {
     ensurePixelInit();
     if (eventId) {
@@ -63,6 +83,7 @@ export const trackCAPIEvent = async (
   },
   eventId?: string
 ) => {
+  if (!isTrackingAllowed()) return;
   try {
     const { fbc, fbp } = getFbCookies();
     

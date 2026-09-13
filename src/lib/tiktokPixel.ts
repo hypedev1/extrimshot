@@ -25,8 +25,27 @@ const getTtCookies = () => {
   };
 };
 
+// Helper to check if tracking should be allowed (ignore local dev & preview environments)
+export const isTrackingAllowed = () => {
+  if (typeof window === 'undefined') return true;
+  const host = window.location.hostname.toLowerCase();
+  if (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host.endsWith('.local') ||
+    host.includes('lovable.app') ||
+    host.includes('lovableproject.com') ||
+    host.includes('lovable.dev') ||
+    host.includes('webcontainer.io')
+  ) {
+    return false;
+  }
+  return true;
+};
+
 // Track event on frontend (browser pixel) with event_id for deduplication
 export const trackTtPixelEvent = (eventName: string, params?: Record<string, any>, eventId?: string) => {
+  if (!isTrackingAllowed()) return;
   if (typeof window !== 'undefined' && window.ttq) {
     if (eventId) {
       window.ttq.track(eventName, params, { event_id: eventId });
@@ -49,6 +68,7 @@ export const trackTtCAPIEvent = async (
   },
   eventId?: string
 ) => {
+  if (!isTrackingAllowed()) return;
   try {
     const { ttp, ttclid } = getTtCookies();
 

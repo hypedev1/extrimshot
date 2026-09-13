@@ -35,6 +35,19 @@
       window.addEventListener('load', function() {
         // Small additional delay so the main thread is fully free
         setTimeout(function() {
+          var host = window.location.hostname.toLowerCase();
+          // Never fire tracking pixels on localhost, Lovable preview, or builder environments
+          var isDevOrPreview = host === 'localhost' ||
+            host === '127.0.0.1' ||
+            host.indexOf('lovable.app') !== -1 ||
+            host.indexOf('lovableproject.com') !== -1 ||
+            host.indexOf('lovable.dev') !== -1 ||
+            host.indexOf('webcontainer.io') !== -1;
+
+          if (isDevOrPreview) {
+            console.log('[Analytics] Skipping pixel initialization on dev/preview domain:', host);
+            return;
+          }
 
           // ── Microsoft Clarity ──────────────────────────────────────────
           (function(c,l,a,r,i,t,y){
