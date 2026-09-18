@@ -25,15 +25,12 @@ const getTtCookies = () => {
   };
 };
 
-// Helper to check if tracking should be allowed (ignore local dev & preview environments)
+// Helper to check if tracking should be allowed (only ignore builder preview iframes)
 export const isTrackingAllowed = () => {
   if (typeof window === 'undefined') return true;
+  if (import.meta.env.VITE_DISABLE_TRACKING === 'true') return false;
   const host = window.location.hostname.toLowerCase();
   if (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host.endsWith('.local') ||
-    host.includes('lovable.app') ||
     host.includes('lovableproject.com') ||
     host.includes('lovable.dev') ||
     host.includes('webcontainer.io')
@@ -64,6 +61,7 @@ export const trackTtCAPIEvent = async (
     currency?: string;
     content_name?: string;
     content_id?: string;
+    content_type?: string;
     order_id?: string;
   },
   eventId?: string
@@ -100,6 +98,7 @@ export const trackTtEvent = async (
     currency?: string;
     content_name?: string;
     content_id?: string;
+    content_type?: string;
     order_id?: string;
   }
 ) => {
@@ -114,12 +113,59 @@ export const trackTtEvent = async (
 
 // ----- Standard event helpers -----
 
+/**
+ * Pageview - browser only.
+ * index.html fires ttq.page() on the initial hard load; this covers every
+ * later SPA navigation. There is no server-side counterpart because TikTok
+ * has no "Pageview" standard event in the Events API, so sending one would be
+ * rejected instead of deduplicated.
+ */
+export const trackTtPageView = () => {
+  if (!isTrackingAllowed()) return;
+  if (typeof window !== 'undefined' && window.ttq) {
+    window.ttq.page();
+  }
+};
+
 export const trackTtViewContent = (contentName: string, value?: number) => {
   trackTtEvent('ViewContent', undefined, {
     content_name: contentName,
     value,
     currency: 'BDT',
     content_id: 'extrimshot',
+    content_type: 'product',
+  });
+};
+
+export const trackTtAddToCart = (
+  contentName: string,
+  value: number,
+  contentId?: string
+) => {
+  trackTtEvent('AddToCart', undefined, {
+    content_name: contentName,
+    content_id: contentId || 'extrimshot',
+    content_type: 'product',
+    value,
+    currency: 'BDT',
+  });
+};
+
+/**
+ * TikTok's lead-equivalent standard event is SubmitForm. "Lead" is a campaign
+ * objective on TikTok, not a pixel event name, so sending "Lead" would land as
+ * an unrecognised custom event and could not be used for optimisation.
+ */
+export const trackTtLead = async (
+  userData: { phone?: string; name?: string },
+  value?: number
+) => {
+  await trackTtEvent('SubmitForm', userData, {
+    value,
+    currency: 'BDT',
+    content_name: 'Extrimshot Form Lead',
+    content_id: 'extrimshot',
+    content_type: 'product',
   });
 };
 
@@ -129,6 +175,7 @@ export const trackTtInitiateCheckout = (value: number) => {
     currency: 'BDT',
     content_name: 'Extrimshot',
     content_id: 'extrimshot',
+    content_type: 'product',
   });
 };
 

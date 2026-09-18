@@ -15,7 +15,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  envPrefix: ['VITE_', 'META_'],
+  // Only VITE_-prefixed vars are inlined into the browser bundle.
+  // Never add 'META_' here: it would leak META_ACCESS_TOKEN to every visitor.
+  envPrefix: ['VITE_'],
   build: {
     // Raise the chunk warning threshold since we're now splitting properly
     chunkSizeWarningLimit: 600,

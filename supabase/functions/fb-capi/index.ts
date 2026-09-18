@@ -12,9 +12,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// The one and only pixel this site reports to. Ignore any pixel_id sent by the
-// client so a stale or tampered request can never fan events out to other pixels.
-const FB_PIXEL_ID = '1119431000005922';
+// The single pixel/dataset this site reports to. Configurable via the
+// META_PIXEL_ID secret. Other pixel IDs must never receive events, so the
+// request body is deliberately not consulted when resolving this.
+const DEFAULT_FB_PIXEL_ID = '2151577492375386';
 const FB_API_VERSION = 'v18.0';
 
 interface EventData {
@@ -60,6 +61,8 @@ interface RequestBody {
     currency?: string;
     value?: number;
     content_name?: string;
+    content_type?: string;
+    content_ids?: string[];
     order_id?: string;
   };
 }
@@ -135,11 +138,15 @@ serve(async (req) => {
     };
 
     if (custom_data) {
+      // content_ids must be forwarded. Dropping it here meant the browser event
+      // carried content_ids and the CAPI copy did not, which weakens matching
+      // and leaves catalog/dynamic-ads attribution empty.
       eventData.custom_data = {
         currency: custom_data.currency || 'BDT',
         value: custom_data.value,
         content_name: custom_data.content_name,
-        content_type: 'product',
+        content_ids: custom_data.content_ids,
+        content_type: custom_data.content_type || 'product',
         order_id: custom_data.order_id,
       };
     }
@@ -148,8 +155,16 @@ serve(async (req) => {
 
     const testEventCode = body.test_event_code || Deno.env.get('META_TEST_EVENT_CODE');
 
-    // Always report to the single configured pixel.
-    const pixelsToSend = [{ id: FB_PIXEL_ID }];
+    // Resolved from secrets only. A pixel_id in the request body is ignored so
+    // that an old cached browser bundle cannot send events to a legacy pixel.
+    const pixelId =
+      Deno.env.get('META_PIXEL_ID') ||
+      Deno.env.get('VITE_META_PIXEL_ID') ||
+      Deno.env.get('FB_PIXEL_ID') ||
+      DEFAULT_FB_PIXEL_ID;
+
+    // Always report to the configured pixel.
+    const pixelsToSend = [{ id: pixelId }];
 
     // Send to pixels
     const results = await Promise.all(

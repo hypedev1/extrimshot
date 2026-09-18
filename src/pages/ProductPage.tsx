@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { products } from '@/data/products';
 import { getProductContent } from '@/data/productContent';
+import { trackViewContent } from '@/lib/fbPixel';
+import { trackTtViewContent } from '@/lib/tiktokPixel';
 import { Header } from '@/components/home/Header';
 import { Footer } from '@/components/home/Footer';
 import { AnnouncementBar } from '@/components/AnnouncementBar';
@@ -20,6 +23,14 @@ const ProductPage = () => {
   
   const product = products.find(p => p.slug === slug);
   const productContent = slug ? getProductContent(slug) : undefined;
+
+  useEffect(() => {
+    if (product) {
+      const price = productContent?.order?.packages?.[0]?.price || 1250;
+      trackViewContent(product.name, price, product.slug || 'powerbooster');
+      trackTtViewContent(product.name, price);
+    }
+  }, [product, productContent]);
   
   if (!product) {
     return <Navigate to="/" replace />;

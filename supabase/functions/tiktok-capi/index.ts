@@ -67,15 +67,17 @@ serve(async (req) => {
       });
     }
 
-    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] ||
-                     req.headers.get('x-real-ip') ||
-                     'unknown';
+    // TikTok rejects a non-IP string such as 'unknown' with a plain-text error
+    // body, which then breaks the JSON parsing below. Omit the field instead.
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                     req.headers.get('x-real-ip')?.trim() ||
+                     '';
 
     // Build user object with hashed PII
     const userObj: Record<string, any> = {
-      ip: clientIp,
       user_agent: user_data?.client_user_agent || req.headers.get('user-agent') || '',
     };
+    if (clientIp) userObj.ip = clientIp;
 
     if (user_data?.phone) {
       let phone = user_data.phone.replace(/\D/g, '');
@@ -84,7 +86,10 @@ serve(async (req) => {
       } else if (!phone.startsWith('88')) {
         phone = '88' + phone;
       }
-      userObj.phone_number = await hashData(phone);
+      // Events API 2.0 names this field `phone`. The old `phone_number` key is
+      // the deprecated v1.2 spelling and is silently dropped, which zeroes out
+      // match quality for every server event.
+      userObj.phone = await hashData(phone);
     }
 
     // Pass TikTok click ID and cookie for attribution
@@ -105,28 +110,33 @@ serve(async (req) => {
           content_id: properties.content_id || 'extrimshot',
           content_name: properties.content_name || 'Extrimshot',
           content_type: properties.content_type || 'product',
+          quantity: 1,
+          price: properties.value,
         });
         eventProperties.contents = contents;
+        eventProperties.content_type = properties.content_type || 'product';
       }
     }
 
     const generatedEventId = event_id || `tt_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
 
-    const payload = {
-      pixel_code: TIKTOK_PIXEL_ID,
+    // Events API 2.0 shape: `user` and `page` sit directly on the event object.
+    // The `context` wrapper and `pixel_code` belong to the retired v1.2 payload
+    // and are ignored once `event_source` / `event_source_id` are sent, so the
+    // whole user block was being discarded by TikTok.
+    const payload: Record<string, any> = {
       event: event,
       event_id: generatedEventId,
       event_time: Math.floor(Date.now() / 1000),
-      context: {
-        page: {
-          url: event_source_url || 'https://extrimshot.com',
-        },
-        user: userObj,
-        user_agent: userObj.user_agent,
-        ip: userObj.ip,
+      user: userObj,
+      page: {
+        url: event_source_url || 'https://extrimshot.com',
       },
       properties: eventProperties,
     };
+
+    const testEventCode = Deno.env.get('TIKTOK_TEST_EVENT_CODE');
+    if (testEventCode) payload.test_event_code = testEventCode;
 
     console.log('Sending TikTok CAPI event:', event, 'event_id:', generatedEventId);
 
@@ -143,7 +153,15 @@ serve(async (req) => {
       }),
     });
 
-    const ttResult = await ttResponse.json();
+    // TikTok answers some rejections with plain text, so parsing straight to
+    // JSON throws and the whole call surfaces as an opaque 500.
+    const ttRaw = await ttResponse.text();
+    let ttResult: any;
+    try {
+      ttResult = JSON.parse(ttRaw);
+    } catch (_) {
+      ttResult = { non_json_response: ttRaw, http_status: ttResponse.status };
+    }
     console.log('TikTok CAPI response:', JSON.stringify(ttResult));
 
     return new Response(JSON.stringify({ success: true, result: ttResult }), {

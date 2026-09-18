@@ -2,15 +2,41 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useRef, lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { lazy, Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import { trackPageView } from "@/lib/fbPixel";
+import { trackTtPageView } from "@/lib/tiktokPixel";
 
 // Eagerly loaded — these are on the critical path for all visitors
 import ProductPage from "./pages/ProductPage";
 import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
+
+// PageView tracking for the initial load and every SPA navigation.
+// index.html only calls fbq('init'), never fbq('track', 'PageView'), so the
+// first PageView is fired here too. That way the browser event and the CAPI
+// event always share one eventID and Meta deduplicates them correctly.
+const RouteTracker = () => {
+  const location = useLocation();
+  // index.html already calls ttq.page() for the initial load, so the TikTok
+  // page view is only fired from the second navigation onwards. Firing it here
+  // too would double-count the landing page.
+  const ttInitialPageViewSkipped = useRef(false);
+
+  useEffect(() => {
+    trackPageView(window.location.href);
+
+    if (ttInitialPageViewSkipped.current) {
+      trackTtPageView();
+    } else {
+      ttInitialPageViewSkipped.current = true;
+    }
+  }, [location.pathname, location.search]);
+
+  return null;
+};
 
 // Lazily loaded — admin-only pages: not needed by public visitors at all
 const Home = lazy(() => import("./pages/Home"));
@@ -41,6 +67,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <RouteTracker />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<ProductPage />} />

@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, CreditCard, Lock, ShieldAlert, Check, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { trackInitiateCheckout, trackPurchase, trackPixelEvent, trackIncompletePurchase } from '@/lib/fbPixel';
-import { trackTtInitiateCheckout, trackTtCompletePayment, trackTtIncompletePurchase } from '@/lib/tiktokPixel';
+import { trackInitiateCheckout, trackPurchase, trackIncompletePurchase, trackAddToCart, trackLead } from '@/lib/fbPixel';
+import { trackTtInitiateCheckout, trackTtCompletePayment, trackTtIncompletePurchase, trackTtAddToCart, trackTtLead } from '@/lib/tiktokPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
 import { isPhoneBlocked, BLOCKED_PHONE_MESSAGE } from '@/lib/phoneBlocklist';
@@ -102,6 +102,15 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         return;
       }
 
+      const leadUser = { phone, name: formData.name.trim() || undefined };
+
+      // Lead does not depend on the incomplete_orders row. Firing it first means
+      // a failed or blocked database write can no longer swallow the Lead event.
+      void Promise.allSettled([
+        trackLead(leadUser, selectedPackage.price),
+        trackTtLead(leadUser, selectedPackage.price),
+      ]);
+
       try {
         const { data, error } = await supabase
           .from('incomplete_orders')
@@ -119,14 +128,14 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         if (!error && data) {
           incompleteOrderIdRef.current = data.id;
           
-          // Send Purchase event to Facebook + TikTok for incomplete orders
+          // Abandoned-cart retargeting: reports the not-yet-placed order as a
+          // Purchase / CompletePayment. See the note in the review before
+          // relying on Purchase numbers in Ads Manager.
           try {
-            await trackIncompletePurchase(
-              { phone, name: formData.name.trim() || undefined },
-              selectedPackage.price,
-              data.id
-            );
-            await trackTtIncompletePurchase({ phone, name: formData.name.trim() || undefined }, selectedPackage.price, data.id);
+            await Promise.allSettled([
+              trackIncompletePurchase(leadUser, selectedPackage.price, data.id),
+              trackTtIncompletePurchase(leadUser, selectedPackage.price, data.id)
+            ]);
           } catch (trackError) {
             console.error('Failed to track incomplete purchase:', trackError);
           }
@@ -241,7 +250,8 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
           trackPurchase(
             { phone: formData.phone, name: formData.name },
             selectedPackage.price,
-            orderResult.id
+            orderResult.id,
+            selectedPackage.name
           ),
           trackTtCompletePayment(
             { phone: formData.phone, name: formData.name },
@@ -301,7 +311,11 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
                 {data.packages.map((pkg) => (
                   <div 
                     key={pkg.id}
-                    onClick={() => setFormData({ ...formData, packageType: pkg.id })}
+                    onClick={() => {
+                      setFormData({ ...formData, packageType: pkg.id });
+                      trackAddToCart(pkg.name, pkg.price, pkg.id);
+                      trackTtAddToCart(pkg.name, pkg.price, pkg.id);
+                    }}
                     className={`cursor-pointer p-5 rounded-2xl border-2 transition-all ${
                       formData.packageType === pkg.id 
                         ? 'border-primary bg-primary/5 shadow-md' 
