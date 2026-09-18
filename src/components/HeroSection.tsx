@@ -1,4 +1,4 @@
-import { Check, Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock, Sparkles, Star } from 'lucide-react';
+import { Check, Zap, Dumbbell, FlaskConical, Lock, Leaf, Heart, Shield, Clock, Sparkles, Star, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const iconMap: Record<string, any> = {
@@ -40,22 +40,72 @@ interface HeroSectionProps {
   content?: HeroContent;
 }
 
-// Auto-play YouTube embed — plays muted immediately on page load (browser policy requires muted for autoplay)
-// Thumbnail covers the iframe until it's fully loaded to prevent the blurry flash
+// Auto-play YouTube embed with top header cropped out (hides YouTube title, channel avatar, and channel name)
+// Uses CSS overflow crop + controls=0 to provide a clean, distraction-free product video
 const AutoPlayYouTube = ({ videoId }: { videoId: string }) => {
   const [loaded, setLoaded] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const toggleSound = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!iframeRef.current?.contentWindow) return;
+    const nextMuted = !isMuted;
+    iframeRef.current.contentWindow.postMessage(
+      JSON.stringify({
+        event: 'command',
+        func: nextMuted ? 'mute' : 'unMute',
+        args: [],
+      }),
+      '*'
+    );
+    setIsMuted(nextMuted);
+  };
 
   return (
-    <div className="relative w-full h-full bg-black">
-      {/* Actual autoplay iframe — hidden until fully loaded */}
-      <iframe
-        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${videoId}&playsinline=1`}
-        className="w-full h-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        title="Product Video"
-        onLoad={() => setLoaded(true)}
-      />
+    <div 
+      className="relative w-full h-full bg-black overflow-hidden select-none cursor-pointer group"
+      onClick={() => isMuted && toggleSound()}
+    >
+      {/* 
+        Crop wrapper:
+        YouTube embeds place channel avatar, title, and channel name in the top 50-65px.
+        By shifting the iframe up by 70px (-top-[70px]) and extending bottom by 70px (-bottom-[70px]),
+        the entire YouTube header and bottom bar are pushed outside the container and clipped by overflow-hidden.
+      */}
+      <div className="absolute -top-[70px] -bottom-[70px] left-0 right-0 overflow-hidden pointer-events-none">
+        <iframe
+          ref={iframeRef}
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${videoId}&playsinline=1&enablejsapi=1&iv_load_policy=3`}
+          className="w-full h-full border-0 pointer-events-auto"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          title="Product Video"
+          onLoad={() => setLoaded(true)}
+        />
+      </div>
+
+      {/* Modern floating sound toggle button */}
+      {loaded && (
+        <button
+          type="button"
+          onClick={toggleSound}
+          className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 hover:bg-black/90 text-white text-xs font-medium backdrop-blur-md border border-white/20 shadow-lg transition-transform active:scale-95"
+          title={isMuted ? 'সাউন্ড চালু করুন' : 'সাউন্ড বন্ধ করুন'}
+        >
+          {isMuted ? (
+            <>
+              <VolumeX className="w-3.5 h-3.5 text-amber-400" />
+              <span>সাউন্ড শুনুন</span>
+            </>
+          ) : (
+            <>
+              <Volume2 className="w-3.5 h-3.5 text-green-400 animate-pulse" />
+              <span>সাউন্ড চালু</span>
+            </>
+          )}
+        </button>
+      )}
+
       {/* Poster thumbnail — shown while iframe loads, fades out once ready */}
       {!loaded && (
         <div className="absolute inset-0 z-10 bg-black">
