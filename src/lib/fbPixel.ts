@@ -169,10 +169,18 @@ export const trackPixelEvent = (eventName: string, params?: Record<string, any>,
   ensurePixelInit();
 
   if (typeof window !== 'undefined' && window.fbq) {
+    if (import.meta.env.DEV) {
+      console.log(
+        '%c[Meta Pixel]%c Fired: ' + eventName,
+        'background: #1877F2; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 3px;',
+        'color: #059669; font-weight: bold; margin-left: 6px;',
+        { eventId, params }
+      );
+    }
     if (eventId) {
-      window.fbq('track', eventName, params, { eventID: eventId });
+      window.fbq('track', eventName, params || {}, { eventID: eventId });
     } else {
-      window.fbq('track', eventName, params);
+      window.fbq('track', eventName, params || {});
     }
   }
 };
