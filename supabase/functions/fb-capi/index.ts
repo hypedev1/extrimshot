@@ -132,7 +132,7 @@ serve(async (req) => {
       event_name,
       event_id: generatedEventId,
       event_time: Math.floor(Date.now() / 1000),
-      event_source_url: event_source_url || 'https://extrimshot.com',
+      event_source_url: event_source_url || 'https://www.extrimshot.xyz',
       action_source: 'website',
       user_data: hashedUserData,
     };

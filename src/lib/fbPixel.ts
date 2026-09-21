@@ -219,7 +219,7 @@ export const trackCAPIEvent = async (
       // resolves the pixel from secrets and ignores this field, so it stays
       // correct after that version ships.
       pixel_id: FB_PIXEL_ID,
-      event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://extrimshot.com',
+      event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://www.extrimshot.xyz',
       user_data: {
         ...userData,
         client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
