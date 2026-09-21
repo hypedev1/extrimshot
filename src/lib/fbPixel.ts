@@ -13,7 +13,7 @@ declare global {
 // otherwise deduplication breaks and Events Manager shows no matched events.
 // Keep this value in sync with the hardcoded ID in index.html.
 export const FB_PIXEL_ID =
-  (import.meta.env.VITE_META_PIXEL_ID as string) || '2151577492375386';
+  (import.meta.env.VITE_META_PIXEL_ID as string) || '1415986030495223';
 
 // Optional override for the edge-function base URL. Set it to
 //   http://127.0.0.1:54321/functions/v1
