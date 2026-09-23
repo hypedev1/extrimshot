@@ -130,7 +130,7 @@ serve(async (req) => {
       event_time: Math.floor(Date.now() / 1000),
       user: userObj,
       page: {
-        url: event_source_url || 'https://www.extrimshot.xyz',
+        url: event_source_url || 'https://www.extrimshot.shop',
       },
       properties: eventProperties,
     };

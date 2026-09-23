@@ -13,7 +13,7 @@ declare global {
 // otherwise deduplication breaks and Events Manager shows no matched events.
 // Keep this value in sync with the hardcoded ID in index.html.
 export const FB_PIXEL_ID =
-  (import.meta.env.VITE_META_PIXEL_ID as string) || '1415986030495223';
+  (import.meta.env.VITE_META_PIXEL_ID as string) || '2167805737420229';
 
 // Optional override for the edge-function base URL. Set it to
 //   http://127.0.0.1:54321/functions/v1
@@ -219,7 +219,7 @@ export const trackCAPIEvent = async (
       // resolves the pixel from secrets and ignores this field, so it stays
       // correct after that version ships.
       pixel_id: FB_PIXEL_ID,
-      event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://www.extrimshot.xyz',
+      event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://www.extrimshot.shop',
       user_data: {
         ...userData,
         client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',

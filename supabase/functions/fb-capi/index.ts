@@ -15,7 +15,7 @@ const corsHeaders = {
 // The single pixel/dataset this site reports to. Configurable via the
 // META_PIXEL_ID secret. Other pixel IDs must never receive events, so the
 // request body is deliberately not consulted when resolving this.
-const DEFAULT_FB_PIXEL_ID = '1415986030495223';
+const DEFAULT_FB_PIXEL_ID = '2167805737420229';
 const FB_API_VERSION = 'v18.0';
 
 interface EventData {
@@ -132,7 +132,7 @@ serve(async (req) => {
       event_name,
       event_id: generatedEventId,
       event_time: Math.floor(Date.now() / 1000),
-      event_source_url: event_source_url || 'https://www.extrimshot.xyz',
+      event_source_url: event_source_url || 'https://www.extrimshot.shop',
       action_source: 'website',
       user_data: hashedUserData,
     };
