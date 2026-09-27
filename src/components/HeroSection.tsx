@@ -41,53 +41,90 @@ interface HeroSectionProps {
 }
 // Clean auto-play video — uses native <video> element with Cloudinary CDN
 // Zero third-party UI (no YouTube/Cloudinary branding, no logos, no crop)
-// Autoplays with sound if allowed, falls back to muted, auto-unmutes on first user interaction
+// Autoplays seamlessly without stopping, auto-unmutes on first user touch/click, with pulsing sound button
 const AutoPlayVideo = ({ src }: { src: string }) => {
   const [loaded, setLoaded] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Attempt unmuted autoplay by default
+    let isCleanedUp = false;
+
+    // Start video playing immediately (muted guarantees 100% autoplay success across all browsers)
+    video.muted = true;
+    video.play().catch(() => {});
+
+    // First attempt: try unmuted playback (works if browser allows or repeat visitor)
     video.muted = false;
     video.play()
       .then(() => {
-        setIsMuted(false);
+        if (!isCleanedUp) setIsMuted(false);
       })
       .catch(() => {
-        // Browser autoplay policy blocked unmuted playback -> start muted
+        // Autoplay with audio was blocked by browser policy -> keep it muted and playing!
+        if (isCleanedUp) return;
         video.muted = true;
         setIsMuted(true);
         video.play().catch(() => {});
-
-        // Unmute automatically on user's first interaction anywhere on page
-        const handleFirstInteraction = () => {
-          if (videoRef.current) {
-            videoRef.current.muted = false;
-            setIsMuted(false);
-          }
-          window.removeEventListener('click', handleFirstInteraction);
-          window.removeEventListener('touchstart', handleFirstInteraction);
-          window.removeEventListener('scroll', handleFirstInteraction, { capture: true });
-          window.removeEventListener('keydown', handleFirstInteraction);
-        };
-
-        window.addEventListener('click', handleFirstInteraction, { once: true });
-        window.addEventListener('touchstart', handleFirstInteraction, { once: true });
-        window.addEventListener('scroll', handleFirstInteraction, { once: true, capture: true });
-        window.addEventListener('keydown', handleFirstInteraction, { once: true });
       });
+
+    // Smart first-touch unmute: on user's very first tap or click anywhere on page
+    const handleFirstTouch = () => {
+      if (isCleanedUp) return;
+      const v = videoRef.current;
+      if (v && v.muted) {
+        v.muted = false;
+        v.play()
+          .then(() => {
+            setIsMuted(false);
+          })
+          .catch(() => {
+            // In case audio is still restricted, ensure video does NOT freeze
+            v.muted = true;
+            setIsMuted(true);
+            v.play().catch(() => {});
+          });
+      }
+      removeListeners();
+    };
+
+    const removeListeners = () => {
+      window.removeEventListener('pointerdown', handleFirstTouch);
+      window.removeEventListener('click', handleFirstTouch);
+      window.removeEventListener('keydown', handleFirstTouch);
+    };
+
+    // Note: Do NOT listen to 'scroll', as Chrome/Safari pauses video on scroll unmute
+    window.addEventListener('pointerdown', handleFirstTouch, { once: true, passive: true });
+    window.addEventListener('click', handleFirstTouch, { once: true });
+    window.addEventListener('keydown', handleFirstTouch, { once: true });
+
+    return () => {
+      isCleanedUp = true;
+      removeListeners();
+    };
   }, [src]);
 
-  const toggleSound = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!videoRef.current) return;
-    const nextMuted = !videoRef.current.muted;
-    videoRef.current.muted = nextMuted;
+  const toggleSound = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
     setIsMuted(nextMuted);
+
+    // Guarantee playback continues smoothly whether muted or unmuted
+    video.play().catch(() => {
+      if (!nextMuted) {
+        video.muted = true;
+        setIsMuted(true);
+        video.play().catch(() => {});
+      }
+    });
   };
 
   return (
@@ -102,8 +139,15 @@ const AutoPlayVideo = ({ src }: { src: string }) => {
         autoPlay
         playsInline
         loop
+        muted={isMuted}
         preload="auto"
         onLoadedData={() => setLoaded(true)}
+        onEnded={() => {
+          if (videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => {});
+          }
+        }}
         className="w-full h-full object-cover"
       />
 
@@ -115,31 +159,31 @@ const AutoPlayVideo = ({ src }: { src: string }) => {
           className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95"
           title={isMuted ? 'সাউন্ড চালু করুন' : 'সাউন্ড বন্ধ করুন'}
         >
-          {/* Pulsing ring when unmuted */}
-          {!isMuted && (
-            <span className="absolute inset-0 rounded-full bg-emerald-400/40 animate-ping" />
+          {/* Pulsing ring when muted to invite click */}
+          {isMuted && (
+            <span className="absolute inset-0 rounded-full bg-amber-400/50 animate-ping duration-1000" />
           )}
           {/* Glow */}
           <span
             className={`absolute -inset-1 rounded-full blur-md transition-colors duration-500 ${
-              isMuted ? 'bg-amber-500/20' : 'bg-emerald-400/30'
+              isMuted ? 'bg-amber-500/40 animate-pulse' : 'bg-emerald-400/30'
             }`}
           />
           {/* Glassmorphic Pill */}
           <span
             className={`relative flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-semibold tracking-wide transition-all duration-500 backdrop-blur-xl shadow-2xl ${
               isMuted
-                ? 'bg-black/70 border-white/20 text-white/90 hover:bg-black/85 hover:border-amber-400/50'
+                ? 'bg-black/80 border-amber-400/60 text-white hover:bg-black/90 hover:border-amber-400'
                 : 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/35'
             }`}
           >
             {isMuted ? (
               <>
                 <span className="relative flex items-center justify-center w-5 h-5">
-                  <VolumeX className="w-4 h-4 text-amber-400" />
+                  <VolumeX className="w-4 h-4 text-amber-400 animate-bounce" />
                 </span>
-                <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                  সাউন্ড শুনুন
+                <span className="bg-gradient-to-r from-amber-200 to-white bg-clip-text text-transparent font-bold">
+                  সাউন্ড শুনুন (ট্যাপ করুন)
                 </span>
               </>
             ) : (
