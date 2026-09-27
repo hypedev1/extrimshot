@@ -15,7 +15,7 @@ const cardStyles = [
 
 // Particle component for confetti effect
 const Particle = ({ delay, color }: { delay: number; color: string }) => (
-  <div 
+  <div
     className="absolute w-2 h-2 rounded-full animate-particle opacity-0"
     style={{
       backgroundColor: color,
@@ -39,90 +39,134 @@ interface HeroContent {
 interface HeroSectionProps {
   content?: HeroContent;
 }
-
-// Auto-play YouTube embed with top header cropped out (hides YouTube title, channel avatar, and channel name)
-// Uses CSS overflow crop + controls=0 to provide a clean, distraction-free product video
-const AutoPlayYouTube = ({ videoId }: { videoId: string }) => {
+// Clean auto-play video — uses native <video> element with Cloudinary CDN
+// Zero third-party UI (no YouTube/Cloudinary branding, no logos, no crop)
+// Autoplays with sound if allowed, falls back to muted, auto-unmutes on first user interaction
+const AutoPlayVideo = ({ src }: { src: string }) => {
   const [loaded, setLoaded] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const toggleSound = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (!iframeRef.current?.contentWindow) return;
-    const nextMuted = !isMuted;
-    iframeRef.current.contentWindow.postMessage(
-      JSON.stringify({
-        event: 'command',
-        func: nextMuted ? 'mute' : 'unMute',
-        args: [],
-      }),
-      '*'
-    );
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Attempt unmuted autoplay by default
+    video.muted = false;
+    video.play()
+      .then(() => {
+        setIsMuted(false);
+      })
+      .catch(() => {
+        // Browser autoplay policy blocked unmuted playback -> start muted
+        video.muted = true;
+        setIsMuted(true);
+        video.play().catch(() => {});
+
+        // Unmute automatically on user's first interaction anywhere on page
+        const handleFirstInteraction = () => {
+          if (videoRef.current) {
+            videoRef.current.muted = false;
+            setIsMuted(false);
+          }
+          window.removeEventListener('click', handleFirstInteraction);
+          window.removeEventListener('touchstart', handleFirstInteraction);
+          window.removeEventListener('scroll', handleFirstInteraction, { capture: true });
+          window.removeEventListener('keydown', handleFirstInteraction);
+        };
+
+        window.addEventListener('click', handleFirstInteraction, { once: true });
+        window.addEventListener('touchstart', handleFirstInteraction, { once: true });
+        window.addEventListener('scroll', handleFirstInteraction, { once: true, capture: true });
+        window.addEventListener('keydown', handleFirstInteraction, { once: true });
+      });
+  }, [src]);
+
+  const toggleSound = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    const nextMuted = !videoRef.current.muted;
+    videoRef.current.muted = nextMuted;
     setIsMuted(nextMuted);
   };
 
   return (
     <div 
       className="relative w-full h-full bg-black overflow-hidden select-none cursor-pointer group"
-      onClick={() => isMuted && toggleSound()}
+      onClick={toggleSound}
     >
-      {/* 
-        Crop wrapper:
-        YouTube embeds place channel avatar, title, and channel name in the top 50-65px.
-        By shifting the iframe up by 70px (-top-[70px]) and extending bottom by 70px (-bottom-[70px]),
-        the entire YouTube header and bottom bar are pushed outside the container and clipped by overflow-hidden.
-      */}
-      <div className="absolute -top-[70px] -bottom-[70px] left-0 right-0 overflow-hidden pointer-events-none">
-        <iframe
-          ref={iframeRef}
-          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${videoId}&playsinline=1&enablejsapi=1&iv_load_policy=3`}
-          className="w-full h-full border-0 pointer-events-auto"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          title="Product Video"
-          onLoad={() => setLoaded(true)}
-        />
-      </div>
+      {/* Native Cloudinary streaming video — 1080x1920 (9:16) no crop */}
+      <video
+        ref={videoRef}
+        src={src}
+        autoPlay
+        playsInline
+        loop
+        preload="auto"
+        onLoadedData={() => setLoaded(true)}
+        className="w-full h-full object-cover"
+      />
 
-      {/* Modern floating sound toggle button */}
+      {/* ─── Premium Sound Toggle Button ─── */}
       {loaded && (
         <button
           type="button"
           onClick={toggleSound}
-          className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 hover:bg-black/90 text-white text-xs font-medium backdrop-blur-md border border-white/20 shadow-lg transition-transform active:scale-95"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95"
           title={isMuted ? 'সাউন্ড চালু করুন' : 'সাউন্ড বন্ধ করুন'}
         >
-          {isMuted ? (
-            <>
-              <VolumeX className="w-3.5 h-3.5 text-amber-400" />
-              <span>সাউন্ড শুনুন</span>
-            </>
-          ) : (
-            <>
-              <Volume2 className="w-3.5 h-3.5 text-green-400 animate-pulse" />
-              <span>সাউন্ড চালু</span>
-            </>
+          {/* Pulsing ring when unmuted */}
+          {!isMuted && (
+            <span className="absolute inset-0 rounded-full bg-emerald-400/40 animate-ping" />
           )}
+          {/* Glow */}
+          <span
+            className={`absolute -inset-1 rounded-full blur-md transition-colors duration-500 ${
+              isMuted ? 'bg-amber-500/20' : 'bg-emerald-400/30'
+            }`}
+          />
+          {/* Glassmorphic Pill */}
+          <span
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-semibold tracking-wide transition-all duration-500 backdrop-blur-xl shadow-2xl ${
+              isMuted
+                ? 'bg-black/70 border-white/20 text-white/90 hover:bg-black/85 hover:border-amber-400/50'
+                : 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/35'
+            }`}
+          >
+            {isMuted ? (
+              <>
+                <span className="relative flex items-center justify-center w-5 h-5">
+                  <VolumeX className="w-4 h-4 text-amber-400" />
+                </span>
+                <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+                  সাউন্ড শুনুন
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="relative flex items-center justify-center w-5 h-5">
+                  <Volume2 className="w-4 h-4 text-emerald-400" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                </span>
+                <span className="bg-gradient-to-r from-emerald-200 to-emerald-50 bg-clip-text text-transparent">
+                  সাউন্ড চালু আছে
+                </span>
+              </>
+            )}
+          </span>
         </button>
       )}
 
-      {/* Poster thumbnail — shown while iframe loads, fades out once ready */}
+      {/* Loading state */}
       {!loaded && (
-        <div className="absolute inset-0 z-10 bg-black">
-          <img
-            src={`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`}
-            alt="Video thumbnail"
-            className="w-full h-full object-cover"
-          />
-          {/* Subtle loading indicator */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-          </div>
+        <div className="absolute inset-0 z-10 bg-black flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       )}
     </div>
   );
 };
+
 
 
 export const HeroSection = ({ content }: HeroSectionProps) => {
@@ -152,7 +196,7 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
 
   const defaultContent: HeroContent = {
     title: 'ডক্টর এ আর খান এর রেকমেন্ডেড প্রডাক্ট এক্সট্রিমশট',
-    videoUrl: 'https://www.youtube.com/embed/iOaQbkKdlYA?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=iOaQbkKdlYA&playsinline=1',
+    videoUrl: 'https://res.cloudinary.com/g5kkzroh/video/upload/hero-video_adarel.mp4',
     subtitle: 'দিনের ক্লান্তি, স্ট্রেস, লো এনার্জি… সব ভুলে আবারও অনুভব করুন তরুন উদ্যম।',
     badges: [{ text: '১০০% প্রাকৃতিক ভেষজ' }, { text: 'ক্যাশ অন ডেলিভারি' }, { text: '৫০,০০০+ সন্তুষ্ট রোগী' }],
     ctaText: 'এখনই অর্ডার করুন',
@@ -185,25 +229,20 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           animation: particle 1.5s ease-out forwards;
         }
       `}</style>
-      
+
       <div className="container">
         <div className="text-center mb-10">
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6 text-foreground">
             {data.title}
           </h1>
-          
-          {data.videoUrl && (() => {
-            // Extract video ID from embed URL (e.g. https://www.youtube.com/embed/iOaQbkKdlYA?...)
-            const videoIdMatch = data.videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
-            const videoId = videoIdMatch ? videoIdMatch[1] : '';
-            return videoId ? (
+
+          {data.videoUrl && (
               <div className="flex justify-center mb-8">
-                <div className="w-[280px] h-[498px] md:w-[340px] md:h-[604px] rounded-2xl overflow-hidden shadow-xl border-4 border-primary/20">
-                  <AutoPlayYouTube videoId={videoId} />
+                <div className="w-[280px] md:w-[340px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border-4 border-primary/20 relative bg-black">
+                  <AutoPlayVideo src={data.videoUrl} />
                 </div>
               </div>
-            ) : null;
-          })()}
+          )}
 
           {!data.videoUrl && data.image && (
             <div className="flex justify-center mb-8">
@@ -211,21 +250,21 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
                 {/* Glowing background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-teal-light/40 rounded-full blur-3xl scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-tr from-accent/20 to-green/20 rounded-full blur-2xl scale-105 animate-pulse" />
-                
+
                 {/* Product image container */}
                 <div className="relative bg-gradient-to-br from-card to-background rounded-2xl md:rounded-3xl p-4 md:p-8 border-2 border-primary/20 shadow-2xl">
-                  <img 
-                    src={data.image} 
-                    alt="Product" 
+                  <img
+                    src={data.image}
+                    alt="Product"
                     loading="lazy"
                     className="w-48 h-48 md:w-72 md:h-72 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
                   />
-                  
+
                   {/* Discount badge */}
                   <div className="absolute -top-3 -right-3 md:-top-4 md:-right-4 bg-gradient-to-br from-accent to-orange text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold shadow-lg animate-bounce">
                     {data.discount}
                   </div>
-                  
+
                   {/* Natural badge */}
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green to-emerald-600 text-white px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-medium shadow-md flex items-center gap-1">
                     <Leaf className="w-3 h-3" />
@@ -256,9 +295,9 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
             <div className="flex items-center gap-3 bg-background border border-border rounded-full px-5 py-2.5 shadow-sm">
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={`w-4 h-4 ${i < 5 ? 'fill-accent text-accent' : 'text-muted-foreground'}`} 
+                  <Star
+                    key={i}
+                    className={`w-4 h-4 ${i < 5 ? 'fill-accent text-accent' : 'text-muted-foreground'}`}
                   />
                 ))}
               </div>
@@ -284,13 +323,13 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
             const IconComponent = iconMap[item.icon] || Zap;
             const style = cardStyles[i % cardStyles.length];
             return (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`relative overflow-hidden rounded-2xl p-6 ${style.bg} border ${style.border} group hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
               >
                 {/* Decorative circle */}
                 <div className={`absolute -top-6 -right-6 w-24 h-24 ${style.iconBg} opacity-10 rounded-full`} />
-                
+
                 {/* Icon with ring */}
                 <div className="relative mb-4">
                   <div className={`w-16 h-16 ${style.iconBg} rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform duration-300`}>
@@ -299,7 +338,7 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
                   {/* Animated ring */}
                   <div className={`absolute inset-0 w-16 h-16 mx-auto border-2 ${style.border} rounded-2xl animate-ping opacity-20`} />
                 </div>
-                
+
                 {/* Content */}
                 <div className="text-center relative">
                   <h3 className={`font-bold text-lg mb-2 ${style.accent}`}>{item.title}</h3>
@@ -319,18 +358,18 @@ export const HeroSection = ({ content }: HeroSectionProps) => {
           {showParticles && (
             <div className="absolute inset-0 pointer-events-none">
               {[...Array(15)].map((_, i) => (
-                <Particle 
-                  key={i} 
-                  delay={i * 100} 
-                  color={particleColors[i % particleColors.length]} 
+                <Particle
+                  key={i}
+                  delay={i * 100}
+                  color={particleColors[i % particleColors.length]}
                 />
               ))}
             </div>
           )}
-          
+
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-green/5 rounded-xl md:rounded-2xl" />
-          
+
           {/* Stats Grid - Compact on Mobile */}
           <div className="relative grid grid-cols-3 gap-2 md:gap-8 py-4 md:py-6 px-2 md:px-4">
             {/* Stat 1 */}

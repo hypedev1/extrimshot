@@ -3,6 +3,7 @@ export interface ProductContent {
   hero: {
     title: string;
     videoUrl?: string;
+    directVideoUrl?: string;
     image?: string;
     subtitle: string;
     badges: { text: string }[];
@@ -66,7 +67,7 @@ export const productContents: Record<string, ProductContent> = {
     slug: 'powerbooster',
     hero: {
       title: 'ডক্টর এ আর খান এর রেক*মেন্ডেড প্রডাক্ট এক্সট্রিমশট, যা খেলে যৌ*ন জীবন হবে শান্তিপূর্ণ ইনশা আল্লাহ',
-      videoUrl: 'https://www.youtube.com/embed/iOaQbkKdlYA?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=iOaQbkKdlYA&playsinline=1',
+      videoUrl: 'https://res.cloudinary.com/g5kkzroh/video/upload/hero-video_adarel.mp4',
       subtitle: 'দিনের ক্লান্তি, স্ট্রেস, লো এনার্জি… সব ভুলে আবারও অনুভব করুন তরুন উদ্যম, স্ট্রং পারফর*ম্যান্স আর কনফিডেন্ট Extrimshot – ন্যাচারাল পাওয়ার বুস্টার এর সাথে।',
       badges: [
         { text: 'কোন প্রকার কেমিকেল নেই' },
