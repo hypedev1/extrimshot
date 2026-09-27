@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clock, CreditCard, Lock, ShieldAlert, Check, Truck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { trackInitiateCheckout, trackPurchase, trackIncompletePurchase, trackAddToCart, trackLead } from '@/lib/fbPixel';
+import { trackInitiateCheckout, trackPurchase, trackAddToCart, trackLead } from '@/lib/fbPixel';
 import { trackTtInitiateCheckout, trackTtCompletePayment, trackTtIncompletePurchase, trackTtAddToCart, trackTtLead } from '@/lib/tiktokPixel';
 import { useDeviceFingerprint } from '@/hooks/useDeviceFingerprint';
 import { checkFraudPrevention, recordOrderFingerprint, getClientIP, recordBlockedAttempt } from '@/lib/fraudPrevention';
@@ -31,6 +31,7 @@ interface OrderSectionProps {
 
 export const OrderSection = ({ content }: OrderSectionProps) => {
   const { slug } = useParams();
+  const productSlug = slug || 'powerbooster';
   const navigate = useNavigate();
   const { toast } = useToast();
   const { deviceInfo, isLoading: isFingerprintLoading } = useDeviceFingerprint();
@@ -73,7 +74,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            trackInitiateCheckout(selectedPackage.price);
+            trackInitiateCheckout(selectedPackage.price, selectedPackage.name, productSlug);
             trackTtInitiateCheckout(selectedPackage.price);
             observer.disconnect();
           }
@@ -107,7 +108,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
       // Lead does not depend on the incomplete_orders row. Firing it first means
       // a failed or blocked database write can no longer swallow the Lead event.
       void Promise.allSettled([
-        trackLead(leadUser, selectedPackage.price),
+        trackLead(leadUser, selectedPackage.price, productSlug),
         trackTtLead(leadUser, selectedPackage.price),
       ]);
 
@@ -128,12 +129,11 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
         if (!error && data) {
           incompleteOrderIdRef.current = data.id;
           
-          // Abandoned-cart retargeting: reports the not-yet-placed order as a
-          // Purchase / CompletePayment. See the note in the review before
-          // relying on Purchase numbers in Ads Manager.
+          // Meta gets no Purchase here: a typed phone number is not an order,
+          // and counting it inflated Purchase and trained campaigns on
+          // non-buyers. Retarget abandoned orders with "Lead without Purchase".
           try {
             await Promise.allSettled([
-              trackIncompletePurchase(leadUser, selectedPackage.price, data.id),
               trackTtIncompletePurchase(leadUser, selectedPackage.price, data.id)
             ]);
           } catch (trackError) {
@@ -251,7 +251,8 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
             { phone: formData.phone, name: formData.name },
             selectedPackage.price,
             orderResult.id,
-            selectedPackage.name
+            selectedPackage.name,
+            productSlug
           ),
           trackTtCompletePayment(
             { phone: formData.phone, name: formData.name },
@@ -313,7 +314,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
                     key={pkg.id}
                     onClick={() => {
                       setFormData({ ...formData, packageType: pkg.id });
-                      trackAddToCart(pkg.name, pkg.price, pkg.id);
+                      trackAddToCart(pkg.name, pkg.price, productSlug);
                       trackTtAddToCart(pkg.name, pkg.price, pkg.id);
                     }}
                     className={`cursor-pointer p-5 rounded-2xl border-2 transition-all ${

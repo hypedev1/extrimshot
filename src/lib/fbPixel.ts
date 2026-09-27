@@ -11,9 +11,12 @@ declare global {
 // Canonical Meta Pixel / dataset ID for this site.
 // The browser pixel and the server-side CAPI must both report to this same ID,
 // otherwise deduplication breaks and Events Manager shows no matched events.
-// Keep this value in sync with the hardcoded ID in index.html.
-export const FB_PIXEL_ID =
-  (import.meta.env.VITE_META_PIXEL_ID as string) || '1097868522942660';
+// Hardcoded on purpose, and kept in sync with index.html: reading it from a
+// VITE_ variable let a stale Vercel value initialise a second pixel on the page.
+export const FB_PIXEL_ID = '1097868522942660';
+
+// Every visitor is in Bangladesh, so country is always sent. sha256('bd').
+const HASHED_COUNTRY_BD = '5e657ff6158d3e2a6d23e2a523917a2305acee9423365e268695c4b7b8919f4c';
 
 // Optional override for the edge-function base URL. Set it to
 //   http://127.0.0.1:54321/functions/v1
@@ -66,44 +69,166 @@ export const generateEventId = () => {
   return `evt_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
 
+const readCookies = (): Record<string, string> => {
+  if (typeof document === 'undefined') return {};
+  return document.cookie.split(';').reduce((acc, cookie) => {
+    const [key, ...rest] = cookie.trim().split('=');
+    if (key) acc[key] = rest.join('=');
+    return acc;
+  }, {} as Record<string, string>);
+};
+
+const writeCookie = (name: string, value: string, days: number) => {
+  try {
+    document.cookie = `${name}=${value};path=/;max-age=${60 * 60 * 24 * days};SameSite=Lax`;
+  } catch (_) {}
+};
+
 // Get Facebook cookies for deduplication & high match rates
 export const getFbCookies = () => {
   if (typeof document === 'undefined') return { fbc: null, fbp: null };
-  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=');
-    if (key) acc[key] = value;
-    return acc;
-  }, {} as Record<string, string>);
-  
+  const cookies = readCookies();
+
   // If _fbp doesn't exist yet, generate a valid fbp cookie for Meta CAPI matching
   let fbp = cookies['_fbp'] || null;
-  if (!fbp && typeof window !== 'undefined') {
+  if (!fbp) {
     fbp = `fb.1.${Date.now()}.${Math.floor(Math.random() * 1000000000)}`;
-    try {
-      document.cookie = `_fbp=${fbp};path=/;max-age=${60 * 60 * 24 * 90};SameSite=Lax`;
-    } catch (_) {}
+    writeCookie('_fbp', fbp, 90);
   }
 
-  // Capture fbclid from URL if _fbc not already set
+  // A new ad click carries a new fbclid. Replace the stored _fbc when the click
+  // ID changed, otherwise the conversion is attributed to the previous click.
   let fbc = cookies['_fbc'] || null;
-  if (!fbc && typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    const fbclid = params.get('fbclid');
-    if (fbclid) {
-      fbc = `fb.1.${Date.now()}.${fbclid}`;
-      try {
-        document.cookie = `_fbc=${fbc};path=/;max-age=${60 * 60 * 24 * 90};SameSite=Lax`;
-      } catch (_) {}
-    }
+  const fbclid = new URLSearchParams(window.location.search).get('fbclid');
+  if (fbclid && (!fbc || !fbc.endsWith(`.${fbclid}`))) {
+    fbc = `fb.1.${Date.now()}.${fbclid}`;
+    writeCookie('_fbc', fbc, 90);
   }
+
+  return { fbc, fbp };
+};
+
+// ── Customer information (hashed in the browser) ────────────────────────────
+// Meta's Event Match Quality depends on how many customer parameters each
+// event carries. Phone and name are only typed once, in the order form, so
+// their hashes are remembered and attached to every later event, and a stable
+// first-party visitor ID is sent as external_id on every event.
+
+const STORED_USER_KEY = '__fb_am';
+
+type HashedUser = { ph?: string; fn?: string; ln?: string };
+
+const sha256Hex = async (value: string): Promise<string | undefined> => {
+  try {
+    const bytes = new TextEncoder().encode(value);
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  } catch (_) {
+    return undefined;
+  }
+};
+
+// Meta expects digits only, with country code: 01XXXXXXXXX becomes 8801XXXXXXXXX.
+// The edge function applies the same rule, so both sides produce one hash.
+export const normalizeBdPhone = (raw: string): string => {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('880')) return digits;
+  if (digits.startsWith('0')) return `88${digits}`;
+  if (digits.startsWith('1') && digits.length === 10) return `880${digits}`;
+  if (digits.startsWith('88')) return digits;
+  return `88${digits}`;
+};
+
+// Lowercase, no punctuation or symbols. Bengali letters and marks are kept.
+const normalizeNamePart = (raw: string) => raw.toLowerCase().replace(/[\p{P}\p{S}]/gu, '').trim();
+
+const hashUser = async (user: { phone?: string; name?: string }): Promise<HashedUser> => {
+  const hashed: HashedUser = {};
+  const phone = user.phone ? normalizeBdPhone(user.phone) : '';
+  if (phone.length >= 12) hashed.ph = await sha256Hex(phone);
+
+  const parts = (user.name || '').split(/\s+/).map(normalizeNamePart).filter(Boolean);
+  if (parts.length > 0) hashed.fn = await sha256Hex(parts[0]);
+  if (parts.length > 1) hashed.ln = await sha256Hex(parts[parts.length - 1]);
+  return hashed;
+};
+
+const readStoredUser = (): HashedUser & { external_id?: string } => {
+  try {
+    return JSON.parse(localStorage.getItem(STORED_USER_KEY) || '{}') || {};
+  } catch (_) {
+    return {};
+  }
+};
+
+// index.html reads this same key and passes it to fbq('init'), so returning
+// visitors also get browser-side advanced matching.
+const writeStoredUser = (value: HashedUser & { external_id?: string }) => {
+  try {
+    localStorage.setItem(STORED_USER_KEY, JSON.stringify({ ...value, country: HASHED_COUNTRY_BD }));
+  } catch (_) {}
+};
+
+const getVisitorId = (): string => {
+  const cookies = readCookies();
+  let id = cookies['_ext_vid'];
+  if (!id) {
+    id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+  // Rewritten on every event, so browsers that cap script-set cookies (Safari
+  // keeps them 7 days) still keep the ID while the visitor stays active.
+  writeCookie('_ext_vid', id, 400);
+  return id;
+};
+
+const buildUserData = async (user?: { phone?: string; name?: string }) => {
+  const stored = readStoredUser();
+  const fresh = user ? await hashUser(user) : {};
+  const merged: HashedUser = {
+    ph: fresh.ph || stored.ph,
+    fn: fresh.fn || stored.fn,
+    ln: fresh.ln || stored.ln,
+  };
+
+  const visitorHash = await sha256Hex(getVisitorId());
+
+  if (visitorHash && (fresh.ph || fresh.fn || stored.external_id !== visitorHash)) {
+    writeStoredUser({ ...merged, external_id: visitorHash });
+  }
+
+  // The visitor ID links every event from this browser; the phone hash links
+  // the same person across devices once they have filled in the form.
+  const externalIds = [visitorHash, merged.ph].filter(Boolean) as string[];
+  const { fbc, fbp } = getFbCookies();
 
   return {
+    ...merged,
+    external_id: externalIds,
+    country: HASHED_COUNTRY_BD,
+    client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     fbc,
     fbp,
   };
 };
 
-// Helper to check if tracking should be allowed (only ignore builder preview iframes)
+// Opening the site with ?test_event_code=TEST12345 sends that session's CAPI
+// events to Events Manager > Test events, and nothing else does. A test code
+// stored as a server secret would silently divert every real event.
+const getTestEventCode = (): string | undefined => {
+  try {
+    const fromUrl = new URLSearchParams(window.location.search).get('test_event_code');
+    if (fromUrl) sessionStorage.setItem('fb_test_event_code', fromUrl);
+    return sessionStorage.getItem('fb_test_event_code') || undefined;
+  } catch (_) {
+    return undefined;
+  }
+};
+
+// Helper to check if tracking should be allowed. Skips builder previews and the
+// admin panel, whose staff traffic would otherwise pollute audiences.
 export const isTrackingAllowed = () => {
   if (typeof window === 'undefined') return true;
   if (import.meta.env.VITE_DISABLE_TRACKING === 'true') return false;
@@ -115,6 +240,7 @@ export const isTrackingAllowed = () => {
   ) {
     return false;
   }
+  if (window.location.pathname.startsWith('/admin')) return false;
   return true;
 };
 
@@ -148,10 +274,9 @@ export const ensurePixelInit = () => {
     })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
   }
 
-  // index.html already ran fbq('init') for the same pixel before React booted.
-  // Re-initialising it here is what makes Meta Pixel Helper report a duplicate
-  // pixel on the page, so only init when the inline snippet did not.
-  if (window.__fbPixelInitialized === FB_PIXEL_ID) {
+  // index.html already ran fbq('init') before React booted. Initialising any
+  // pixel again here is what put a second pixel on the page, so never do it.
+  if (window.__fbPixelInitialized) {
     pixelInitialized = true;
     return;
   }
@@ -185,6 +310,17 @@ export const trackPixelEvent = (eventName: string, params?: Record<string, any>,
   }
 };
 
+type CustomData = {
+  value?: number;
+  currency?: string;
+  content_name?: string;
+  content_type?: string;
+  content_ids?: string[];
+  contents?: { id: string; quantity: number; item_price?: number }[];
+  num_items?: number;
+  order_id?: string;
+};
+
 // Track event via server-side CAPI with eventID for deduplication
 export const trackCAPIEvent = async (
   eventName: string,
@@ -192,47 +328,30 @@ export const trackCAPIEvent = async (
     phone?: string;
     name?: string;
   },
-  customData?: {
-    value?: number;
-    currency?: string;
-    content_name?: string;
-    content_type?: string;
-    content_ids?: string[];
-    order_id?: string;
-  },
+  customData?: CustomData,
   eventId?: string
 ) => {
   if (!isTrackingAllowed()) return;
   try {
-    const { fbc, fbp } = getFbCookies();
-
-    // Neither the pixel ID nor the access token is sent from the browser.
-    // The edge function resolves both from Supabase secrets, so a stale cached
-    // bundle can never redirect events to a different pixel, and the token
-    // never reaches the client bundle.
+    // Neither the access token nor raw phone/name leaves the browser: customer
+    // fields are SHA-256 hashed here and the token lives in Supabase secrets.
     const { data, error } = await invokeFbCapi({
       event_name: eventName,
       event_id: eventId,
-      // The currently deployed edge function still targets an older pixel and
-      // honours this field, so sending it keeps browser and server events on the
-      // same dataset without a redeploy. The version in supabase/functions/fb-capi
-      // resolves the pixel from secrets and ignores this field, so it stays
-      // correct after that version ships.
+      // Older deployed versions of the edge function honoured this field. The
+      // current version resolves the pixel from secrets and ignores it.
       pixel_id: FB_PIXEL_ID,
       event_source_url: typeof window !== 'undefined' ? window.location.href : 'https://www.extrimshot.shop',
-      user_data: {
-        ...userData,
-        client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-        fbc,
-        fbp,
-      },
+      referrer_url: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
+      test_event_code: getTestEventCode(),
+      user_data: await buildUserData(userData),
       custom_data: customData,
     });
 
     if (error) {
-      console.warn('Meta CAPI invoke error:', error);
+      console.warn('Meta CAPI invoke error:', eventName, error, data);
     } else {
-      console.log('Meta CAPI response:', eventName, data);
+      if (import.meta.env.DEV) console.log('Meta CAPI response:', eventName, data);
       warnOnPixelMismatch(eventName, data);
     }
   } catch (error) {
@@ -247,33 +366,36 @@ export const trackEvent = async (
     phone?: string;
     name?: string;
   },
-  customData?: {
-    value?: number;
-    currency?: string;
-    content_name?: string;
-    content_type?: string;
-    content_ids?: string[];
-    order_id?: string;
-  }
+  customData?: CustomData
 ) => {
   // Generate unique event ID for deduplication
   const eventId = generateEventId();
-  
+
   // Browser pixel with eventID
   trackPixelEvent(eventName, customData, eventId);
-  
+
   // Server-side CAPI with exact same eventID
   await trackCAPIEvent(eventName, userData, customData, eventId);
 
   return eventId;
 };
 
+const productData = (contentId: string, value?: number, contentName?: string): CustomData => ({
+  content_name: contentName,
+  content_ids: [contentId],
+  contents: [{ id: contentId, quantity: 1, ...(value !== undefined ? { item_price: value } : {}) }],
+  num_items: 1,
+  content_type: 'product',
+  value,
+  currency: 'BDT',
+});
+
 // ── Standard Events ──────────────────────────────────────────────────────────
 
 /**
  * 1. PageView - Triggered on page loads and client route navigation
  */
-export const trackPageView = (url?: string) => {
+export const trackPageView = (_url?: string) => {
   const eventId = generateEventId();
   trackPixelEvent('PageView', undefined, eventId);
   void trackCAPIEvent('PageView', undefined, undefined, eventId);
@@ -287,89 +409,57 @@ export const trackViewContent = (
   value?: number,
   contentId: string = 'powerbooster'
 ) => {
-  trackEvent('ViewContent', undefined, {
-    content_name: contentName,
-    content_ids: [contentId],
-    content_type: 'product',
-    value,
-    currency: 'BDT',
-  });
+  trackEvent('ViewContent', undefined, productData(contentId, value, contentName));
 };
 
 /**
- * 3. AddToCart - Triggered when selecting or switching packages / clicking CTA
+ * 3. AddToCart - Triggered when selecting or switching packages
  */
 export const trackAddToCart = (
   contentName: string,
   value: number,
-  packageId?: string
+  contentId: string = 'powerbooster'
 ) => {
-  trackEvent('AddToCart', undefined, {
-    content_name: contentName,
-    content_ids: packageId ? [packageId] : ['powerbooster'],
-    content_type: 'product',
-    value,
-    currency: 'BDT',
-  });
+  trackEvent('AddToCart', undefined, productData(contentId, value, contentName));
 };
 
 /**
  * 4. InitiateCheckout - Triggered when the user reaches or views the order form
  */
-export const trackInitiateCheckout = (value: number, packageName?: string) => {
-  trackEvent('InitiateCheckout', undefined, {
-    value,
-    currency: 'BDT',
-    content_name: packageName || 'Extrimshot',
-    content_type: 'product',
-  });
+export const trackInitiateCheckout = (
+  value: number,
+  packageName?: string,
+  contentId: string = 'powerbooster'
+) => {
+  trackEvent('InitiateCheckout', undefined, productData(contentId, value, packageName || 'Extrimshot'));
 };
 
 /**
- * 5. Lead - Triggered when the user provides contact details (phone number)
+ * 5. Lead - Triggered when the user provides contact details (phone number).
+ * Also the event to build abandoned-order audiences from (Lead without Purchase).
  */
 export const trackLead = async (
   userData: { phone?: string; name?: string },
-  value?: number
+  value?: number,
+  contentId: string = 'powerbooster'
 ) => {
   await trackEvent('Lead', userData, {
-    value,
-    currency: 'BDT',
-    content_name: 'Extrimshot Form Lead',
+    ...productData(contentId, value, 'Extrimshot Form Lead'),
   });
 };
 
 /**
- * 6. Purchase - Triggered when order is successfully placed
+ * 6. Purchase - Triggered only when an order is saved in the orders table
  */
 export const trackPurchase = async (
   userData: { phone: string; name: string },
   value: number,
   orderId: string,
-  packageName?: string
+  packageName?: string,
+  contentId: string = 'powerbooster'
 ) => {
   await trackEvent('Purchase', userData, {
-    value,
-    currency: 'BDT',
-    content_name: packageName || 'Extrimshot',
-    content_type: 'product',
+    ...productData(contentId, value, packageName || 'Extrimshot'),
     order_id: orderId,
-  });
-};
-
-/**
- * Track incomplete order as Purchase event to Facebook for abandoned cart retargeting
- */
-export const trackIncompletePurchase = async (
-  userData: { phone: string; name?: string },
-  value: number,
-  incompleteOrderId: string
-) => {
-  await trackEvent('Purchase', userData, {
-    value,
-    currency: 'BDT',
-    content_name: 'Extrimshot',
-    content_type: 'product',
-    order_id: `incomplete_${incompleteOrderId}`,
   });
 };

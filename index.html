@@ -43,7 +43,16 @@
       // literal string when the build environment is missing the variable, and
       // fbq then initialises a pixel that does not exist. Keep this ID in sync
       // with FB_PIXEL_ID in src/lib/fbPixel.ts.
-      fbq('init', '1097868522942660');
+      // Advanced matching for returning visitors: src/lib/fbPixel.ts stores the
+      // SHA-256 hashes of phone, name, visitor ID and country under __fb_am.
+      var fbAm = {};
+      try {
+        var stored = JSON.parse(localStorage.getItem('__fb_am') || '{}') || {};
+        ['ph', 'fn', 'ln', 'external_id', 'country'].forEach(function (k) {
+          if (typeof stored[k] === 'string' && /^[a-f0-9]{64}$/.test(stored[k])) fbAm[k] = stored[k];
+        });
+      } catch (e) {}
+      fbq('init', '1097868522942660', fbAm);
       // Marks the pixel as already initialised so src/lib/fbPixel.ts does not
       // call fbq('init') a second time. A second init on the same page makes
       // Meta Pixel Helper report a duplicate pixel and can suppress events.
