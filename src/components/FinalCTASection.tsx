@@ -37,7 +37,7 @@ export const FinalCTASection = ({ content }: FinalCTASectionProps) => {
 
         <p className="mt-6 text-red font-medium flex items-center justify-center gap-2">
           <AlertTriangle className="w-4 h-4" />
-          স্টক সীমিত – অফার যে কোনো সময় শেষ হয়ে যেতে পারে
+          স্টক সী*মিত – অফার যে কোনো সময় শেষ হয়ে যেতে পারে
         </p>
       </div>
     </section>

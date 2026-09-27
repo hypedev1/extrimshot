@@ -17,6 +17,7 @@ import { TestimonialsSection } from '@/components/TestimonialsSection';
 import { HowToUseSection } from '@/components/HowToUseSection';
 import { OrderSection } from '@/components/OrderSection';
 import { FinalCTASection } from '@/components/FinalCTASection';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 const ProductPage = () => {
   const { slug = 'powerbooster' } = useParams<{ slug: string }>();
@@ -65,6 +66,7 @@ const ProductPage = () => {
         <FinalCTASection content={productContent?.finalCta} />
         <Footer />
       </div>
+      <WhatsAppButton />
     </div>
   );
 };

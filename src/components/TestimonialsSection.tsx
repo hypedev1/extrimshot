@@ -29,7 +29,7 @@ const testimonials = [
     location: 'সিলেট'
   },
   {
-    quote: 'বউ বলে এখন আমি আগের চেয়ে অনেক ফ্রেশ থাকি। ধন্যবাদ Extrimshot টিমকে।',
+    quote: 'বউ বলে এ*খন আমি আগের চেয়ে অনেক ফ্রেশ থাকি। ধন্যবাদ Extrimshot টিমকে।',
     name: 'জাহিদ',
     location: 'রাজশাহী'
   },

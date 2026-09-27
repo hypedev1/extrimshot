@@ -1,5 +1,6 @@
 import { CheckCircle, Phone, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 const ThankYou = () => {
   return (
@@ -38,6 +39,7 @@ const ThankYou = () => {
           </Link>
         </div>
       </div>
+      <WhatsAppButton />
     </div>
   );
 };
