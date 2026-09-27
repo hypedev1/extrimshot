@@ -15,7 +15,7 @@ const corsHeaders = {
 // The single pixel/dataset this site reports to. Configurable via the
 // META_PIXEL_ID secret. Other pixel IDs must never receive events, so the
 // request body is deliberately not consulted when resolving this.
-const DEFAULT_FB_PIXEL_ID = '2167805737420229';
+const DEFAULT_FB_PIXEL_ID = '1097868522942660';
 const FB_API_VERSION = 'v18.0';
 
 interface EventData {
