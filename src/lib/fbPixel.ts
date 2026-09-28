@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { findBdDistrict } from '@/lib/bdDistricts';
 
 declare global {
   interface Window {
@@ -110,13 +111,15 @@ export const getFbCookies = () => {
 
 // ── Customer information (hashed in the browser) ────────────────────────────
 // Meta's Event Match Quality depends on how many customer parameters each
-// event carries. Phone and name are only typed once, in the order form, so
-// their hashes are remembered and attached to every later event, and a stable
-// first-party visitor ID is sent as external_id on every event.
+// event carries. Phone, name and address are only typed once, in the order
+// form, so their hashes are remembered and attached to every later event, and
+// a stable first-party visitor ID is sent as external_id on every event.
 
 const STORED_USER_KEY = '__fb_am';
 
-type HashedUser = { ph?: string; fn?: string; ln?: string };
+type HashedUser = { ph?: string; fn?: string; ln?: string; ct?: string; st?: string };
+
+type UserInput = { phone?: string; name?: string; address?: string };
 
 const sha256Hex = async (value: string): Promise<string | undefined> => {
   try {
@@ -143,7 +146,7 @@ export const normalizeBdPhone = (raw: string): string => {
 // Lowercase, no punctuation or symbols. Bengali letters and marks are kept.
 const normalizeNamePart = (raw: string) => raw.toLowerCase().replace(/[\p{P}\p{S}]/gu, '').trim();
 
-const hashUser = async (user: { phone?: string; name?: string }): Promise<HashedUser> => {
+const hashUser = async (user: UserInput): Promise<HashedUser> => {
   const hashed: HashedUser = {};
   const phone = user.phone ? normalizeBdPhone(user.phone) : '';
   if (phone.length >= 12) hashed.ph = await sha256Hex(phone);
@@ -151,6 +154,13 @@ const hashUser = async (user: { phone?: string; name?: string }): Promise<Hashed
   const parts = (user.name || '').split(/\s+/).map(normalizeNamePart).filter(Boolean);
   if (parts.length > 0) hashed.fn = await sha256Hex(parts[0]);
   if (parts.length > 1) hashed.ln = await sha256Hex(parts[parts.length - 1]);
+
+  // City (district) and state (division), read from the typed address.
+  const place = user.address ? findBdDistrict(user.address) : undefined;
+  if (place) {
+    hashed.ct = await sha256Hex(place.ct);
+    hashed.st = await sha256Hex(place.st);
+  }
   return hashed;
 };
 
@@ -184,18 +194,20 @@ const getVisitorId = (): string => {
   return id;
 };
 
-const buildUserData = async (user?: { phone?: string; name?: string }) => {
+const buildUserData = async (user?: UserInput) => {
   const stored = readStoredUser();
   const fresh = user ? await hashUser(user) : {};
   const merged: HashedUser = {
     ph: fresh.ph || stored.ph,
     fn: fresh.fn || stored.fn,
     ln: fresh.ln || stored.ln,
+    ct: fresh.ct || stored.ct,
+    st: fresh.st || stored.st,
   };
 
   const visitorHash = await sha256Hex(getVisitorId());
 
-  if (visitorHash && (fresh.ph || fresh.fn || stored.external_id !== visitorHash)) {
+  if (visitorHash && (fresh.ph || fresh.fn || fresh.ct || stored.external_id !== visitorHash)) {
     writeStoredUser({ ...merged, external_id: visitorHash });
   }
 
@@ -324,10 +336,7 @@ type CustomData = {
 // Track event via server-side CAPI with eventID for deduplication
 export const trackCAPIEvent = async (
   eventName: string,
-  userData?: {
-    phone?: string;
-    name?: string;
-  },
+  userData?: UserInput,
   customData?: CustomData,
   eventId?: string
 ) => {
@@ -362,10 +371,7 @@ export const trackCAPIEvent = async (
 // Combined tracking - both browser and server with shared eventId for deduplication
 export const trackEvent = async (
   eventName: string,
-  userData?: {
-    phone?: string;
-    name?: string;
-  },
+  userData?: UserInput,
   customData?: CustomData
 ) => {
   // Generate unique event ID for deduplication
@@ -439,7 +445,7 @@ export const trackInitiateCheckout = (
  * Also the event to build abandoned-order audiences from (Lead without Purchase).
  */
 export const trackLead = async (
-  userData: { phone?: string; name?: string },
+  userData: UserInput,
   value?: number,
   contentId: string = 'powerbooster'
 ) => {
@@ -452,7 +458,7 @@ export const trackLead = async (
  * 6. Purchase - Triggered only when an order is saved in the orders table
  */
 export const trackPurchase = async (
-  userData: { phone: string; name: string },
+  userData: UserInput & { phone: string; name: string },
   value: number,
   orderId: string,
   packageName?: string,

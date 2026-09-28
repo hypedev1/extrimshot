@@ -108,7 +108,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
       // Lead does not depend on the incomplete_orders row. Firing it first means
       // a failed or blocked database write can no longer swallow the Lead event.
       void Promise.allSettled([
-        trackLead(leadUser, selectedPackage.price, productSlug),
+        trackLead({ ...leadUser, address: formData.address.trim() || undefined }, selectedPackage.price, productSlug),
         trackTtLead(leadUser, selectedPackage.price),
       ]);
 
@@ -248,7 +248,7 @@ export const OrderSection = ({ content }: OrderSectionProps) => {
       try {
         await Promise.allSettled([
           trackPurchase(
-            { phone: formData.phone, name: formData.name },
+            { phone: formData.phone, name: formData.name, address: formData.address },
             selectedPackage.price,
             orderResult.id,
             selectedPackage.name,

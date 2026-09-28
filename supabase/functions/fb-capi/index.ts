@@ -43,6 +43,8 @@ interface RequestBody {
     ph?: string;
     fn?: string;
     ln?: string;
+    ct?: string;
+    st?: string;
     external_id?: string | string[];
     country?: string;
     // Raw values, still sent by bundles cached from before browser hashing.
@@ -143,6 +145,13 @@ serve(async (req) => {
     }
     if (fn) userData.fn = [fn];
     if (ln) userData.ln = [ln];
+
+    // City (district) and state (division), hashed by the browser from the
+    // typed address. Only well-formed hashes are forwarded.
+    const ct = asHash(user_data?.ct);
+    const st = asHash(user_data?.st);
+    if (ct) userData.ct = [ct];
+    if (st) userData.st = [st];
 
     const externalIds = (Array.isArray(user_data?.external_id) ? user_data.external_id : [user_data?.external_id])
       .map(asHash)
